@@ -118,6 +118,7 @@ now you are ready to go
 
 ### Fetch records
 You can do almost anything you want : find by primary key, find where arguments, join, aggregates and so on. Heres some basic :
+
 ```php
 $user = new User;
 
