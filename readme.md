@@ -20,9 +20,7 @@ $config['autoload_models'] = TRUE;
 ```
 
 ## Convention
-Gas makes some assumptions about your database structure:
-- Each table should have primary key, default to **id**. You can set this dynamically in your Gas model.
-- Each table should have same name with its corresponding Gas model's name.
+Gas makes some assumptions about your database structure. Each table should have primary key, default to **id**. You can set this dynamically in your Gas model. Each table should have same name with its corresponding Gas model's name.
 
 Typically your Gas model will be something like this, let say you have **user_gas.php** to hold **user** model.
 
@@ -96,4 +94,28 @@ class User extends Gas {
 }
 ```
 
+Gas support for cascading directories, so you can have as many sub-level folder as you want, in your primary models directory.
+
 ## Usage
+The simplest way to start using Gas as your ORM, is to autoload Gas library in your application/config/autoload.php. 
+
+```php
+$autoload['libraries'] = array('gas');
+```
+
+If you decide to manually loading it, you will need to load/include your model first. Typically, you would do that as follow (eg, in some controller's function) :
+
+```php
+$this->load->library('gas');
+// to see available models :
+// var_dump($this->gas->list_models());
+
+// now, if you want to load the user model
+$this->gas->load('user');
+```
+
+now you are ready to go
+
+### Fetch records
+
+
