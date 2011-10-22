@@ -162,5 +162,66 @@ $someuser = $user->find_by_email('foo@bar.com', 1); // will return a single matc
 
 $someusers = $user->find_where(aray('active' => 1)); // will return a set/array of user object
 $someuser = $user->find_where(aray('active' => 1), 1); // will return a single match of user object
+
+// all standard CI AR clause statement : group_by, like, or_like and so on.
+$grouped_users = $user->group_by('email')->all(); // will return a set/array of user object
+$liked_users = $user->like('username', $some_key)->all(); // will return a set/array of user object
 ```
+
+### Write Operations (Insert, Update, Delete)
+Since Gas utilize CI Form Validation, data validation process will not longer need draw a dragon in your code-blocks. Since validation is an optional feature, soon you set up your _fields at _init method, your fields will be validated if you try to save a record(s) and passed TRUE parameter into save method. Update and delete process will be follow your recorded logic.
+
+```php
+$user = new User;
+
+// SAVE
+/* Suppose your form return POST value as follow
+$_POST = array(
+    'id' => null,
+    'name' => 'Mr. Foo',
+    'email' => 'foo@bar.com',
+    'username' => 'foobar',
+);
+*/
+
+$user->id = $_POST['id'];
+$user->name = $_POST['name'];
+$user->email = $_POST['email'];
+$user->username = $_POST['username'];
+
+// If you passing TRUE as save() parameter, Gas will do validation rule
+// which you set in your fields type in _init method
+if( ! $user->save(TRUE))
+{
+    // If theres error(s), you can retrieve it using errors() method
+    var_dump($user->errors());
+}
+else 
+{
+    $created_id = $user->last_id();
+}
+
+// UPDATE
+$user_update = $user->find($created_id);
+
+if($user->has_result())
+{
+    $user_update->email = 'changed@world.com';
+    $user->save();
+    var_dump($user_update->errors());
+}
+
+// DELETE
+$user_delete = $user->find($created_id);
+
+if($user->has_result())
+{
+    var_dump($user_delete->delete());
+}
+// If you want to delete exact id, you can do this too
+// $user->delete(1);
+// or
+// $user->delete(2, 3, 4)
+```
+
 
