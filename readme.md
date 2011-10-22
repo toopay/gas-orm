@@ -163,7 +163,8 @@ $someuser = $user->find_by_email('foo@bar.com', 1); // will return a single matc
 $someusers = $user->find_where(aray('active' => 1)); // will return a set/array of user object
 $someuser = $user->find_where(aray('active' => 1), 1); // will return a single match of user object
 
-// all standard CI AR clause statement : group_by, like, or_like and so on.
+// all standard CI AR clause statement : where, group_by, join, like and so on.
+$join_user = $user->left_join_phone()->find(35); // will produces : SELECT * FROM (`user`) LEFT JOIN `phone` ON `phone`.`id` = `dummy`.`id` WHERE `dummy`.`id` =  35
 $grouped_users = $user->group_by('email')->all(); // will return a set/array of user object
 $liked_users = $user->like('username', $some_key)->all(); // will return a set/array of user object
 ```
@@ -221,7 +222,7 @@ if($user->has_result())
 // If you want to delete exact id, you can do this too
 // $user->delete(1);
 // or
-// $user->delete(2, 3, 4)
+// $user->delete(2, 3, 4);
 ```
 
 
