@@ -117,5 +117,49 @@ $this->gas->load('user');
 now you are ready to go
 
 ### Fetch records
+You can do almost anything you want : find by primary key, find where arguments, join, aggregates and so on. Heres some basic :
+```php
+$user = new User;
 
+// all
+$users = $user->all(); // will return a set/array of user object
+if($user->has_result())
+{
+    // get total users
+    echo 'There are total : .'$user->count();
+    
+    foreach($users as $single_user)
+    {
+        // to produce an array of single user
+        var_dump($single_user->to_array());
+
+        // or just fetch the corresponding table properties
+        echo $single_user->id . '<br />';
+        echo $single_user->email . '<br />';
+        echo '<hr />';
+    }
+}
+
+// first
+$firstuser = $user->first(); // will return a single user object
+
+// last
+$lastuser = $user->last(); // will return a single user object
+
+// aggregate : max, min, avg, sum
+$max = $user->max(); // will return a single user object, with max id
+$min = $user->min('money'); // will return a single user object, with min money
+$avg = $user->avg();
+$sum = $user->sum();
+
+// finder : find, find_by_something, find_where
+$someusers = $user->find(1, 2, 3); // will return a set/array of user
+$someuser = $user->find(1); // will return a single user object with id = 1
+
+$someusers = $user->find_by_email('foo@bar.com'); // will return a set/array of user object
+$someuser = $user->find_by_email('foo@bar.com', 1); // will return a single match of user object
+
+$someusers = $user->find_where(aray('active' => 1)); // will return a set/array of user object
+$someuser = $user->find_where(aray('active' => 1), 1); // will return a single match of user object
+```
 
