@@ -23,6 +23,17 @@ class User extends Gas {
                             'has_and_belong_to' => array('job' => array()),
                         );
 
+    function _init()
+    {
+        $this->_fields = array(
+          'id'       => Gas::field('auto'),
+          'name'     => Gas::field('char[40]'),
+          'email'    => Gas::field('email'),
+          'username' => Gas::field('char', array('callback_username_check')),
+          'active'   => Gas::field('int[1]'),
+        );
+    }
+
 }
 ```
 
