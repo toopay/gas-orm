@@ -228,8 +228,8 @@ if($user->has_result())
 ### Relationship
 Gas supported three type of table relationship, **one-to-one** relationship, **one-to-many** relationship and **many-to-many** relationship. All you have to do, is to define your table relations at $relations properties in your model.
 
-#### One to One Realtionship
-For example, let say we have two table which have one-to-one relationship, user table and wife table, then each table should have $relation properties as follow :
+#### One to One Relationship
+For example, let say we have two table which have one-to-one relationship, user table and wife table, then each table should have $relations properties as follow :
 
 Your **user** model would be something like :
 
@@ -268,8 +268,7 @@ class Wife extends Gas {
     // }
 }
 ```
-
-Since you have define your tables/models relation, your can intuitively retrieve its relation like below :
+This assumes that your **wife** table has **user_id** field, as FK to refer **user** table, make sense right? Since you have define your tables/models relation, your can intuitively retrieve its relation like below :
 
 ```php
 $user = new User;
@@ -282,6 +281,9 @@ if($user->has_result())
     echo 'User\'s email is : '.$user1->email;
     echo 'User with id '.$user1->id.' has one wife, with these details : ';
     var_dump($user1->wife->to_array());
+
+    // You can now, for example, delete the wife from user object
+    var_dump($user1->wife->delete()); // will delete the wife record with user_id = 1
 }
 
 // otherwise, you can also retrieve belongs_to
@@ -292,10 +294,105 @@ $wife1 = $wife->find(1);
 
 if($wife->has_result())
 {
-    echo 'Wife\'s name is : '.$wife1->email;
+    echo 'Wife\'s name is : '.$wife1->name;
     echo 'Her husband is '.$wife1->user->id.', with these details : ';
     var_dump($wife1->user->to_array());
+
+    // You can now, update the related user from wife object
+    $wife1->user->active = 0;
+    var_dump($wife1->user->save());
 }
 ```
+
+#### One to Many Relationship
+This relationship type, is similar with above, except for **one-to-many** relationship, Gas will asume that one record from parent table, is **always** have several records in child table. For example, lets say we have two table which have one-to-many relationship, user table (as parent table) and kid table (as child table), then each table should have $relations properties as follow :
+
+Your **user** model would be something like :
+
+```php
+class User extends Gas {
+    
+    public $relations = array(
+                            'has_one' => array('wife' => array()),
+                            'has_many' => array('kid' => array())
+                        );
+
+    // Optionally, you can also define your model/table relation within _init method
+    // function _init()
+    // {
+    //    $this->_has_one = array(
+    //      'wife' => array()
+    //    );
+    //
+    //    $this->_has_many = array(
+    //      'kid' => array()
+    //    );
+    // }
+}
+```
+
+Then, your **kid** model would be something like :
+
+```php
+class Kid extends Gas {
+    
+    public $relations = array(
+                            'belongs_to' => array('user' => array()),
+                        );
+
+    // Optionally, you can also define your model/table relation within _init method
+    // function _init()
+    // {
+    //    $this->_belongs_to = array(
+    //      'user' => array()
+    //    );
+    // }
+}
+```
+
+You can do each action as **one-to-one** example above, except since this is **one-to-many** relationship, your child object will be a set/array of object instead one single object.
+
+```php
+$user = new User;
+
+// retrieve user's kid
+$user1 = $user->find(1);
+
+if($user->has_result())
+{
+    echo 'User\'s email is : '.$user1->email;
+    echo 'User with id '.$user1->id.' has '.count($user1->kid).' kids, with these details : ';
+    foreach($user1->kid as $kid)
+    {
+        var_dump($kid->to_array());
+
+         // You can now, for example, delete some kid data
+         if($kid->name == 'bad boy')
+         {
+            var_dump($kid->delete()); // will delete the kid record with user_id = 1
+         }
+    }
+
+   
+}
+
+// otherwise, you can also retrieve belongs_to, like one-to-one example above
+$kid = new Kid;
+
+// retrieve wife
+$kid1 = $kid->find(1);
+
+if($kid->has_result())
+{
+    echo 'Kid\'s name is : '.$kid1->name;
+    echo 'His/her parent is '.$kid1->user->id.', with these details : ';
+    var_dump($kid1->user->to_array());
+
+    // You can now, update the related user from wife object
+    $kid1->user->email = 'parentofkid'.$kid1->id.'@goodparent.com';
+    var_dump($kid1->user->save());
+}
+```
+
 
 
