@@ -9,20 +9,20 @@ Put Gas.php on your libraries folder and gas.php in config folder.
 Gas just have three option for configuration
 
 ```php
-/* here you can specify your models directory. This is relative to application folder */
+/* here you can specify your models directory. This is relative to application folder. */
 $config['models_path'] = 'models';
 
-/* by default the prefix is _gas, so typically your model file name would be something like foo_gas.php */
+/* by default the prefix is _gas, so typically your model file name would be something like foo_gas.php. */
 $config['models_suffix'] = '_gas';
 
-/* if this set to TRUE, then all models class will automaticly loaded. If this set to FALSE, you need to manually load each model you want to use, using $this->gas->load('foo', 'bar', 'and_so_on') */
+/* if this set to TRUE, then all models class will automaticly loaded. If this set to FALSE, you need to manually load each model you want to use, using $this->gas->load('foo', 'bar', 'and_so_on'). */
 $config['autoload_models'] = TRUE;
 ```
 
 ## Convention
 Gas makes some assumptions about your database structure. Each table should have primary key, default to **id**. You can set this dynamically in your Gas model. Each table should have same name with its corresponding Gas model's name.
 
-Typically your Gas model will be something like this, let say you have **user_gas.php** to hold **user** model.
+Typically your Gas model will be something like this, let say you have **user_gas.php** to hold **user** table.
 
 ```php
 class User extends Gas {
@@ -85,7 +85,7 @@ class User extends Gas {
     //    }
     //    else
     //    {
-    //        $this->set_message('some_check', 'The %s field was an invalid autoincrement field.', $field);
+    //        $this->set_message('some_check', 'The %s field should only contain \'must_like_these\'', $field);
     //  
     //        return FALSE;
     //    }
