@@ -229,7 +229,7 @@ if($user->has_result())
 Gas supported three type of table relationship, **one-to-one** relationship, **one-to-many** relationship and **many-to-many** relationship. All you have to do, is to define your table relations at $relations properties in your model.
 
 #### One to One Relationship
-For example, let say we have two table which have one-to-one relationship, user table and wife table, then each table should have $relations properties as follow :
+First, we will talk about **has_one** relationship. For example, let say we have two table which have one-to-one relationship, user table and wife table, then each table should have $relations properties as follow :
 
 Your **user** model would be something like :
 
@@ -305,7 +305,7 @@ if($wife->has_result())
 ```
 
 #### One to Many Relationship
-This relationship type, is similar with above, except for **one-to-many** relationship, Gas will asume that one record from parent table, is **always** have several records in child table. For example, lets say we have two table which have one-to-many relationship, user table (as parent table) and kid table (as child table), then each table should have $relations properties as follow :
+Secondly, we will talk about **has_many** relationship. This relationship type, is similar with above, except for **one-to-many** relationship, Gas will asume that one record from parent table, is **always** have several records in child table. For example, lets say we have two table which have one-to-many relationship, user table (as parent table) and kid table (as child table), then each table should have $relations properties as follow :
 
 Your **user** model would be something like :
 
@@ -350,7 +350,7 @@ class Kid extends Gas {
 }
 ```
 
-You can do each action as **one-to-one** example above, except since this is **one-to-many** relationship, your child object will be a set/array of object instead one single object.
+You can do each action as **one-to-one** example above, except since this is **one-to-many** relationship : your child object will be a set/array of object instead one single object.
 
 ```php
 $user = new User;
@@ -369,7 +369,7 @@ if($user->has_result())
          // You can now, for example, delete some kid data
          if($kid->name == 'bad boy')
          {
-            var_dump($kid->delete()); // will delete the kid record with user_id = 1
+            var_dump($kid->delete()); // will delete the kid record with user_id = 1 and name = 'bad boy'
          }
     }
 
@@ -379,7 +379,7 @@ if($user->has_result())
 // otherwise, you can also retrieve belongs_to, like one-to-one example above
 $kid = new Kid;
 
-// retrieve wife
+// retrieve kid
 $kid1 = $kid->find(1);
 
 if($kid->has_result())
@@ -388,11 +388,70 @@ if($kid->has_result())
     echo 'His/her parent is '.$kid1->user->id.', with these details : ';
     var_dump($kid1->user->to_array());
 
-    // You can now, update the related user from wife object
+    // You can now, update the related user from kid object
     $kid1->user->email = 'parentofkid'.$kid1->id.'@goodparent.com';
     var_dump($kid1->user->save());
 }
 ```
+
+#### Many to Many Relationship
+Last, this is the most tricky relationship in your database. This relationship type, is exist when you have a pivot table. Pivot table is an intermediate table, which links one table with another table, when each table is having many and belongs to each other. 
+
+For example, assume a **user** has many **job**, but a **job** can also belong to many **user**. Three tables must be created to accomplish this relationship: a **user** table, a **job** table, and a **job_user** table. When using Gas, you aren't need to create **job_user** model, instead, what you have to do is define **has_and_belongs_to** properties in your corresponding table(s). So refer to above scenario (user and job), you will take this below step.
+
+Your **user** model would be something like :
+
+```php
+class User extends Gas {
+    
+    public $relations = array(
+                            'has_one' => array('wife' => array()),
+                            'has_many' => array('kid' => array()),
+                            'has_and_belong_to' => array('job' => array()),
+                        );
+
+    // Optionally, you can also define your model/table relation within _init method
+    // function _init()
+    // {
+    //    $this->_has_one = array(
+    //      'wife' => array()
+    //    );
+    //
+    //    $this->_has_many = array(
+    //      'kid' => array()
+    //    );
+    //
+    //    $this->_has_and_belongs_to = array(
+    //      'job' => array()
+    //    );
+    // }
+}
+```
+
+Then, your **job** model would be something like :
+
+```php
+class Job extends Gas {
+    
+    public $relations = array(
+                            'has_and_belongs_to' => array('user' => array()),
+                        );
+
+    // Optionally, you can also define your model/table relation within _init method
+    // function _init()
+    // {
+    //    $this->_has_and_belongs_to = array(
+    //      'user' => array()
+    //    );
+    // }
+}
+```
+
+<table>
+    <tr>
+        <td>Foo</td>
+    </tr>
+</table>
 
 
 
