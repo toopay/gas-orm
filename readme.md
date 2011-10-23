@@ -568,6 +568,91 @@ if($job->has_result())
 }
 ```
 
+#### Eager Loading
+Gas support eager loading, so you can improve your relationship queries. Eager loading works for all $realations properties that you defined. Based by examples above, you can eager loading any type of relationship tables, using **with()** method. 
+
+In short, instead doing this :
+
+```php
+$user = new User;
+
+// retrieve all users
+$all_users = $user->all();
+
+if($user->has_result())
+{
+    // ...
+    foreach($all_users as $single_user)
+    {
+        foreach($single_user->job as $job) 
+        {
+            var_dump($job->to_array()); 
+        }
+    }
+}
+// heres you actually will doing SELECT as many as your user counts, this bad for your mother health
+var_dump($user->last_query());
+```
+
+You can eager loading your relational table, which defined in $relations properties :
+
+```php
+$user = new User;
+
+// retrieve all users
+$all_users = $user->with('job')->all(); // make sure you put with() method before any other finder method
+
+if($user->has_result())
+{
+    // ...
+    foreach($all_users as $single_user)
+    {
+        foreach($single_user->job as $job) 
+        {
+            var_dump($job->to_array()); 
+        }
+    }
+}
+// now you just only doing two queries, one to SELECT all users, one to SELECT all jobs with WHERE IN clause.
+var_dump($user->last_query());
+```
+
+You can eager load several models at a time too :
+
+```php
+$user = new User;
+
+// retrieve all users
+$all_users = $user->with('wife, 'kid', 'job')->all(); 
+
+if($user->has_result())
+{
+    foreach($all_users as $single_user)
+    {
+        echo $single_user->name.' has these details :';
+
+        echo $single_user->name.' has one wife :';
+        var_dump($single_user->wife->to_array()); 
+
+        echo $single_user->name.' has many kids :';
+        foreach($single_user->kid as $kid) 
+        {
+            var_dump($kid->to_array()); 
+        }
+
+        echo $single_user->name.' has several jobs :';
+        foreach($single_user->job as $job) 
+        {
+            var_dump($job->to_array()); 
+        }
+
+        echo '<hr />';
+    }
+}
+// now you just only doing 4 queries, one to SELECT all users, three to SELECT all wife, kids and jobs with WHERE IN clause.
+var_dump($user->last_query());
+```
+
 
 
 
