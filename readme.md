@@ -448,7 +448,7 @@ class Job extends Gas {
 ```
 
 Now, let say you have those tables entries, as follow
-**user**
+##### **user** table
 <table>
   <tr>
     <th>id</th>
@@ -469,7 +469,7 @@ Now, let say you have those tables entries, as follow
     <td>bar</td>
   </tr>
 </table>
-**job**
+##### **job** table
 <table>
   <tr>
     <th>id</th>
@@ -492,6 +492,83 @@ Now, let say you have those tables entries, as follow
     <td>Boring job, but you will get free snack at lunch.</td>
   </tr>
 </table>
+
+##### **job_user** table
+<table>
+  <tr>
+    <th>user_id</th>
+    <th>job_id</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>2</td>
+  </tr>
+   <tr>
+    <td>2</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>3</td>
+  </tr>
+</table>
+
+With each model defined **has_and_belongs_to** property, now you can do :
+
+```php
+$user = new User;
+
+// retrieve user's job
+$user1 = $user->find(1);
+
+if($user->has_result())
+{
+    echo 'User\'s name is : '.$user1->name;
+    echo 'User with id '.$user1->id.' has '.count($user1->job).' jobs, with these details : ';
+    foreach($user1->job as $job)
+    {
+        var_dump($job->to_array()); // since in 'job_user' table, user_id 1 have 2 job, this will give you a set/array of 'job' with id '1' and '2'
+
+         // You can now, for example, update some job data
+         if($job->name == 'Politician')
+         {
+            $job = 'This is a pseudo job.';
+            var_dump($job->save()); // will update any record(s) in 'job' with 'job_user'.'user_id' = 1 and have 'Politician' as name argument
+         }
+    }
+
+   
+}
+
+// otherwise, you can also retrieve user table from job table as well
+$job = new Job;
+
+// retrieve job
+$job1 = $job->find(1);
+
+if($job->has_result())
+{
+    echo 'Job\'s name is : '.$job1->name;
+    echo 'Some users which work as '.$job1->name.', are : ';
+    foreach($job1->user as $user)
+    {
+        var_dump($user->to_array()); // since in 'job_user' table, job_id 1 belongs to 2 users, this will give you a set/array of 'user' with id '1' and '2'
+
+         // You can now, for example, update some user data
+         if(strpbrk($user->email, 'world') == 'world.com')
+         {
+            $user->email = str_replace('world', 'geek', $user->email);
+            var_dump($user->save()); // will update any record(s) in 'user' with 'job_user'.'job_id' = 1  and have 'world.com' phrase in their email argument
+         }
+    }
+}
+```
+
+
 
 
 
