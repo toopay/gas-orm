@@ -3,15 +3,17 @@
 A lighweight and easy-to-use ORM for CodeIgniter
 
 ## Installation
+
 Put Gas.php on your libraries folder and gas.php in config folder. 
 
-## Usage
-Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class.
+## Overview
 
-### Overview
-Gas provide methods that will map your database table and its relation, into accesible object.
-#### Convention
+Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
+
+### Convention
+
 An example model of user :
+
 ```php
 class User extends Gas {
     
@@ -23,7 +25,9 @@ class User extends Gas {
 
 }
 ```
-#### Usage example
+
+### Usage example
+
 ```php
 $user = new User;
 
