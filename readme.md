@@ -447,10 +447,50 @@ class Job extends Gas {
 }
 ```
 
+Now, let say you have those tables entries, as follow
+**user**
 <table>
-    <tr>
-        <td>Foo</td>
-    </tr>
+  <tr>
+    <th>id</th>
+    <th>name</th>
+    <th>email</th>
+    <th>username</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>Foo</td>
+    <td>foo@world.com</td>
+    <td>foo</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Bar</td>
+    <td>bar@world.com</td>
+    <td>bar</td>
+  </tr>
+</table>
+**job**
+<table>
+  <tr>
+    <th>id</th>
+    <th>name</th>
+    <th>description</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>Developer</td>
+    <td>Awesome job, but sometimes makes you bored.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Politician</td>
+    <td>This is not really a job.</td>
+  </tr>
+   <tr>
+    <td>3</td>
+    <td>Accountant</td>
+    <td>Boring job, but you will get free snack at lunch.</td>
+  </tr>
 </table>
 
 
