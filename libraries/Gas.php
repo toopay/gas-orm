@@ -155,7 +155,11 @@ class Gas {
 	 */
 	public function find()
 	{
-		if(func_num_args() == 1) return $this->find_where(array($this->primary_key => func_get_arg(0)), 1);
+		if(func_num_args() == 1) 
+		{
+			$key_value = func_get_arg(0));
+			return $this->find_where(array($this->primary_key => $key_value), 1);
+		}
 
 		$in = func_get_args();
 
@@ -332,7 +336,8 @@ class Gas {
 		{
 				if(func_num_args() == 1)
 				{
-					$this->_db->where(array($this->primary_key => func_get_arg(0)), 1);
+					$key_value = func_get_arg(0);
+					$this->_db->where(array($this->primary_key => $key_value), 1);
 				}
 				else
 				{
@@ -376,11 +381,13 @@ class Gas {
 		
 		if(func_num_args() == 1)
 		{
-			$this->_db->join(func_get_arg(0), func_get_arg(0).'.id = '.$this->table.'.id');
+			$join_clause = func_get_arg(0);
+			$this->_db->join($join_clause, $join_clause.'.id = '.$this->table.'.id');
 		}
 		else
 		{
-			call_user_func_array(array($this->_db, 'join'), func_get_args());
+			$join_args = func_get_args();
+			call_user_func_array(array($this->_db, 'join'), $join_args);
 		}
 		$this->_locked_join = $this->_db->ar_join;
 
@@ -402,7 +409,8 @@ class Gas {
 
 		$this->_is_where = TRUE;
 		
-		call_user_func_array(array($this->_db, 'where'), func_get_args());
+		$where_args = func_get_args();
+		call_user_func_array(array($this->_db, 'where'), $where_args);
 		
 		if($this->_is_join) array_walk_recursive($this->_db->ar_where, 'Gas::_set_join');
 
@@ -611,7 +619,8 @@ class Gas {
 	{
 		if(func_num_args() == 0) return show_error('Try to load model(s), without passing any parameter(s).');
 
-		$this->_load_model(func_get_args());
+		$models = func_get_args();
+		$this->_load_model($models);
 	}
 
 	/**

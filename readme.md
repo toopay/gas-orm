@@ -15,6 +15,7 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 An example model of user :
 
 ```php
+
 class User extends Gas {
     
     public $relations = array(
@@ -35,15 +36,21 @@ class User extends Gas {
     }
 
 }
+
 ```
 
 ### Usage example
 
+Below is some of sample of Gas implementation.
+
+#### Fetch record (finder)
+
 ```php
+
 $user = new User;
 
-// Fetch record
 $users = $user->all();
+
 if($user->has_result())
 {
     foreach($users as $single_user)
@@ -56,7 +63,12 @@ $someuser = $user->find_by_email('foo@bar.com', 1);
 
 $join_user = $user->left_join_phone()->find(35);
 
-// Write Operations (Insert, Update, Delete)
+```
+
+#### Write Operations (Insert, Update, Delete)
+
+```php
+
 $user = new User;
 
 $user->id = $_POST['id'];
@@ -84,7 +96,12 @@ if($user->has_result())
 
 var_dump($user->delete(1, 2, 3));
 
-// Relationship (one-to-one, one-to-many, many-to-many)
+```
+
+#### Relationship (one-to-one, one-to-many, many-to-many)
+
+```php
+
 $user1 = $user->find(1);
 
 if($user->has_result())
@@ -103,10 +120,15 @@ if($user->has_result())
     }
 }
 
-// Eager Loading
+```
+
+#### Eager Loading
+
+```php
+
 $user = new User;
 
-$all_users = $user->with('wife, 'kid', 'job')->all(); 
+$all_users = $user->with('wife', 'kid', 'job')->all(); 
 
 if($user->has_result())
 {
@@ -130,6 +152,7 @@ if($user->has_result())
         }
     }
 }
+
 ```
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
 
