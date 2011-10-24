@@ -157,7 +157,7 @@ class Gas {
 	{
 		if(func_num_args() == 1) 
 		{
-			$key_value = func_get_arg(0));
+			$key_value = func_get_arg(0);
 			return $this->find_where(array($this->primary_key => $key_value), 1);
 		}
 

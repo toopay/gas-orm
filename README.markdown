@@ -154,6 +154,7 @@ if($user->has_result())
 }
 
 ```
+
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
 
 
