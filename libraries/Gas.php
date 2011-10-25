@@ -475,6 +475,8 @@ class Gas {
 		if($this->_is_where) $this->_db->ar_where = $this->_locked_where;
 		if($this->_is_where_in) $this->_db->ar_wherein = $this->_locked_where_in;
 		
+		$this->_validate_table();
+
 		$this->_db->from($this->table);
 			
 		return $this->_db->count_all_results();
