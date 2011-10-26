@@ -40,6 +40,9 @@ class Gas {
 	protected $_is_where_in = FALSE;
 	protected $_is_join = FALSE;
 	protected $_is_with = array();
+
+	protected $_is_duplicate = FALSE;
+	protected $_locked_duplicate = array();
 	
 	private $_locked_table = FALSE;
 	private $_locked_where = array();
@@ -188,6 +191,8 @@ class Gas {
 		$q = $this->_db->get($this->table);
 		
 		$res = $this->_generate($q->result(), $locked);
+
+		$q->free_result();
 		
 		return ( ! is_array($res) and $limit !== 1) ? array($res) : $res;
 	}
@@ -209,8 +214,10 @@ class Gas {
 		
 		$this->_validate_table();
 		$q = $this->_db->get($this->table);
-			
+		
 		$res = $this->_generate($q->result(), $locked);
+
+		$q->free_result();
 
 		if($eager_load)
 		{
@@ -280,6 +287,8 @@ class Gas {
 
 		if($this->_locked_table)
 		{
+			if($this->_is_duplicate) $this->_strip_duplicate();
+
 			$this->_db->ar_where = $this->_locked_where;
 			$this->_db->ar_join = $this->_locked_join;
 			
@@ -287,7 +296,7 @@ class Gas {
 			{
 				$this->_db->where($this->primary_key, $this->_set_fields[$this->primary_key]);
 			}
-			
+
 			$this->_db->update($this->table, $this->_set_fields); 
 		}
 		elseif($this->_is_join)
@@ -314,8 +323,24 @@ class Gas {
 		}
 		else 
 		{
+			$is_duplicate = $this->find((int)$this->_set_fields[$this->primary_key]);
+			if(is_object($is_duplicate))
+			{
+				$id = (int) $is_duplicate->id;
+				$recent_id = (int) $this->_set_fields[$this->primary_key];
+
+				if($recent_id == $id)
+				{
+					$this->_is_duplicate = TRUE;
+					$this->_locked_table = TRUE;
+					return $this->save();
+				}
+			}
+
 			$this->_db->insert($this->table, $this->_set_fields);
 		}
+
+		$this->_set_fields = array();
 		
 		return $this->_db->affected_rows();
 	}
@@ -360,6 +385,8 @@ class Gas {
 		}
 
 		$this->_db->delete($this->table); 
+
+		$this->_set_fields = array();
 
 		return $this->_db->affected_rows();
 	}
@@ -543,10 +570,8 @@ class Gas {
 		{
 			$line = $msg;
 		}
-		
+
 		$this->_error_callbacks[] = str_replace('%s', $this->_label($field), $line);
-		
-		return $this;
 	}
 	
 	/**
@@ -565,13 +590,15 @@ class Gas {
 		$suffix = ($suffix == '') ? '</p>' : $suffix;
 		
 		$errors = '';
-		
+
 		foreach ($this->_error_callbacks as $error)
 		{
 			$errors .= $prefix.$error.$suffix."\n";
 		}
-		
-		return $errors.$this->_CI->form_validation->error_string($prefix, $suffix);
+
+		$str_errors = $errors.$this->_CI->form_validation->error_string($prefix, $suffix);
+
+		return $str_errors;
 	}
 	
 	/**
@@ -584,7 +611,7 @@ class Gas {
 	 */
 	public function auto_check($field, $val)
 	{
-		if (empty($val) or is_integer($val)) return TRUE;
+		if (is_null($val) or is_integer($val)) return TRUE;
 		
 		$this->set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
 		
@@ -609,13 +636,28 @@ class Gas {
 	}
 
 	/**
+	 * scan
+	 *
+	 * Scan model(s) class
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function scan()
+	{
+		$this->_scan_models();
+
+		return $this;
+	}
+
+	/**
 	 * load
 	 *
 	 * Load model(s) class
 	 *
 	 * @access	public
 	 * @param   mixed
-	 * @return	array
+	 * @return	void
 	 */
 	public function load()
 	{
@@ -623,6 +665,8 @@ class Gas {
 
 		$models = func_get_args();
 		$this->_load_model($models);
+
+		return $this;
 	}
 
 	/**
@@ -652,7 +696,7 @@ class Gas {
 	}
 	
 	/**
-	 * _scan_model
+	 * _load_model
 	 * 
 	 * Validate and sets model(s)'s directories
 	 *
@@ -760,8 +804,10 @@ class Gas {
 	 */
 	private function _validate_post()
 	{
-		if($this->_CI->form_validation->run() == FALSE) return FALSE;
-		
+		$success = TRUE;
+
+		if($this->_CI->form_validation->run() == FALSE) $sucess = FALSE;
+
 		foreach ($this->_fields as $k => $field)
 		{
 			if(strpos($field['rules'], 'callback'))
@@ -774,13 +820,41 @@ class Gas {
 					
 						if ( ! method_exists($this, $rule))	continue;
 						
-						if($this->$rule($k, $this->_set_fields[$k]) == FALSE) return FALSE;
+						if($this->$rule($k, $this->_set_fields[$k]) == FALSE)
+						{
+							$success = FALSE;
+						}
 					}
 				}
 			}
 		}
 		
-		return TRUE;
+		return $success;
+	}
+
+	/**
+	 * _strip_duplicate
+	 * 
+	 * Strip the unused dynamic properties
+	 *
+	 * @access	private
+	 * @return	void
+	 */
+	private function _strip_duplicate()
+	{
+		$this->_locked_duplicate = $this->_set_fields;
+		$stripped = array();
+
+		$original = $this->_db->list_fields($this->table);
+
+		foreach($original as $origin)
+		{
+			if($this->_set_fields[$origin]) $stripped[$origin] = $this->_set_fields[$origin];
+		}
+
+		$this->_set_fields = $stripped;
+
+		return $this;
 	}
 	
 	/**
@@ -869,8 +943,9 @@ class Gas {
 	 * @param	mixed
 	 * @return	void
 	 */
-	private function _set_with($obj)
+	private function _set_with($obj = array())
 	{
+
 		$load_with = array();
 		$in = array();
 
@@ -878,7 +953,7 @@ class Gas {
 		
 		foreach ($obj as $result)
 		{
-			if($result->$identifier_key)
+			if(isset($result->$identifier_key))
 			{
 				$in[] = (is_numeric($result->$identifier_key)) ? (int) $result->$identifier_key : $result->$identifier_key;
 			}
@@ -888,8 +963,7 @@ class Gas {
 		{
 			$load_with[$attachment] = $this->_generate_relation($attachment, TRUE, $in);
 		}
-
-
+		
 		return $load_with;
 	}
 
@@ -909,110 +983,148 @@ class Gas {
 
 		$this->_has_result = (bool) count($results);
 
+		$eager_loaded_models = $this->_set_with($results);
+
+		$is_with = (bool) (count($eager_loaded_models) > 0);
+
 		if(count($results) > 1)
 		{
 			$instances = array();
 
-			$eager_loaded_models = $this->_set_with($results);
-
-			$is_with = (bool) (count($eager_loaded_models) > 0);
-
 			foreach ($results as $result)
 			{
-
-				$gas = get_class($this);
-				$instance = new $gas;
+				$res_instance = $this->_generate_instance((array) $result, $locked_table, $is_with, $eager_loaded_models);
 				
-				if($locked_table == TRUE)
-				{
-					$instance->_locked_table = TRUE;
-					$instance->_is_where = $this->_is_where;
-					$instance->_locked_where = $this->_locked_where;
-					$instance->_is_where_in = $this->_is_where_in;
-					$instance->_locked_where_in = $this->_locked_where_in;
-					$instance->_is_join = $this->_is_join;
-					$instance->_locked_join = $this->_locked_join;
-				}
-				
-				$instance->_set_fields((array) $result);
-
-				if($is_with)
-				{
-					foreach($eager_loaded_models as $foreign_model => $eager_model)
-					{
-						$is_one = isset($this->_has_one[$foreign_model]);
-						$is_many = isset($this->_has_many[$foreign_model]);
-						$is_many_to_many = isset($this->_has_and_belongs_to[$foreign_model]);
-						
-						$key = $eager_model['eager_load_key'];
-						$res = $eager_model['eager_load_result'];
-
-						unset($eager_model['eager_load_key']);
-						unset($eager_model['eager_load_result']);
-
-						$set_fields = array();
-
-						foreach($eager_model as $index => $model)
-						{
-							if($is_many_to_many)
-							{
-								$pivot_key = (explode('.', $key));
-
-								$key = $pivot_key[count($pivot_key)-1];
-							}
-
-							if($instance->_set_fields[$instance->primary_key] == $model->_set_fields[$key])
-							{
-								if($is_one)
-								{
-									$instance->_set_fields(array($foreign_model => $eager_model[$index]));
-								}
-								elseif($is_many or $is_many_to_many)
-								{
-									$set_fields[] = $eager_model[$index];
-								}
-
-								continue;
-							}
-							
-							$belongs_to = FALSE;
-
-							foreach($res as $eager_key => $fields)
-							{
-								if($instance->_set_fields[$instance->primary_key] == $fields[$key])
-								{
-									$belongs_to = TRUE;
-									continue;
-								}
-							}
-
-							if( ! $belongs_to)
-							{
-								$instance->_set_fields(array($foreign_model => new $foreign_model));
-								continue;
-							}
-						}
-
-						if($is_many or $is_many_to_many)
-						{
-							if(empty($set_fields)) $set_fields[] = new $foreign_model;
-							$instance->_set_fields(array($foreign_model => $set_fields));
-						}
-					}
-				}
-				
-				$instances[] = $instance;
+				$instances[] = $res_instance;
 			}
 			
 			return $instances;
 		}
-		
-		if($locked_table == TRUE) $this->_locked_table = TRUE;
-		
-		if( ! empty($results))  $this->_set_fields((array) $results[0]);
+		elseif(count($results) == 1)
+		{
+			return $this->_generate_instance((array) $results[0], $locked_table = FALSE, $is_with, $eager_loaded_models);
+		}
 
-		return $this;
+		return FALSE;
 	}
+
+	/**
+	 * _generate_instance
+	 * 
+	 * Set/generate the GAS instance
+	 *
+	 * @access	private
+	 * @param   mixed
+	 * @param   bool
+	 * @param   bool
+	 * @param   array
+	 * @return	obj
+	 */
+	private function _generate_instance($res, $locked_table = FALSE, $eager = FALSE, $eager_models = array())
+	{
+		$gas = get_class($this);
+		$instance = new $gas;
+		
+		if($locked_table == TRUE)
+		{
+			$instance->_locked_table = TRUE;
+			$instance->_is_where = $this->_is_where;
+			$instance->_locked_where = $this->_locked_where;
+			$instance->_is_where_in = $this->_is_where_in;
+			$instance->_locked_where_in = $this->_locked_where_in;
+			$instance->_is_join = $this->_is_join;
+			$instance->_locked_join = $this->_locked_join;
+		}
+		
+		$instance->_set_fields($res);
+
+		if($eager)
+		{
+			$instance = $this->_generate_eager_load_properties($instance, $eager_models);
+		}
+
+		return $instance;
+	}
+
+	/**
+	 * _generate_eager_load_properties
+	 * 
+	 * Set/generate the instance eager load properties 
+	 *
+	 * @access	private
+	 * @param	mixed
+	 * @param   array
+	 * @return	obj
+	 */
+	 private function _generate_eager_load_properties($instance, $eager_loaded_models)
+	 {
+	 	foreach($eager_loaded_models as $foreign_model => $eager_model)
+		{
+			$is_one = isset($this->_has_one[$foreign_model]);
+			$is_many = isset($this->_has_many[$foreign_model]);
+			$is_many_to_many = isset($this->_has_and_belongs_to[$foreign_model]);
+			
+			$key = $eager_model['eager_load_key'];
+			$res = $eager_model['eager_load_result'];
+
+			unset($eager_model['eager_load_key']);
+			unset($eager_model['eager_load_result']);
+
+			$set_fields = array();
+
+			foreach($eager_model as $index => $model)
+			{
+				if($is_many_to_many)
+				{
+					$pivot_key = (explode('.', $key));
+
+					$key = $pivot_key[count($pivot_key)-1];
+				}
+
+				$instance_primary_key = (int)$instance->_set_fields[$instance->primary_key];
+				$model_key = is_object($model) ? (int) $model->_set_fields[$key] : 0;
+
+				if($instance_primary_key == $model_key)
+				{
+					if($is_one)
+					{
+						$instance->_set_fields(array($foreign_model => $eager_model[$index]));
+					}
+					elseif($is_many or $is_many_to_many)
+					{
+						$set_fields[] = $eager_model[$index];
+					}
+
+					continue;
+				}
+				
+				$belongs_to = FALSE;
+
+				foreach($res as $eager_key => $fields)
+				{
+					if($instance->_set_fields[$instance->primary_key] == $fields[$key])
+					{
+						$belongs_to = TRUE;
+						continue;
+					}
+				}
+
+				if( ! $belongs_to)
+				{
+					$instance->_set_fields(array($foreign_model => new $foreign_model));
+					continue;
+				}
+			}
+
+			if($is_many or $is_many_to_many)
+			{
+				if(empty($set_fields)) $set_fields[] = new $foreign_model;
+				$instance->_set_fields(array($foreign_model => $set_fields));
+			}
+		}
+
+		return $instance;
+	 }
 
 	/**
 	 * _generate_relation
@@ -1067,9 +1179,9 @@ class Gas {
 			{
 				$has_one = $has->find_where(array(
 						$this->table.'_'.$this->primary_key => $this->_set_fields[$this->primary_key],
-		 		), 1);
+		 		), 1, null, TRUE);
 			}
-			
+
 			return $has_one;
 		}
 		elseif(isset($this->_has_many[$relation_table]))
@@ -1253,8 +1365,12 @@ class Gas {
 			
 			$this->_validate_table();
 			$q = $this->_db->get($this->table);
+
+			$res = $this->_generate($q->result());
+
+			$q->free_result();
 			
-			return $this->_generate($q->result());
+			return $res;
 		}
 		elseif ($name == 'with' and count($args) > 0)
 		{
@@ -1274,6 +1390,10 @@ class Gas {
 			$where = array('where', 'or_where');
 			$where_in = array('where_in', 'or_where_in', 'where_not_in', 'or_where_not_in');
 
+			$meta = array('list_tables', 'table_exists', 'list_fields', 'field_exists', 'field_data');
+
+			if(in_array($name, $meta)) return call_user_func_array(array($this->_db, $name), $args);
+
 			$is_get = FALSE;
 
 			if(in_array($name, $get))
@@ -1283,7 +1403,7 @@ class Gas {
 				$this->_validate_table();
 				$this->_db->from($this->table);
 			}
-			
+
 			if( ! $is_get) call_user_func_array(array($this->_db, $name), $args);
 
 			if(in_array($name, $where))
@@ -1302,7 +1422,10 @@ class Gas {
 			if($is_get)
 			{
 				$q = $this->_db->get();
-				return $this->_generate($q->result(), $this->_locked_table);
+				$res = $this->_generate($q->result(), $this->_locked_table);
+				$q->free_result();
+
+				return $res;
 			}
 			
 			return $this;

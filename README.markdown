@@ -4,7 +4,7 @@ A lighweight and easy-to-use ORM for CodeIgniter
 
 ## Installation
 
-Put Gas.php on your libraries folder and gas.php in config folder. 
+Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run **http://localdomain.com/index.php/gasunittest**.
 
 ## Overview
 
@@ -155,7 +155,7 @@ if($user->has_result())
 
 ```
 
-Comments on those libraries should self explanatory, but if you need to go more depth about Gas, read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
+Comments on those libraries should self explanatory, but if you need to go more depth about Gas, use **gasunittest.php** or read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
 
 
 
