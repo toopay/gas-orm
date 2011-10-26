@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.0.1
+ * @version     1.0.2
  * @author      Taufan Aditya A.K.A Toopay
  * @license     GPL
  */
