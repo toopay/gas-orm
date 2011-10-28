@@ -1299,7 +1299,9 @@ class Gas {
  				break;
  			
  			default:
- 				return $this->_set_fields[$name];
+ 				if (isset($this->_set_fields[$name])) {
+ 					return $this->_set_fields[$name];
+ 				}
  				break;
  		}
  	}
