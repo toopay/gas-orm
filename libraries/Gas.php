@@ -849,7 +849,7 @@ class Gas {
 
 		foreach($original as $origin)
 		{
-			if($this->_set_fields[$origin]) $stripped[$origin] = $this->_set_fields[$origin];
+			if(isset($this->_set_fields[$origin])) $stripped[$origin] = $this->_set_fields[$origin];
 		}
 
 		$this->_set_fields = $stripped;
