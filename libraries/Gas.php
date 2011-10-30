@@ -3,90 +3,187 @@
 /**
  * CodeIgniter Gas ORM Library
  *
- * A lighweight and easy-to-use ORM for CodeIgniter
+ * A lighweight and scalable ORM for CodeIgniter
  * 
  * This class intend to use as semi-native ORM library for CI, 
  * based on the ActiveRecord pattern. This library uses CI stan-
- * dard DB utility packages also validation class,
+ * dard DB utility packages also validation class.
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.0.2
+ * @version     1.0.3
  * @author      Taufan Aditya A.K.A Toopay
+ * @link        http://taufanaditya.com/gas-orm
  * @license     GPL
  */
 
-class Gas {
-	
+ /* ------------------------------------------------------------------------------------------------- */
+ /* ------------------------------------------------------------------------------------------------- */
+
+/**
+ * Gas Core Class.
+ *
+ * @package		Gas Library
+ * @subpackage	Gas Core
+ * @category    Libraries
+ * @version     1.0.3
+ */
+
+class Gas_Core {
+
 	public $table = '';
-	public $relations = array();
+
 	public $primary_key = 'id';
-	
-	protected $_CI;
-	
+
+	public $relations = array();
+
+	public $errors = array();
+
+	public $locked = FALSE;
+
+
 	protected $_config;
-	protected $_db;
-	protected $_fields = array();
-	protected $_set_fields = array();
-	protected $_error_callbacks = array();
-	protected $_has_result = FALSE;
 
-	protected $_has_one = array();
-	protected $_has_many = array();
-	protected $_belongs_to = array();
-	protected $_has_and_belongs_to = array();
+	protected $_fields;
+
+	protected $_get_fields = array();
+
+	protected $_get_child_fields = array();
+
+	protected $_get_child_nodes = array();
+
+
+	public static $childs = array();
+
+	public static $childs_resource = array();
+
+	public static $init = FALSE;
+
+	public static $bureau;
+
+	public static $single = FALSE;
+
+	public static $ar_recorder = array();
+
+	public static $post = FALSE;
+
+	public static $join = FALSE;
+
+	public static $with = FALSE;
+
+	public static $with_models = array();
+
+
+	static $transaction_pointer = FALSE;
+
+	static $selector = FALSE;
+
+	static $condition = FALSE;
+
+	static $executor = FALSE;
+
+	static $transaction_status = FALSE;
+
+	static $transaction_executor = FALSE;
 	
-	protected $_is_where = FALSE;
-	protected $_is_where_in = FALSE;
-	protected $_is_join = FALSE;
-	protected $_is_with = array();
 
-	protected $_is_duplicate = FALSE;
-	protected $_locked_duplicate = array();
-	
-	private $_locked_table = FALSE;
-	private $_locked_where = array();
-	private $_locked_where_in = array();
-	private $_locked_join = array();
+	protected static $_models;
 
-	private $_models = array();
-	private $_loaded_models = array();
+	protected static $_rules = array();
+
+	protected static $_set_fields = array();
+
+	protected static $_error_callbacks = array();
 	
 	/**
 	 * Constructor
 	 */
 	function __construct()
 	{
-		$this->_CI =& get_instance();
-		
-		$this->_CI->config->load('gas', TRUE, TRUE);
-		$this->_config = $this->_CI->config->item('gas');
-		
-		$this->_scan_models();
+		$init = FALSE;
 
-		if($this->_config['autoload_models']) $this->_load_model('*');
-		
-		if( ! isset($this->_CI->db))
+		$gas = $this->model();
+
+		if (self::is_initialize() == FALSE)
 		{
-			$this->_CI->load->database();
-		}
-		
-		$this->_db = $this->_CI->db;
-		
-		$this->_init();
+			$CI =& get_instance();
 
-		log_message('debug', 'Gas ORM Class Initialized');
+			$CI->config->load('gas', TRUE, TRUE);
+
+			$this->_config = $CI->config->item('gas');
+			
+			$this->_scan_models();
+
+			$this->_init();
+
+			$init = TRUE;
+
+			Gas_Core::$bureau = new Gas_Bureau($CI);
+		}
+
+		self::$bureau =& Gas_Core::recruit_bureau(); 
+
+		self::$bureau->_models = self::$_models;
+
+		self::$bureau->_config = $this->_config;
+
+		self::$bureau->_set_fields = self::$_set_fields;
+
+		if ($this->_config['autoload_models']) self::$bureau->load_model('*');
+
+		if ($init) self::$init = TRUE;
+
+		if (func_num_args() == 1)
+		{
+			$args = func_get_arg(0);
+
+			if (isset($args['record'])) $this->_get_fields = Gas_Janitor::get_input(__METHOD__, $args['record'], FALSE, array());
+		}
+
+		log_message('debug', 'Gas ORM Core Class Initialized');
 	}
 
 	/**
-	 * _init 
+	 * Produce an empty Gas model instance.
 	 * 
-	 * Initialize method
-	 * 
+	 * @param   string 
+	 * @return  object  Gas Instance
 	 */
-	function _init() {}
+	public static function factory($name, $records = array())
+	{
+		$model = $name;
 
-	
+		$gas = new $model($records);
+
+		return $gas;
+	}
+
+	/**
+	 * recruit_bureau
+	 * 
+	 * Calling Gas Bureau instance
+	 * 
+	 * @access public
+	 * @return object  Gas Bureau Instance
+	 */
+	public static function &recruit_bureau()
+	{
+		return Gas_Core::$bureau;
+	}
+
+	/**
+	 * is_initialize
+	 * 
+	 * Check Gas Core State
+	 * 
+	 * @access public
+	 * @return bool
+	 */
+	public static function is_initialize()
+	{
+		return self::$init;
+	}
+
 	/**
 	 * field
 	 * 
@@ -104,97 +201,133 @@ class Gas {
 		if (preg_match('/^([^)]+)\[(.*?)\]$/', $type, $m) AND count($m) == 3)
 		{
 			$type = $m[1];
+
 			$rules[] = 'max_length['.$m[2].']';
 		}
 		
 		switch ($type) 
 		{
 			case 'auto':
+
 				$rules[] = 'callback_auto_check'; 
+
 				break;
 			
 			case 'char':
+
 				$rules[] = 'callback_char_check'; 
+
 				break;
 				
 			case 'int':
+
 				$rules[] = 'integer';
+
 				break;
 			
 			case 'email':
+
 				$rules[] = 'valid_email';
+
 				break;
 		}
 		
 		return array('rules' => implode('|', array_merge($rules, $args)));
 	}
-	
+
+	/**
+	 * db
+	 * 
+	 * Creates a temporary DB instance
+	 * 
+	 * @access public
+	 * @return void
+	 */
+	public function db()
+	{
+		$bureau = self::$bureau;
+
+		return $bureau::engine();
+	}
+
+	/**
+	 * list_models
+	 * 
+	 * Get list of available models
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function list_models()
+	{
+		return self::$_models;
+	}
+
+	/**
+	 * with 
+	 * 
+	 * Eager loading pointer
+	 * 
+	 * @access public
+	 * @return void
+	 */
+	public function with()
+	{
+		$args = func_get_args();
+
+		$eager_load_models = Gas_Janitor::get_input(__METHOD__, $args, FALSE, array());
+
+		if ( ! empty($eager_load_models))
+		{
+			self::$with = TRUE;
+
+			self::$with_models = $eager_load_models;
+		}
+
+		return $this;
+	}
+
 	/**
 	 * all
 	 * 
-	 * Get all records
-	 *
-	 * @access	public
-	 * @return	array  array of result(s) object
+	 * Fetch records
+	 * 
+	 * @access public
+	 * @return object Gas Instance
 	 */
 	public function all()
 	{
-		$this->_validate_table();
-		$q = $this->_db->get($this->table);
+		$bureau = self::$bureau;
+
+		$this->validate_table();
 		
-		$res = $this->_generate($q->result());
-		
-		return ( ! is_array($res)) ? array($res) : $res;
+		$recorder = array('get' => array($this->table));
+
+		Gas_Janitor::tape_record($this->model(), $recorder);
+
+		$this->validate_join();
+
+		return $bureau::compile($this->model(), self::$ar_recorder, self::$single);
 	}
 	
 	/**
 	 * find
 	 * 
-	 * Get a record based by id or defined primary key
+	 * Get record based by given primary key arguments
 	 *
 	 * @access	public
 	 * @param   mixed
-	 * @return	object 
+	 * @return	object Gas Instance
 	 */
 	public function find()
 	{
-		if(func_num_args() == 1) 
-		{
-			$key_value = func_get_arg(0);
-			return $this->find_where(array($this->primary_key => $key_value), 1);
-		}
+		$args = func_get_args();
 
-		$in = func_get_args();
+		$in = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
 
-		return $this->find_where_in(array($this->primary_key => $in));
-	}
-	
-	/**
-	 * find_where
-	 * 
-	 * Get record based by given arguments
-	 *
-	 * @access	public
-	 * @param   array
-	 * @param   int
-	 * @param   int
-	 * @param   bool
-	 * @return	array  array of result(s) object
-	 */
-	public function find_where($args, $limit = null, $offset = null, $locked = TRUE)
-	{
-		$this->where($args);
-		
-		if(is_int($limit)) $this->_db->limit($limit, $offset);
-		
-		$this->_validate_table();
-		$q = $this->_db->get($this->table);
-		
-		$res = $this->_generate($q->result(), $locked);
+		self::$single = count($in) == 1;
 
-		$q->free_result();
-		
-		return ( ! is_array($res) and $limit !== 1) ? array($res) : $res;
+		return $this->find_where_in(array($this->primary_key, $in));
 	}
 
 	/**
@@ -205,226 +338,55 @@ class Gas {
 	 * @access	public
 	 * @param   array
 	 * @param   string
-	 * @param   bool
-	 * @return	array  array of result(s) object
+	 * @return	object Gas Instance
 	 */
-	public function find_where_in($args, $type = '', $locked = TRUE, $eager_load = FALSE)
+	public function find_where_in($args, $type = '')
 	{
-		$this->where_in($type, $args);
-		
-		$this->_validate_table();
-		$q = $this->_db->get($this->table);
-		
-		$res = $this->_generate($q->result(), $locked);
+		$args = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
 
-		$q->free_result();
+		$this->where_in($args, $type);
+		
+		return $this->all();
+	}
 
-		if($eager_load)
+	/**
+	 * find_where
+	 * 
+	 * Get record based by given arguments
+	 *
+	 * @access	public
+	 *
+	 */
+	public function find_where($args, $limit = null, $offset = null, $type = '')
+	{
+		$args = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
+
+		if (is_int($limit))
 		{
-			$res = (is_array($res)) ? $res :  array($res);
+			if($limit == 1)  self::$single = TRUE;
 
-			$res['eager_load_key'] = key($args);
-			$res['eager_load_result'] = $q->result_array();
-		}
+			$recorder = array('limit' => array($limit, $offset));
 
-		return ( ! is_array($res)) ? array($res) : $res;
-	}
-
-	/**
-	 * first
-	 * 
-	 * Get first record
-	 *
-	 * @access	public
-	 * @param   string
-	 * @return	array  array of result(s) object
-	 */
-	public function first($column = null)
-	{
-		$this->_db->order_by((is_null($column)) ? $this->primary_key : $column, 'asc'); 
-		$this->_db->limit(1);
-		
-		$this->_validate_table();
-		$q = $this->_db->get($this->table);
-		
-		return $this->_generate($q->result(), TRUE);
-	}
-
-	/**
-	 * last
-	 * 
-	 * Get last record
-	 *
-	 * @access	public
-	 * @param   string
-	 * @return	array  array of result(s) object
-	 */
-	public function last($column = null)
-	{
-		$this->_db->order_by((is_null($column)) ? $this->primary_key : $column, 'desc'); 
-		$this->_db->limit(1);
-		
-		$this->_validate_table();
-		$q = $this->_db->get($this->table);
-		
-		return $this->_generate($q->result(), TRUE);
-	}
-
-	
-	/**
-	 * save
-	 * 
-	 * Save or Update a table
-	 *
-	 * @access	public
-	 * @return	mixed
-	 */
-	public function save($check = FALSE)
-	{
-		if($check == TRUE and $this->_validate_post() == FALSE) return FALSE;
-		
-		$this->_validate_table();
-
-		if($this->_locked_table)
-		{
-			if($this->_is_duplicate) $this->_strip_duplicate();
-
-			$this->_db->ar_where = $this->_locked_where;
-			$this->_db->ar_join = $this->_locked_join;
+			Gas_Janitor::tape_record($this->model(), $recorder);
 			
-			if(isset($this->_set_fields[$this->primary_key]) and ! empty($this->_set_fields[$this->primary_key]))
-			{
-				$this->_db->where($this->primary_key, $this->_set_fields[$this->primary_key]);
-			}
-
-			$this->_db->update($this->table, $this->_set_fields); 
-		}
-		elseif($this->_is_join)
-		{
-			list($identifier, $pivot_table, $parent_table_fields) = $this->_join_to_write($this->_locked_join, $this->table);
-
-			$fields = array();
-			foreach($this->_set_fields as $column => $val)
-			{
-				if(in_array($column, $parent_table_fields)) $fields[] = '`'.$this->table.'`.`'.$column.'` = \''.$val.'\'';
-			}
-
-			$fields = implode(', ', $fields);
-
-			if($this->_is_where)
-			{
-				$where = implode("\n", $this->_locked_where);
-				$where = 'WHERE ('.$where.' AND '.$identifier.')';
-			}
-
-			$update = 'UPDATE `'.$this->table.'`, `'.$pivot_table.'` SET '.$fields.' '.$where;
-			
-			$this->_db->query($update);
-		}
-		else 
-		{
-			$is_duplicate = $this->find((int)$this->_set_fields[$this->primary_key]);
-			if(is_object($is_duplicate))
-			{
-				$id = (int) $is_duplicate->id;
-				$recent_id = (int) $this->_set_fields[$this->primary_key];
-
-				if($recent_id == $id)
-				{
-					$this->_is_duplicate = TRUE;
-					$this->_locked_table = TRUE;
-					return $this->save();
-				}
-			}
-
-			$this->_db->insert($this->table, $this->_set_fields);
 		}
 
-		$this->_set_fields = array();
-		
-		return $this->_db->affected_rows();
-	}
-
-	/**
-	 * delete
-	 * 
-	 * Delete record(s)
-	 *
-	 * @access	public
-	 * @return	mixed
-	 */
-	public function delete()
-	{
-		$this->_validate_table();
-
-		if(func_num_args() > 0)
+		if ($type == 'or')
 		{
-				if(func_num_args() == 1)
-				{
-					$key_value = func_get_arg(0);
-					$this->_db->where(array($this->primary_key => $key_value), 1);
-				}
-				else
-				{
-					$in = func_get_args();
-					$this->_db->where_in($this->primary_key, $in);
-				}
-		}
-		elseif($this->_locked_table)
-		{
-			$this->_db->ar_where = $this->_locked_where;
-			$this->_db->ar_wherein = $this->_locked_where_in;
-		}
-		elseif(isset($this->_set_fields[$this->primary_key]))
-		{
-			$this->_db->where(array($this->primary_key => $this->_set_fields[$this->primary_key]));
+			$this->or_where($args);
 		}
 		else
 		{
-			return FALSE;
+			$this->where($args);
 		}
 
-		$this->_db->delete($this->table); 
-
-		$this->_set_fields = array();
-
-		return $this->_db->affected_rows();
-	}
-	
-	/**
-	 * join
-	 * 
-	 * Join statement for joining table query
-	 *
-	 * @access	public
-	 * @param   mixed
-	 * @return	void
-	 */
-	public function join()
-	{
-		if(func_num_args() == 0) show_error('Using JOIN statement, without passing any parameter(s).');
-
-		$this->_is_join = TRUE;
-		
-		if(func_num_args() == 1)
-		{
-			$join_clause = func_get_arg(0);
-			$this->_db->join($join_clause, $join_clause.'.id = '.$this->table.'.id');
-		}
-		else
-		{
-			$join_args = func_get_args();
-			call_user_func_array(array($this->_db, 'join'), $join_args);
-		}
-		$this->_locked_join = $this->_db->ar_join;
-
-		return $this;
+		return $this->all();
 	}
 
 	/**
 	 * where
 	 * 
-	 * Where statement for conditional query
+	 * WHERE statement for conditional query
 	 *
 	 * @access	public
 	 * @param   mixed
@@ -432,16 +394,35 @@ class Gas {
 	 */
 	public function where()
 	{
-		if(func_num_args() == 0) return show_error('Using WHERE statement, without passing any parameter(s).');
+		$args = func_get_args();
 
-		$this->_is_where = TRUE;
-		
-		$where_args = func_get_args();
-		call_user_func_array(array($this->_db, 'where'), $where_args);
-		
-		if($this->_is_join) array_walk_recursive($this->_db->ar_where, 'Gas::_set_join');
+		$args = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
 
-		$this->_locked_where = $this->_db->ar_where;
+		$recorder = array('where' => $args);
+		
+		Gas_Janitor::tape_record($this->model(), $recorder);
+
+		return $this;
+	}
+
+	/**
+	 * or_where
+	 * 
+	 * OR WHERE statement for conditional query
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @return	void
+	 */
+	public function or_where()
+	{
+		$args = func_get_args();
+
+		$args = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
+
+		$recorder = array('or_where' => $args);
+		
+		Gas_Janitor::tape_record($this->model(), $recorder);
 
 		return $this;
 	}
@@ -449,103 +430,145 @@ class Gas {
 	/**
 	 * where_in
 	 * 
-	 * Where IN statement for conditional query
+	 * WHERE IN statement for conditional query
 	 *
 	 * @access	public
-	 * @param   string
 	 * @param   array
+	 * @param   string
 	 * @return	void
 	 */
-	public function where_in($type = '', $args = array())
+	public function where_in($args, $type = '')
 	{
-		$this->_is_where_in = TRUE;
+		$args = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
 
-		$where_field = key($args);
-		$in = $args[$where_field];
-
-		switch($type)
+		switch ($type)
 		{
 			case 'or':
-				$this->_db->or_where_in($where_field, $in);
+
+				$recorder = array('or_where_in' => $args);
+
 				break;
 
 			case 'not';
-				$this->_db->where_not_in($where_field, $in);
+
+				$recorder = array('where_not_in' => $args);
+
 				break;
 
 			case 'or_not';
-				$this->_db->or_where_not_in($where_field, $in);
+
+				$recorder = array('or_where_not_in' => $args);
+
 				break;
 
 			default:
-				$this->_db->where_in($where_field, $in);
+
+				$recorder = array('where_in' => $args);
+
 				break;
 		}
 		
-		if($this->_is_join) array_walk_recursive($this->_db->ar_wherein, 'Gas::_set_join');
-
-		$this->_locked_where_in = $this->_db->ar_wherein;
+		Gas_Janitor::tape_record($this->model(), $recorder);
 
 		return $this;
 	}
 
 	/**
-	 * count
+	 * save
 	 * 
-	 * Get current rows/record(s)'s count
+	 * Save or Update a table
 	 *
 	 * @access	public
-	 * @return	int
+	 * @param   bool    whether to skip or not the validation process
+	 * @return	int     affected rows
 	 */
-	public function count()
+	public function save($check = FALSE)
 	{
-		if($this->_is_where) $this->_db->ar_where = $this->_locked_where;
-		if($this->_is_where_in) $this->_db->ar_wherein = $this->_locked_where_in;
+		$bureau = self::$bureau;
+
+		$this->validate_table();
+
+		if ($check)
+		{
+			$this->_init();
+
+			$valid = $bureau->validate($this->model(), self::$_set_fields, $this->_fields);
+
+			if ( ! $valid) return FALSE;
+		}
+
+		if (empty($this->_get_fields))
+		{
+			$recorder = array('insert' => array($this->table, self::$_set_fields));
+		}
+		else
+		{
+			$identifier = $this->identifier();
+
+			self::$ar_recorder = array();
+
+			$recorder = array('where' => array($this->primary_key, $identifier));
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			self::$_set_fields = array_merge($this->_get_fields, self::$_set_fields);
+
+			$recorder = array('update' => array($this->table, self::$_set_fields));
+		}
+
+		Gas_Janitor::tape_record($this->model(), $recorder);
+
+		Gas_Janitor::flush_post();
+
+		self::$_set_fields = array();
+
+		$bureau::compile($this->model(), self::$ar_recorder);
+
+		return $this->db()->affected_rows();
 		
-		$this->_validate_table();
-
-		$this->_db->from($this->table);
-			
-		return $this->_db->count_all_results();
 	}
 
 	/**
-	 * last_id
+	 * delete
 	 * 
-	 * Get last inserted id by save process
+	 * Delete record(s) based by given arguments
 	 *
 	 * @access	public
-	 * @return	int
+	 * @param   mixed
+	 * @return	int     affected rows
 	 */
-	public function last_id()
+	public function delete()
 	{
-		return $this->_db->insert_id();
-	}
+		$bureau = self::$bureau;
 
-	/**
-	 * to_array
-	 * 
-	 * Convert result to array
-	 *
-	 * @access	public
-	 * @return	array
-	 */
-	public function to_array()
-	{
-		return (array) $this->_set_fields;
-	}
+		$this->validate_table();
 
-	/**
-	 * to_json
-	 * 
-	 * Convert result to json
-	 *
-	 * @access	public
-	 * @return	array
-	 */
-	public function to_json()
-	{
-		return json_encode((array) $this->_set_fields);
+		$args = func_get_args();
+
+		$in = Gas_Janitor::get_input(__METHOD__, $args, FALSE, null);
+
+		if (is_null($in)) 
+		{
+			$identifier = Gas_Janitor::get_input(__METHOD__, $this->identifier(), TRUE);
+
+			$recorder = array('delete' => array($this->table, array($this->primary_key => $identifier)));
+		}
+		else
+		{
+			$this->where_in(array($this->primary_key, $in));
+
+			$recorder = array('delete' => array($this->table));
+		}
+
+		Gas_Janitor::tape_record($this->model(), $recorder);
+
+		Gas_Janitor::flush_post();
+
+		self::$_set_fields = array();
+
+		$bureau::compile($this->model(), self::$ar_recorder);
+
+		return $this->db()->affected_rows();
 	}
 
 	/**
@@ -560,18 +583,18 @@ class Gas {
 	 * @param  string
 	 * @return void
 	 */
-	public function set_message($key, $msg, $field = null)
+	public static function set_message($key, $msg, $field = null)
 	{
-		if(is_null($field)) show_error('Using set_message within callback function : '.$key.', without passing third parameter. Add $field as third parameter!');
+		$field = Gas_Janitor::get_input(__METHOD__, $field, TRUE);
 		
-		$this->_CI->lang->load('form_validation');
+		self::$bureau->lang()->load('form_validation');
 		
-		if (FALSE === ($line = $this->_CI->lang->line($key)))
+		if (FALSE === ($line = self::$bureau->lang()->line($key)))
 		{
 			$line = $msg;
 		}
 
-		$this->_error_callbacks[] = str_replace('%s', $this->_label($field), $line);
+		self::$_error_callbacks[] = str_replace('%s', Gas_Janitor::set_label($field), $line);
 	}
 	
 	/**
@@ -586,17 +609,20 @@ class Gas {
 	 */
 	public function errors($prefix = '', $suffix = '')
 	{
+		$validator = self::$bureau->validator();
+		
 		$prefix = ($prefix == '') ? '<p>' : $prefix;
+
 		$suffix = ($suffix == '') ? '</p>' : $suffix;
 		
 		$errors = '';
 
-		foreach ($this->_error_callbacks as $error)
+		foreach (self::$_error_callbacks as $error)
 		{
 			$errors .= $prefix.$error.$suffix."\n";
 		}
 
-		$str_errors = $errors.$this->_CI->form_validation->error_string($prefix, $suffix);
+		$str_errors = $errors.$validator->error_string($prefix, $suffix);
 
 		return $str_errors;
 	}
@@ -613,7 +639,7 @@ class Gas {
 	{
 		if (is_null($val) or is_integer($val)) return TRUE;
 		
-		$this->set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
+		static::set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
 		
 		return FALSE;
 	}
@@ -630,82 +656,216 @@ class Gas {
 	{
 		if (is_string($val) or $val === '') return TRUE;
 		
-		$this->set_message('char_check', 'The %s field was an invalid char field.', $field);
+		static::set_message('char_check', 'The %s field was an invalid char field.', $field);
 		
 		return FALSE;
 	}
 
 	/**
-	 * scan
+	 * to_array
+	 * 
+	 * Output array of model attributes
 	 *
-	 * Scan model(s) class
+	 * @access	private
+	 * @return	string
 	 *
-	 * @access	public
-	 * @return	void
 	 */
-	public function scan()
+	public function to_array()
 	{
-		$this->_scan_models();
+		return Gas_Janitor::to_array($this->_get_fields);
+	}
 
+	/**
+	 * to_json
+	 * 
+	 * Output json of model attributes
+	 *
+	 * @access	private
+	 * @return	string
+	 *
+	 */
+	public function to_json()
+	{
+		return Gas_Janitor::to_json($this->_get_fields);
+	}
+
+	/**
+	 * set_fields
+	 * 
+	 * Set model attributes
+	 *
+	 * @access	private
+	 * @param   mixed
+	 * @return	array
+	 *
+	 */
+	public function set_fields($resource)
+	{
+		self::$_set_fields = (array) $resource;
+		
 		return $this;
 	}
 
 	/**
-	 * load
-	 *
-	 * Load model(s) class
+	 * set_record
+	 * 
+	 * Set CI records into model attributes
 	 *
 	 * @access	public
 	 * @param   mixed
 	 * @return	void
 	 */
-	public function load()
+	public function set_record($resource)
 	{
-		if(func_num_args() == 0) return show_error('Try to load model(s), without passing any parameter(s).');
+		$this->_get_fields = (array) $resource;
+		
+		return $this;
+	}
 
-		$models = func_get_args();
-		$this->_load_model($models);
+	/**
+	 * set_child
+	 * 
+	 * Set Gas child properties
+	 *
+	 * @access	public
+	 * @param   string
+	 * @return	void
+	 */
+	public function set_child($name, $node)
+	{
+		array_push($this->_get_child_fields, $name);
+
+		array_push($this->_get_child_nodes, array($name => $node));
+		
+		return $this;
+	}
+
+	/**
+	 * set_ar_record
+	 * 
+	 * Set CI AR attributes to a Gas model
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @return	void
+	 */
+	public function set_ar_record($condition)
+	{
+		self::$ar_recorder = $condition;
 
 		return $this;
 	}
 
 	/**
-	 * list_models
-	 *
-	 * Return all available models based by provided configuration
+	 * get_ar_record
+	 * 
+	 * Get CI AR attributes of a Gas model
 	 *
 	 * @access	public
 	 * @return	array
 	 */
-	public function list_models()
+	public function get_ar_record()
 	{
-		return $this->_models;
+		return self::$ar_recorder;
 	}
 
 	/**
-	 * loaded_models
+	 * model
+	 * 
+	 * Get Gas model name
 	 *
-	 * Return all loaded models
+	 * @access	public
+	 * @return	string
+	 *
+	 */
+	public function model($gas = null)
+	{
+		return is_null($gas) ? strtolower(get_class($this)) : strtolower(get_class($gas));
+	}
+
+	/**
+	 * identifier
+	 * 
+	 * Get identifier key array
 	 *
 	 * @access	public
 	 * @return	array
+	 *
 	 */
-	public function loaded_models()
+	public function identifier($column = null)
 	{
-		return $this->_loaded_models;
+		if ( ! is_null($column))
+		{
+			if (isset($this->_get_fields[$column]))
+			{
+				return $this->_get_fields[$column];	
+			} 
+			else
+			{
+				return;
+			}
+		}
+
+		return $this->_get_fields[$this->primary_key];
 	}
-	
+
 	/**
-	 * _load_model
+	 * validate_table
 	 * 
-	 * Validate and sets model(s)'s directories
+	 * Validating whether current table is valid 
+	 *
+	 * @access	protected
+	 * @param   sring
+	 * @return	void
+	 */
+	protected function validate_table($table = null)
+	{
+		$table = (is_null($table)) ? $this->table : $table;
+		
+		if(empty($table))
+		{
+			$table = strtolower($this->model());
+			
+			$this->table = $table;
+		}
+		
+		return $this;
+	}
+
+	/**
+	 * validate_join
+	 * 
+	 * Validating whether JOIN statement has been declared
+	 *
+	 * @access	protected
+	 * @return	void
+	 */
+	protected function validate_join()
+	{
+		$this->validate_table();
+
+		if (self::$join == TRUE)
+		{
+			self::$ar_recorder = Gas_Janitor::where_to_join(self::$ar_recorder, $this->table);
+		}
+		
+		return $this;
+	}
+
+
+ 	/**
+	 * _scan_model
+	 * 
+	 * Scan model directories recursively and set global models collections
 	 *
 	 * @access	private
 	 * @return	void
+	 *
 	 */
 	private function _scan_models($path = null)
 	{
 		$models_dir = (is_null($path)) ? APPPATH.$this->_config['models_path'] : $path;
+
 		if( ! is_dir($models_dir)) show_error('Unable to locate the models path you have specified: '.$models_dir);
 		
 		$files = scandir($models_dir);
@@ -722,7 +882,7 @@ class Gas {
 			{
 				$model = explode('/', $file);
 
-				$this->_models[str_replace($this->_config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
+				self::$_models[str_replace($this->_config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
 			}
 		}
 		
@@ -730,553 +890,20 @@ class Gas {
 	}
 
 	/**
-	 * _load_model
+	 * __set
 	 * 
-	 * Get model(s)'s classes
+	 * Overloading method to writing data to inaccessible properties.
 	 *
-	 * @access	private
-	 * @param   mixed
-	 * @return	void
-	 */
-	private function _load_model($models = null)
-	{
-		if($models == '*')
-		{
-			foreach ($this->_models as $model => $model_path)
-			{
-				$this->_loaded_models[] = $model;
-				require_once $model_path;
-			}
-		}
-		elseif(is_array($models))
-		{
-			foreach ($models as $model)
-			{
-				if( ! array_key_exists($model, $this->_models)) show_error('Unable to locate the models name you have specifieds: '.$model);
-
-				$this->_loaded_models[] = $model;
-				require_once $this->_models[$model];
-			}
-		}
-		elseif(is_string($models))
-		{
-			if( ! array_key_exists($models, $this->_models)) show_error('Unable to locate the models name you have specified: '.$models);
-
-			$this->_loaded_models[] = $models;
-			require_once $this->_models[$models];
-		}
-		
-		return $this;
-	}
-	
-	/**
-	 * _validate_table
-	 * 
-	 * Validating whether current table is valid 
-	 *
-	 * @access	private
-	 * @param   sring
-	 * @return	void
-	 */
-	private function _validate_table($table = null)
-	{
-		$this->_has_result = FALSE;
-		$table = (is_null($table)) ? $this->table : $table;
-		
-		if(empty($table))
-		{
-			$table = strtolower(get_class($this));
-			$this->table = $table;
-			
-			if ( ! $this->_db->table_exists($table)) show_error('Unable to locate the table name you have specified: '.$table);
-		}
-		
-		return $this;
-	}
-	
-	/**
-	 * _validate_post
-	 * 
-	 * Validating post data or data sets by save method
-	 *
-	 * @access	private
-	 * @return	bool
-	 */
-	private function _validate_post()
-	{
-		$success = TRUE;
-
-		if($this->_CI->form_validation->run() == FALSE) $sucess = FALSE;
-
-		foreach ($this->_fields as $k => $field)
-		{
-			if(strpos($field['rules'], 'callback'))
-			{
-				foreach (explode('call', $field['rules']) as $callback_rule)
-				{
-					if (substr($callback_rule, 0, 5) == 'back_')
-					{
-						$rule = substr($callback_rule, 5);
-					
-						if ( ! method_exists($this, $rule))	continue;
-						
-						if($this->$rule($k, $this->_set_fields[$k]) == FALSE)
-						{
-							$success = FALSE;
-						}
-					}
-				}
-			}
-		}
-		
-		return $success;
-	}
-
-	/**
-	 * _strip_duplicate
-	 * 
-	 * Strip the unused dynamic properties
-	 *
-	 * @access	private
-	 * @return	void
-	 */
-	private function _strip_duplicate()
-	{
-		$this->_locked_duplicate = $this->_set_fields;
-		$stripped = array();
-
-		$original = $this->_db->list_fields($this->table);
-
-		foreach($original as $origin)
-		{
-			if($this->_set_fields[$origin]) $stripped[$origin] = $this->_set_fields[$origin];
-		}
-
-		$this->_set_fields = $stripped;
-
-		return $this;
-	}
-	
-	/**
-	 * _set_fields
-	 * 
-	 * Set the ORM object properties, alongside with its validation rule
-	 *
-	 * @access	private
-	 * @param	array
-	 * @return	void
-	 */
-	private function _set_fields($fields = array())
-	{
-		if( ! isset($this->_CI->form_validation)) $this->_CI->load->library('form_validation');
-		
-		foreach ($fields as $field => $val)
-		{
-			if(isset($this->_fields[$field])) $this->_CI->form_validation->set_rules($field, $this->_label($field), $this->_fields[$field]['rules']);
-				
-			$this->_set_fields[$field] = $val;
-		}
-		
-		return $this;
-	}
-
-	/**
-	 * _set_join
-	 * 
-	 * Set the where arguments if join declared
-	 *
-	 * @access	private
+	 * @access	public
 	 * @param	string
-	 * @param   string
-	 * @return	void
-	 */
-	private function _set_join(&$v, $k)
-	{
-		$v = str_replace('`'.$this->primary_key.'`', '`'.$this->table.'`.`'.$this->primary_key.'`', $v);
-	}
-
-	/**
-	 * _join_to_write
-	 * 
-	 * Return all neccesary stuff from write operation from JOIN portion
-	 *
-	 * @access	private
-	 * @param	array
-	 * @param   string
-	 * @return	array
-	 */
-	private function _join_to_write($join_argument, $parent_table)
-	{
-		array_walk_recursive($join_argument, 'Gas::_set_join');
-			
-		$join = array_shift($join_argument);
-		
-		list($pivot_table, $identifier) = explode('ON', $join);
-
-		$pivot_table = str_replace(array('JOIN', ' ', '`'), '', $pivot_table);
-		$pivot_table_meta = $this->_db->field_data($pivot_table);
-
-		$pivot_table_fields = array();
-		foreach($pivot_table_meta as $meta) $pivot_table_fields[] = $meta->name; 
-		
-		if(preg_match('/('.implode('|', $pivot_table_fields).')/', $identifier, $m) and count($m) == 2)
-		{
-			$new_identifier = str_replace('`'.$m[1].'`', '`'.$pivot_table.'`.`'.$m[1].'`', $identifier);
-			$join = str_replace($identifier, $new_identifier, $join);
-		}
-
-		$parent_table_meta = $this->_db->field_data($parent_table);
-
-		$parent_table_fields = array();
-		foreach($parent_table_meta as $meta) $parent_table_fields[] = $meta->name; 
-
-
-		return array($new_identifier, $pivot_table, $parent_table_fields);
-	}
-
-	/**
-	 * _set_with
-	 * 
-	 * Set the eager load properties if with declared
-	 *
-	 * @access	private
-	 * @param	mixed
-	 * @return	void
-	 */
-	private function _set_with($obj = array())
-	{
-
-		$load_with = array();
-		$in = array();
-
-		$identifier_key = $this->primary_key;
-		
-		foreach ($obj as $result)
-		{
-			if(isset($result->$identifier_key))
-			{
-				$in[] = (is_numeric($result->$identifier_key)) ? (int) $result->$identifier_key : $result->$identifier_key;
-			}
-		}
-
-		foreach ($this->_is_with as $attachment)
-		{
-			$load_with[$attachment] = $this->_generate_relation($attachment, TRUE, $in);
-		}
-		
-		return $load_with;
-	}
-
-	/**
-	 * _generate
-	 * 
-	 * Set/generate the ORM object 
-	 *
-	 * @access	private
-	 * @param	array
-	 * @param	bool
-	 * @return	void
-	 */
-	private function _generate($results = array(), $locked_table = FALSE)
-	{
-		$eager_loaded_models = array();
-
-		$this->_has_result = (bool) count($results);
-
-		$eager_loaded_models = $this->_set_with($results);
-
-		$is_with = (bool) (count($eager_loaded_models) > 0);
-
-		if(count($results) > 1)
-		{
-			$instances = array();
-
-			foreach ($results as $result)
-			{
-				$res_instance = $this->_generate_instance((array) $result, $locked_table, $is_with, $eager_loaded_models);
-				
-				$instances[] = $res_instance;
-			}
-			
-			return $instances;
-		}
-		elseif(count($results) == 1)
-		{
-			return $this->_generate_instance((array) $results[0], $locked_table = FALSE, $is_with, $eager_loaded_models);
-		}
-
-		return FALSE;
-	}
-
-	/**
-	 * _generate_instance
-	 * 
-	 * Set/generate the GAS instance
-	 *
-	 * @access	private
-	 * @param   mixed
-	 * @param   bool
-	 * @param   bool
 	 * @param   array
-	 * @return	obj
+	 * @return	mixed
 	 */
-	private function _generate_instance($res, $locked_table = FALSE, $eager = FALSE, $eager_models = array())
+	function __set($name, $args)
 	{
-		$gas = get_class($this);
-		$instance = new $gas;
-		
-		if($locked_table == TRUE)
-		{
-			$instance->_locked_table = TRUE;
-			$instance->_is_where = $this->_is_where;
-			$instance->_locked_where = $this->_locked_where;
-			$instance->_is_where_in = $this->_is_where_in;
-			$instance->_locked_where_in = $this->_locked_where_in;
-			$instance->_is_join = $this->_is_join;
-			$instance->_locked_join = $this->_locked_join;
-		}
-		
-		$instance->_set_fields($res);
-
-		if($eager)
-		{
-			$instance = $this->_generate_eager_load_properties($instance, $eager_models);
-		}
-
-		return $instance;
+		self::$_set_fields[$name] = $args;
 	}
 
-	/**
-	 * _generate_eager_load_properties
-	 * 
-	 * Set/generate the instance eager load properties 
-	 *
-	 * @access	private
-	 * @param	mixed
-	 * @param   array
-	 * @return	obj
-	 */
-	 private function _generate_eager_load_properties($instance, $eager_loaded_models)
-	 {
-	 	foreach($eager_loaded_models as $foreign_model => $eager_model)
-		{
-			$is_one = isset($this->_has_one[$foreign_model]);
-			$is_many = isset($this->_has_many[$foreign_model]);
-			$is_many_to_many = isset($this->_has_and_belongs_to[$foreign_model]);
-			
-			$key = $eager_model['eager_load_key'];
-			$res = $eager_model['eager_load_result'];
-
-			unset($eager_model['eager_load_key']);
-			unset($eager_model['eager_load_result']);
-
-			$set_fields = array();
-
-			foreach($eager_model as $index => $model)
-			{
-				if($is_many_to_many)
-				{
-					$pivot_key = (explode('.', $key));
-
-					$key = $pivot_key[count($pivot_key)-1];
-				}
-
-				$instance_primary_key = (int)$instance->_set_fields[$instance->primary_key];
-				$model_key = is_object($model) ? (int) $model->_set_fields[$key] : 0;
-
-				if($instance_primary_key == $model_key)
-				{
-					if($is_one)
-					{
-						$instance->_set_fields(array($foreign_model => $eager_model[$index]));
-					}
-					elseif($is_many or $is_many_to_many)
-					{
-						$set_fields[] = $eager_model[$index];
-					}
-
-					continue;
-				}
-				
-				$belongs_to = FALSE;
-
-				foreach($res as $eager_key => $fields)
-				{
-					if($instance->_set_fields[$instance->primary_key] == $fields[$key])
-					{
-						$belongs_to = TRUE;
-						continue;
-					}
-				}
-
-				if( ! $belongs_to)
-				{
-					$instance->_set_fields(array($foreign_model => new $foreign_model));
-					continue;
-				}
-			}
-
-			if($is_many or $is_many_to_many)
-			{
-				if(empty($set_fields)) $set_fields[] = new $foreign_model;
-				$instance->_set_fields(array($foreign_model => $set_fields));
-			}
-		}
-
-		return $instance;
-	 }
-
-	/**
-	 * _generate_relation
-	 * 
-	 * Set/generate the ORM relationnal table(s) object 
-	 *
-	 * @access	private
-	 * @param	mixed
-	 * @param	bool
-	 * @param   array
-	 * @return	void
-	 */
-	private function _generate_relation($relation_table, $eager_load = FALSE, $n = null)
-	{
-		if( ! empty($this->relations));
-		{
-			foreach ($this->relations as $relation_type => $relation)
-			{
-				switch($relation_type)
-				{
-					case 'has_one':
-						$this->_has_one = array_merge($relation, $this->_has_one);
-						break;
-
-					case 'has_many':
-						$this->_has_many = array_merge($relation, $this->_has_many);
-						break;
-
-					case 'belongs_to':
-						$this->_belongs_to = array_merge($relation, $this->_belongs_to);
-						break;
-
-					case 'has_and_belongs_to':
-						$this->_has_and_belongs_to = array_merge($relation, $this->_has_and_belongs_to);
-						break;
-				}
-				
-			}
-		}
-
-		if( ! class_exists ($relation_table)) $this->_load_model($relation_table);
-
-		if(isset($this->_has_one[$relation_table]))
-		{
-			$has = new $relation_table;
-
-			if($eager_load and count($n) > 0)
-			{
-				$has_one = $has->find_where_in(array($this->table.'_'.$this->primary_key => $n), '', FALSE, TRUE);
-			}
-			else
-			{
-				$has_one = $has->find_where(array(
-						$this->table.'_'.$this->primary_key => $this->_set_fields[$this->primary_key],
-		 		), 1, null, TRUE);
-			}
-
-			return $has_one;
-		}
-		elseif(isset($this->_has_many[$relation_table]))
-		{
-			$has = new $relation_table;
-
-			if($eager_load and count($n) > 0)
-			{
-				$has_many = $has->find_where_in(array($this->table.'_'.$this->primary_key => $n), '', FALSE, TRUE);
-			}
-			else
-			{
-				$has_many = $has->find_where(array(
-						$this->table.'_'.$this->primary_key => $this->_set_fields[$this->primary_key],
-		 		), null, null, FALSE);
-			}
-			
-			return $has_many;
-		}
-		elseif(isset($this->_belongs_to[$relation_table]))
-		{
-			$belongs_to = new $relation_table;
-
-			$foreign_key = $relation_table.'_'.$belongs_to->primary_key;
-
-			if($eager_load and count($n) > 0)
-			{
-				$belongs = $belongs_to->find_where_in(array(str_replace($relation_table.'_', '', $foreign_key) => $n), '', FALSE, TRUE);
-			}
-			else
-			{
-				$belongs = $belongs_to->find_where(array(
-						str_replace($relation_table.'_', '', $foreign_key) => $this->_set_fields[$foreign_key],
-		 		), 1);
-		 	}
-			
-			return $belongs;
-		}
-		elseif(isset($this->_has_and_belongs_to[$relation_table]))
-		{
-			
-			$combination_table = array(
-									$relation_table.'_'.$this->table,
-									$this->table.'_'.$relation_table
-								);
-			
-			foreach($combination_table as $guessed_table)
-			{
-				if($this->_db->table_exists($guessed_table))
-				{
-					$pivot_table = $guessed_table;
-					continue;
-				}
-				
-			}
-
-			if( ! isset($pivot_table))  show_error('Unable to locate the pivot table between '.$this->table.' and '.$relation_table);
-
-			$many_to_many = new $relation_table;
-
-			$identifier_key = $many_to_many->primary_key;
-
-			$many_to_many->join($pivot_table, $relation_table.'_'.$identifier_key.' = '.$identifier_key);
-
-			if($eager_load and count($n) > 0)
-			{
-				$many = $many_to_many->find_where_in(array($pivot_table.'.'.$this->table.'_'.$this->primary_key => $n), '', FALSE, TRUE);
-			}
-			else
-			{
-				$many = $many_to_many->find_where(array(
-		 				$pivot_table.'.'.$this->table.'_'.$this->primary_key => $this->_set_fields[$this->primary_key],
-			 		 ), null, null, FALSE);
-			}
-			
-			return $many;
-		}
-		
-		return FALSE;
-	}
-			
-	/**
-	 * _label
-	 * 
-	 * Set/generate human named for fields
-	 *
-	 * @access	private
-	 * @param	string
-	 * @return	string
-	 */
-	private function _label($field)
-	{
-		return str_replace(array('-', '_'), ' ', ucfirst($field));
-	}
-	
 	/**
 	 * __get
 	 * 
@@ -1285,37 +912,840 @@ class Gas {
 	 * @access	public
 	 * @param	string
 	 * @return	mixed
+	 *
 	 */
- 	function __get($name) 
+	function __get($name) 
  	{
- 		if(isset($this->$name)) return $this->$name;
+ 		$this->validate_table();
 
- 		if(isset($this->_models[$name]) and ! isset($this->_set_fields[$name]))  return $this->_generate_relation($name);
- 		
- 		switch ($name) 
+ 		if (isset($this->_get_fields[$name])) return $this->_get_fields[$name];
+
+ 		if ( ! empty($this->_get_child_fields))
  		{
- 			case 'validation_rules':
- 				return $this->_fields;
- 				break;
+ 			foreach ($this->_get_child_fields as $index => $child)
+ 			{
+ 				if ($name == $child) return $this->_get_child_nodes[$index];
  			
- 			default:
- 				return $this->_set_fields[$name];
- 				break;
+ 			}
  		}
+
+ 		if (isset(self::$_models[$name]) and ! isset($this->_set_fields[$name]))
+ 		{
+
+ 			$foreign_table = Gas_Janitor::get_input('Gas_Core::__get', Gas::factory($name)->table, FALSE, $name);
+
+ 			$foreign_key = Gas::factory($name)->primary_key;
+
+ 			return Gas_Bureau::generate_child($this->model(), $name, array($this->identifier()), $this->identifier($foreign_table.'_'.$foreign_key));
+	 	}
  	}
- 	
-	/**
-	 * __set
+
+ 	/**
+	 * __call
 	 * 
-	 * Overloading method to writing data to inaccessible properties.
+	 * Overloading method triggered when invoking special method.
 	 *
 	 * @access	public
 	 * @param	string
+	 * @param	array
+	 * @return	void
+	 */
+	function __call($name, $args)
+	{
+		$this->validate_table();
+
+		$bureau = self::$bureau;
+
+		$engine = $bureau::engine();
+
+		if (empty($this->table)) $this->table = $this->model();
+		
+		if ($name == 'has_result')
+		{
+			return (bool) count($this->_get_fields) > 0;
+		}
+		
+		elseif ($name == 'fill')
+		{
+
+			$input = array();
+
+			$raw_input = array_shift($args);
+
+			$post = array_shift($args);
+
+			if ($post)
+			{
+				self::$post = TRUE;
+
+				$_POST = $raw_input;
+
+				self::$_set_fields = $raw_input;
+
+			}
+			elseif (isset($_POST))
+			{
+				if ($_POST == $raw_input)
+				{
+					self::$post = TRUE;
+
+					self::$_set_fields = $_POST;
+				}
+				else
+				{
+					self::$_set_fields = $raw_input;
+				}
+			}
+			else
+			{
+				self::$_set_fields = $raw_input;
+			}
+
+			return $this;
+
+		}
+		elseif ($name == 'filled_fields')
+		{
+
+			return self::$_set_fields;
+
+		}
+		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) AND count($m) == 2)
+		{
+
+			$field = $m[1];
+
+			$value = array_shift($args);
+
+			$limit = array_shift($args);
+
+			$offset = array_shift($args);
+			
+			return $this->find_where(array($field => $value), $limit, $offset);
+
+		}
+		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) AND count($m) == 2)
+		{
+
+			if (empty($args)) $args = array($this->primary_key);
+			
+			$recorder = array('select_'.$m[1] => $args);
+			
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			self::$single = TRUE;
+
+			return $this->all();
+
+		}
+		elseif (preg_match('/^(first|last)$/', $name, $m) AND count($m) == 2)
+		{
+
+			$column = array_shift($args);
+
+			$order = is_null($column) ? $this->primary_key : $column;
+
+			$by = ($m[1] == 'first') ? 'asc' : 'desc';
+
+			$recorder = array('order_by' => array($order, $by));
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			self::$single = TRUE;
+
+			return $this->all();
+
+		}
+		elseif (preg_match('/^join_([^)]+)$/', $name, $m) AND count($m) == 2)
+		{
+
+			$joined_field = $m[1];
+
+			$on = array_shift($args);
+			
+			$join_args = (is_string($on)) ? array($joined_field, $on) : array($joined_field);
+
+			$recorder = array('join' => $join_args);
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			self::$join = TRUE;
+			
+			return $this;
+
+		}
+		elseif (preg_match('/^([^)]+)_join_([^)]+)$/', $name, $m) AND count($m) == 3)
+		{
+
+			$allowed_type = array('left', 'right', 'outer', 'inner', 'left outer', 'right outer');
+
+			$join_type = str_replace('_', ' ', $m[1]);
+
+			$joined_field = $m[2];
+
+			$on = array_shift($args);
+
+			if (in_array($join_type, $allowed_type))
+			{
+				$join_args = (is_string($on)) ? array($joined_field, $on, $join_type) : array($joined_field, '', $join_type);
+			}
+			else
+			{
+				$join_args = (is_string($on)) ? array($joined_field, $on) : array($joined_field);
+			}
+
+			$recorder = array('join' => $join_args);
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			self::$join = TRUE;
+			
+			return $this;
+
+		}
+		elseif ($name == 'last_id')
+		{
+			
+			return $engine->insert_id();
+
+		}
+		elseif ($name == 'list_fields')
+		{
+			return $engine->list_fields($this->table);
+		}
+		elseif ($name == 'sql')
+		{
+			
+			return $engine->last_query();
+
+		}
+		elseif ($name == 'group_by')
+		{
+
+			$recorder = array('group_by' => $args);
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			return $this;
+
+		}
+		elseif (method_exists($engine, $name))
+		{
+			$executor = Gas_Janitor::$dictionary['executor'];
+
+			$direct = array_splice($executor, -6);
+
+			$tables = array_splice($executor, -2);
+
+			$writes = array_splice($executor, -4);
+
+			$argumental = $executor;
+
+			if (in_array($name, $tables))
+			{
+				$args = array($this->table);
+			}
+			elseif (in_array($name, $argumental) or in_array($name, $writes))
+			{
+				$args = Gas_Janitor::get_input('Gas_Core::__call', $args, TRUE);
+			}
+
+			$recorder = array($name => $args);
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			$medical_history = Gas_Janitor::diagnostic($name);
+
+			if ($medical_history == 'executor' or $medical_history == 'transaction_status')
+			{
+				return $bureau::compile($this->model(), self::$ar_recorder);
+			}
+			elseif (strpos($name, 'join') !== FALSE)
+			{
+				self::$join = TRUE;
+			}
+			elseif ($name == 'limit')
+			{
+				if (isset($args[0]) and $args[0] == 1) self::$single = TRUE;
+			}
+			
+			return $this;
+		}
+		
+		return FALSE;
+	}
+
+}
+
+ /* ------------------------------------------------------------------------------------------------- */
+ /* ------------------------------------------------------------------------------------------------- */
+
+/**
+ * Gas Bureau Class.
+ *
+ * @package		Gas Library
+ * @subpackage	Gas Bureau
+ * @category    Libraries
+ * @version     1.0.3
+ */
+
+class Gas_Bureau {
+
+	public $_models = array();
+
+	public $_loaded_models = array();
+	
+	protected $_CI;
+
+	protected static $db;
+
+	protected static $validator;
+	
+	/**
+	 * Constructor
+	 */
+	function __construct()
+	{
+		$this->_CI = func_get_arg(0);
+		
+		if ( ! isset($this->_CI->db)) $this->_CI->load->database();
+
+		self::$db = $this->_CI->db;
+
+		if ( ! isset($this->_CI->form_validation)) $this->_CI->load->library('form_validation');
+
+		self::$validator = $this->_CI->form_validation;
+
+		log_message('debug', 'Gas ORM Bureau Class Initialized');
+	}
+
+	/**
+	 * compile
+	 * 
+	 * Compile AR
+	 *
+	 * @access	public
+	 * @param	string
+	 * @param	array
+	 * @param	bool
+	 * @return	response
+	 */
+	public static function compile($gas, $recorder, $limit = FALSE)
+	{
+		$tasks = Gas_Janitor::play_record($recorder);
+
+		foreach ($tasks as $type => $task)
+		{
+			if ($gas::$$type == TRUE)
+			{
+				foreach($task as $action)
+				{
+					$motor = get_class(self::$db);
+
+					if (is_callable($motor.'::'.key($action)))
+					{
+						$method = key($action);
+
+						$args = array_shift($action);
+
+						if ($type == 'executor' or $type == 'transaction_status')
+						{
+							$executor = Gas_Janitor::$dictionary['executor'];
+
+							$operations = array_splice($executor, -8);
+
+							$writes = array_splice($executor, -4);
+
+							if ($method == 'get')
+							{
+								$result = Gas_Janitor::force_and_get(self::$db, $method, $args);
+
+								$gas::$ar_recorder = array();
+
+								return self::generator($gas, $result->result(), __FUNCTION__, $limit, $gas::$with);
+							}
+							elseif (in_array($method, $writes))
+							{
+								Gas_Janitor::force(self::$db, $method, $args);
+
+								$gas::$ar_recorder = array();
+								
+								return self::$db->affected_rows();
+							}
+
+							Gas_Janitor::force(self::$db, $method, $args);
+
+							$gas::$ar_recorder = array();
+						}
+						else
+						{
+							Gas_Janitor::force(self::$db, $method, $args);
+						}
+					}
+				}
+
+			}
+		}
+
+		return;
+	}
+
+	/**
+	 * engine
+	 * 
+	 * return CI DB Object
+	 *
+	 * @access	public
+	 * @return	object
+	 */
+	public static function engine()
+	{
+		return self::$db;
+	}
+
+	/**
+	 * generator
+	 * 
+	 * Generate Gas based by AR
+	 *
+	 * @access	public
+	 * @param	string
+	 * @param	mixed
+	 * @param	string
+	 * @param	bool
+	 * @param	bool
+	 * @param	bool
 	 * @return	mixed
 	 */
-	function __set($name, $args)
+	public static function generator($gas, $resource, $method, $limit = FALSE, $with = FALSE, $locked = FALSE)
 	{
-		$this->_set_fields(array($name => $args));
+		$primary_key = Gas::factory($gas)->primary_key;
+
+		$instances = array();
+
+		$eager_load_models = array();
+
+		$eager_load_results = array();
+
+		if (empty($resource)) 
+		{
+			if ($limit == TRUE)
+			{
+				return  FALSE;
+			}
+			else
+			{
+				return  $instances;
+			}
+		}
+
+		if ($with)
+		{
+			$childs = array();
+
+			$eager_load_models = $gas::$with_models;
+
+			foreach ($eager_load_models as $child)
+			{
+				$childs[$child]['foreign_table'] = Gas_Janitor::get_input(__METHOD__, Gas::factory($child)->table, FALSE, $child);
+
+				$childs[$child]['foreign_key'] = Gas::factory($child)->primary_key;
+			}
+
+			$ids = array();
+
+			$fids = array();
+
+			foreach ($resource as $single)
+			{
+				if (isset($single->$primary_key)) $ids[] = $single->$primary_key;
+
+				foreach ($childs as $child)
+				{
+					$foreign_key = $child['foreign_table'].'_'.$child['foreign_key'];
+
+					if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
+				}
+
+			}
+
+			foreach ($eager_load_models as $model)
+			{
+				$eager_load_results[$model] = self:: generate_child($gas, $model, $ids, $fids, TRUE);
+			}
+
+		}
+
+		foreach ($resource as $record)
+		{
+			$model = ucfirst($gas);
+
+			$instance = Gas::factory($model, array('record' => (array) $record));
+
+			if ($with)
+			{
+				foreach ($eager_load_results as $child => $results)
+				{
+					$success = FALSE;
+
+					$all_results = $results;
+
+					$sample = array_shift($results);
+
+					if (empty($sample))
+					{
+						$instance->set_child($child, FALSE);
+					}
+					else
+					{
+
+						$identifier = $sample['identifier'];
+
+						$self = $sample['self'];
+
+						$eager_records = FALSE;
+
+						foreach ($all_results as $result)
+						{
+							$eager_record = Gas_Janitor::get_input(__METHOD__, $result['record'], FALSE, array());
+
+							if (isset($result['raw']) and ! empty($result['raw']))
+							{
+								if (isset($result['raw'][$identifier]))
+								{
+									$id = Gas_Janitor::get_input(__METHOD__, $result['raw'][$identifier], FALSE, '');
+								}
+								else
+								{
+									$id = FALSE;
+								}
+								
+							}
+							else
+							{
+								$id = Gas_Janitor::get_input(__METHOD__, $eager_record[$identifier], FALSE, '');
+							}
+							
+							if ($id == $record->$primary_key)
+							{
+								if ($self)
+								{
+									$eager_records = Gas::factory($child, array('record' => $eager_record));
+
+									continue;
+								}
+								else
+								{
+									$eager_records[] = Gas::factory($child, array('record' => $eager_record));
+								}
+							}
+						}
+
+						$instance->set_child($child, $eager_records);
+					}
+				}
+			}
+
+			if ($limit) return $instance;
+
+			$instances[] = $instance;
+		}
+
+		return $instances;
+	}
+
+	/**
+	 * generate_child
+	 * 
+	 * Generate Relationship Nodes
+	 *
+	 * @access	public
+	 * @param	string
+	 * @param	string
+	 * @param	array
+	 * @param	mixed
+	 * @param	bool
+	 * @return	mixed
+	 */
+	public static function generate_child($gas, $child, $identifiers = array(), $foreign_value = null, $eager_load = FALSE)
+	{
+		$global_identifier = '';
+
+		$instance = Gas::factory($gas);
+
+		$relations = $instance->relations;
+
+		$table = Gas_Janitor::get_input(__METHOD__, $instance->table, FALSE, $gas);
+
+		$primary_key = $instance->primary_key;
+
+		$foreign_key = Gas::factory($child)->primary_key; 
+
+		if (empty($relations) or ! is_array($relations)) show_error('Model founds, but missing relationship properties.');
+
+		$peer_relation = '';
+
+		foreach ($relations as $type => $relation)
+		{
+			if (key($relation) == $child)
+			{
+ 				$peer_relation = $type;
+			}
+		}
+
+		if (empty($peer_relation)) show_error('Model founds, but missing relationship properties.');
+
+		$self = FALSE;
+
+		if ($peer_relation == 'has_one' or $peer_relation == 'has_many')
+		{
+			$new_identifier = $table.'_'.$primary_key;
+
+			$global_identifier = $new_identifier;
+
+			if (count($identifiers) == 1)
+			{
+				self::$db->where(array($new_identifier => $identifiers[0]))->from($child);
+			}
+			elseif (count($identifiers) > 1)
+			{
+				self::$db->where_in($new_identifier, $identifiers)->from($child);
+			}	
+
+			if ($peer_relation == 'has_one') $self = TRUE;
+		}
+		elseif ($peer_relation == 'belongs_to')
+		{
+			$global_identifier = $foreign_key;
+
+			if (is_string($foreign_value) or is_numeric($foreign_value))
+			{
+				self::$db->where(array($foreign_key => $foreign_value))->limit(1)->from($child);
+				
+			}
+			elseif (is_array($foreign_value))
+			{
+				self::$db->where_in($foreign_key, $foreign_value)->from($child);
+			}
+
+			$self = TRUE;
+		}
+		elseif ($peer_relation == 'has_and_belongs_to')
+		{
+			$guess_table = Gas_Janitor::combine($table, $child);
+
+			foreach ($guess_table as $link_table)
+			{
+				if (self::$db->table_exists($link_table))
+				{
+					$pivot_table = $link_table;
+
+					continue;
+				}
+			}
+
+			$pivot_table = Gas_Janitor::get_input(__METHOD__, $pivot_table, TRUE);
+
+			$origin_fields = self::$db->list_fields($child);
+
+			$new_identifier = $table.'_'.$primary_key;
+
+			$global_identifier = $new_identifier;
+
+			self::$db->join($pivot_table, $child.'_'.$foreign_key.' = '.$foreign_key);
+
+			if (count($identifiers) == 1)
+			{
+				self::$db->where(array($new_identifier => $identifiers[0]))->from($child);
+			}
+			elseif (count($identifiers) > 1)
+			{
+				self::$db->where_in($new_identifier, $identifiers)->from($child);
+			}	
+		}
+
+		$q = self::$db->get();
+
+		$res = $q->result_array();
+
+		if (count($res) > 0) 
+		{
+			$child_field = array();
+
+			$child_field = array_push($child_field, $child);
+
+			$instance->_get_child_field = $child_field;
+
+			$many = array();
+
+			foreach ($res as $one)
+			{
+				$raw = array();
+
+				if($self and ! $eager_load) 
+				{
+
+					return Gas::factory($child, array('record' => $one));
+				}
+
+				if (isset($origin_fields))
+				{
+					if ($eager_load) $raw = $one;
+
+					$keys = array_values($origin_fields);
+
+					$values = array_keys($origin_fields);
+					
+					$levenshtein = array_combine($keys, $values);
+					
+					$one = array_intersect_ukey($one, $levenshtein, 'Gas_Janitor::intersect');
+				}
+
+				if ($eager_load)
+				{
+					$many[] = array('identifier' => $global_identifier, 'self' => $self, 'type' => $peer_relation, 'record' => $one, 'raw' => $raw);
+				}
+				else
+				{
+					$many[] = Gas::factory($child, array('record' => $one));
+				}
+				
+			}
+
+			return $many;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+
+	/**
+	 * load_model
+	 * 
+	 * Get model(s)'s public
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @return	void
+	 */
+	public function load_model($models = null)
+	{
+		if ($models == '*')
+		{
+			foreach ($this->_models as $model => $model_path)
+			{
+				$this->_loaded_models[] = $model;
+
+				require_once $model_path;
+			}
+		}
+		elseif (is_array($models))
+		{
+			foreach ($models as $model)
+			{
+				if( ! array_key_exists($model, $this->_models)) show_error('Unable to locate the models name you have specifieds: '.$model);
+
+				$this->_loaded_models[] = $model;
+
+				require_once $this->_models[$model];
+			}
+		}
+		elseif (is_string($models))
+		{
+			if ( ! array_key_exists($models, $this->_models)) show_error('Unable to locate the models name you have specified: '.$models);
+
+			$this->_loaded_models[] = $models;
+
+			require_once $this->_models[$models];
+		}
+		
+		return $this;
+	}
+
+	/**
+	 * validate
+	 * 
+	 * Validation handler
+	 *
+	 * @access	public
+	 * @param   string
+	 * @param   array
+	 * @param   array
+	 * @return	bool
+	 */
+	public function validate($gas, $entries, $rules)
+	{
+		$gas = Gas_Janitor::get_input(__METHOD__, $gas, TRUE);
+
+		$entries = Gas_Janitor::get_input(__METHOD__, $entries, TRUE);
+
+		$rules = Gas_Janitor::get_input(__METHOD__, $rules, TRUE);
+
+		$validator = self::$validator;
+
+		foreach ($rules as $field => $rule)
+		{
+			$validator->set_rules($field, Gas_Janitor::set_label($field), $rule['rules']);
+		}
+
+		if($validator->run() === TRUE)
+		{
+			$success = TRUE;
+		}
+		else
+		{
+			$success = FALSE;
+		}
+
+		foreach ($rules as $field => $rule)
+		{
+			if(strpos($rule['rules'], 'callback'))
+			{
+				foreach (explode('call', $rule['rules']) as $callback_rule)
+				{
+					if (substr($callback_rule, 0, 5) == 'back_')
+					{
+						$rule = substr($callback_rule, 5);
+					
+						if ( ! method_exists($gas, $rule))	die('nothing');
+						
+						if (call_user_func_array(array($gas, $rule), array($field, $entries[$field])) == FALSE)
+						{
+							$success = FALSE;
+						}
+					}
+				}
+			}
+		}
+
+		return $success;
+	}
+
+	/**
+	 * validator
+	 * 
+	 * CI Form validation class object
+	 *
+	 * @access	public
+	 * @return	object
+	 */
+	public function validator()
+	{
+		return self::$validator;
+	}
+
+	/**
+	 * lang
+	 * 
+	 * CI Language class object
+	 *
+	 * @access	public
+	 * @return	object
+	 */
+	public function lang()
+	{
+		return $this->_CI->lang;
 	}
 	
 	/**
@@ -1330,107 +1760,360 @@ class Gas {
 	 */
 	function __call($name, $args)
 	{
-		if (preg_match('/^find_by_([^)]+)$/', $name, $m) AND count($m) == 2)
+		$db = get_class(self::$db);
+
+		if (is_callable($db.'::'.$name))
 		{
-			$field = $m[1];
-			$value = array_shift($args);
-			$limit = array_shift($args);
-			$offset = array_shift($args);
-			
-			return $this->find_where(array($field => $value), $limit, $offset);
+			call_user_func_array(array(self::$db, $name), $args);
 		}
-		elseif (preg_match('/^join_([^)]+)$/', $name, $m) AND count($m) == 2)
-		{
-			$joined_field = $m[1];
-			$on = array_shift($args);
-			
-			return (is_string($on)) ? $this->join($joined_field, $on) : $this->join($joined_field);
-		}
-		elseif (preg_match('/^([^)]+)_join_([^)]+)$/', $name, $m) AND count($m) == 3)
-		{
-			$allowed_type = array('left', 'right', 'outer', 'inner', 'left outer', 'right outer');
 
-			$join_type = str_replace('_', ' ', $m[1]);
-			$joined_field = $m[2];
-			$on = array_shift($args);
-			$on = (is_string($on)) ? $on : $joined_field.'.id = '.$this->table.'.id';
-
-			return (in_array($join_type, $allowed_type)) ? $this->join($joined_field, $on, $join_type) : $this->join($joined_field, $on);
-		}
-		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) AND count($m) == 2)
-		{
-			if(empty($args)) $args = array($this->primary_key);
-			
-			call_user_func_array(array($this->_db, 'select_'.$m[1]), $args);
-			
-			$this->_validate_table();
-			$q = $this->_db->get($this->table);
-
-			$res = $this->_generate($q->result());
-
-			$q->free_result();
-			
-			return $res;
-		}
-		elseif ($name == 'with' and count($args) > 0)
-		{
-			$this->_is_with = $args;
-
-			return $this;
-		}
-		elseif ($name == 'has_result')
-		{
-			return (bool) (count($this->_set_fields) > 0) ? TRUE : $this->_has_result;
-		}
-		elseif (method_exists($this->_db, $name))
-		{
-			if($name == 'last_query') return $this->_db->queries;
-
-			$get = array('get', 'get_where', 'truncate');
-			$where = array('where', 'or_where');
-			$where_in = array('where_in', 'or_where_in', 'where_not_in', 'or_where_not_in');
-
-			$meta = array('list_tables', 'table_exists', 'list_fields', 'field_exists', 'field_data');
-
-			if(in_array($name, $meta)) return call_user_func_array(array($this->_db, $name), $args);
-
-			$is_get = FALSE;
-
-			if(in_array($name, $get))
-			{
-				if($name !== 'truncate') $is_get = TRUE;
-				
-				$this->_validate_table();
-				$this->_db->from($this->table);
-			}
-
-			if( ! $is_get) call_user_func_array(array($this->_db, $name), $args);
-
-			if(in_array($name, $where))
-			{
-				$this->_locked_table = TRUE;
-				$this->_is_where = TRUE;
-				$this->_locked_where = $this->_db->ar_where;
-			}
-			elseif(in_array($name, $where_in))
-			{
-				$this->_locked_table = TRUE;
-				$this->_is_where_in = TRUE;
-				$this->_locked_where_in = $this->_db->ar_wherein;
-			}
-
-			if($is_get)
-			{
-				$q = $this->_db->get();
-				$res = $this->_generate($q->result(), $this->_locked_table);
-				$q->free_result();
-
-				return $res;
-			}
-			
-			return $this;
-		}
-		
-		return FALSE;
+		return $this;
 	}
+
+}
+
+ /* ------------------------------------------------------------------------------------------------- */
+ /* ------------------------------------------------------------------------------------------------- */
+
+/**
+ * Gas Janitor Class.
+ *
+ * @package		Gas Library
+ * @subpackage	Gas Janitor
+ * @category    Libraries
+ * @version     1.0.3
+ */
+
+class Gas_Janitor {
+
+	static $dictionary = array(
+
+		'transaction_pointer' => array('trans_off', 'trans_start', 'trans_begin'),
+
+		'selector' => array('select', 'select_max', 'select_min', 'select_avg', 'select_sum'),
+
+		'condition' => array('join', 'where', 'or_where', 'where_in', 'or_where_in', 'where_not_in', 'or_where_not_in', 'like', 'or_like', 'not_like', 'or_not_like', 'group_by', 'distinct', 'having', 'or_having', 'order_by', 'limit', 'set'),
+
+		'executor' => array('get', 'count_all_results', 'insert_string', 'update_string', 'query', 'insert', 'insert_batch', 'update', 'delete', 'empty_table', 'truncate', 'insert_id', 'count_all', 'affected_rows', 'platform', 'version', 'last_query'),
+
+		'transaction_status' => array('trans_status'),
+
+		'transaction_executor' => array('trans_complete', 'trans_rollback', 'trans_commit'),
+
+	);
+
+	/**
+	 * diagnostic
+	 *
+	 * @access	public
+	 * @param   string
+	 * @return	string
+	 */
+	static function diagnostic($name)
+	{
+		foreach (self::$dictionary as $type => $nodes)
+		{
+			if (in_array($name, $nodes)) return $type;
+		}
+
+		return '';
+	}
+
+	/**
+	 * combine
+	 *
+	 * @access	public
+	 * @param   array
+	 * @return	array
+	 */
+	static function combine($a, $b)
+	{
+		return array($a.'_'.$b, $b.'_'.$a);
+	}
+
+	/**
+	 * intersect
+	 *
+	 * @access	public
+	 * @param   array
+	 * @return	array
+	 */
+	static function intersect($a, $b)
+	{
+	    if ($a == $b)
+	    {
+	    	return 0;
+	    }  
+	    elseif ($a > $b)
+	    {
+	    	return 1;
+	    }
+	    
+	    return -1;
+	}
+
+	/**
+	 * new_record
+	 *
+	 * @access	public
+	 * @return	array
+	 */
+	static function new_record()
+	{
+		return array_fill(0, count(self::$dictionary), array());
+	}
+
+	/**
+	 * tape_record
+	 *
+	 * @access	public
+	 * @param   string
+	 * @param   array
+	 * @return	void
+	 */
+	static function tape_record($gas, $recorder)
+	{
+		$success = FALSE;
+
+		$recorder = self::get_input(__METHOD__, $recorder, FALSE, array());
+
+		foreach (self::$dictionary as $type => $nodes)
+		{
+			foreach ($nodes as $node)
+			{
+				if (key($recorder) == $node)
+				{
+					$success = TRUE;
+
+					$gas::$$type = TRUE;
+
+					array_push($gas::$ar_recorder, $recorder);
+				}
+			}
+		}
+
+		return;
+	}
+
+	/**
+	 * play_record
+	 *
+	 * @access	public
+	 * @param   array
+	 * @return	array
+	 */
+	static function play_record($recorder)
+	{
+		$blank_disc = self::new_record();
+
+		$tasks = array_combine(array_keys(self::$dictionary), $blank_disc);
+
+		foreach ($recorder as $task)
+		{
+			foreach (self::$dictionary as $type => $nodes)
+			{
+				foreach ($nodes as $node)
+				{
+					if (key($task) == $node)  array_push($tasks[$type], $task);
+				}
+			}
+		}
+
+		return $tasks;
+	}
+
+	/**
+	 * force
+	 *
+	 * @access	public
+	 * @param   string
+	 * @param   string
+	 * @param   array
+	 * @return	void
+	 */
+	static function force($class, $method, $args)
+	{
+		$total_args = count($args);
+			
+		if ($total_args == 4)
+		{
+			$class->$method($args[0], $args[1], $args[2], $args[3]);
+		}
+		elseif ($total_args == 3)
+		{
+			$class->$method($args[0], $args[1], $args[2]);
+		}
+		elseif ($total_args == 2)
+		{
+			$class->$method($args[0], $args[1]);
+		}
+		elseif ($total_args == 1)
+		{
+			$class->$method($args[0]);
+		}
+		else
+		{
+			$class->$method();
+		}
+
+		return;
+	}
+
+	/**
+	 * force_and_get
+	 *
+	 * @access	public
+	 * @param   string
+	 * @param   string
+	 * @param   array
+	 * @return	mixed
+	 */
+	static function force_and_get($class, $method, $args)
+	{
+		$total_args = count($args);
+			
+		if ($total_args == 4)
+		{
+			return $class->$method($args[0], $args[1], $args[2], $args[3]);
+		}
+		elseif ($total_args == 3)
+		{
+			return $class->$method($args[0], $args[1], $args[2]);
+		}
+		elseif ($total_args == 2)
+		{
+			return $class->$method($args[0], $args[1]);
+		}
+		elseif ($total_args == 1)
+		{
+			return $class->$method($args[0]);
+		}
+		else
+		{
+			return $class->$method();
+		}
+	}
+
+	/**
+	 * flush_post
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	static function flush_post()
+	{
+		if (isset($_POST)) $_POST = array();
+	}
+
+	/**
+	 * get_input
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @param   bool
+	 * @param   bool
+	 * @return	mixed
+	 */
+	static function get_input($method, $input, $die = FALSE, $default = FALSE)
+	{
+		if ( ! isset($input) or empty($input))
+		{
+			if ($die) show_error('Cannot continue executing '.$method.' without any passed parameter.');
+
+			$input = $default;
+		}
+
+		return $input;
+	}
+	
+	/**
+	 * to_array
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @return	array
+	 */
+	static function to_array($var)
+	{
+		return (array) $var;
+	}
+
+	/**
+	 * to_json
+	 *
+	 * @access	public
+	 * @param   array
+	 * @return	string
+	 */
+	static function to_json($var)
+	{
+		return json_encode($var);
+	}
+
+	/**
+	 * where_to_join
+	 *
+	 * @access	public
+	 * @param   array
+	 * @param   string
+	 * @return	array
+	 */
+	static function where_to_join($recorder, $table)
+	{
+		$condition = self::$dictionary['condition'];
+
+		foreach ($condition as $node)
+		{
+			foreach ($recorder as $index => $statement)
+			{
+				$preserve = array('join', 'select');
+
+				$type = key($statement);
+
+				if ( ! in_array($type, $preserve) and $type == $node)
+				{
+					$recorder[$index][$node][0] = $table.'.'.$recorder[$index][$node][0];
+				}
+			}
+		}
+
+		return $recorder;
+	}
+
+	/**
+	 * to_json
+	 *
+	 * @access	public
+	 * @param   string
+	 * @return	string
+	 */
+	static function set_label($field)
+	{
+		return str_replace(array('-', '_'), ' ', ucfirst($field));
+	}
+
+}
+
+ /* ------------------------------------------------------------------------------------------------- */
+ /* ------------------------------------------------------------------------------------------------- */
+
+/**
+ * Gas Class.
+ *
+ * @package		Gas Library
+ * @subpackage	Gas
+ * @category    Libraries
+ * @version     1.0.3
+ */
+
+class Gas extends Gas_Core {
+
+	/**
+	 * _init 
+	 * 
+	 * Initialize method
+	 * 
+	 */
+	function _init() {}
+
 }
