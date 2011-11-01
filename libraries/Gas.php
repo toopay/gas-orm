@@ -41,6 +41,8 @@ class Gas_Core {
 
 	public $locked = FALSE;
 
+	public $single = FALSE;
+
 
 	protected $_config;
 
@@ -60,8 +62,6 @@ class Gas_Core {
 	public static $init = FALSE;
 
 	public static $bureau;
-
-	public static $single = FALSE;
 
 	public static $ar_recorder = array();
 
@@ -307,7 +307,7 @@ class Gas_Core {
 
 		$this->validate_join();
 
-		return $bureau::compile($this->model(), self::$ar_recorder, self::$single);
+		return $bureau::compile($this->model(), self::$ar_recorder, $this->single);
 	}
 	
 	/**
@@ -325,7 +325,7 @@ class Gas_Core {
 
 		$in = Gas_Janitor::get_input(__METHOD__, $args, TRUE);
 
-		self::$single = count($in) == 1;
+		$this->single = count($in) == 1;
 
 		return $this->find_where_in(array($this->primary_key, $in));
 	}
@@ -363,7 +363,7 @@ class Gas_Core {
 
 		if (is_int($limit))
 		{
-			if($limit == 1)  self::$single = TRUE;
+			if($limit == 1)  $this->single = TRUE;
 
 			$recorder = array('limit' => array($limit, $offset));
 
@@ -492,7 +492,7 @@ class Gas_Core {
 		{
 			$this->_init();
 
-			$valid = $bureau->validate($this->model(), self::$_set_fields, $this->_fields);
+			$valid = $bureau->validate($this->model(), array_merge($this->_get_fields, self::$_set_fields), $this->_fields);
 
 			if ( ! $valid) return FALSE;
 		}
@@ -637,7 +637,7 @@ class Gas_Core {
 	 */
 	public function auto_check($field, $val)
 	{
-		if (is_null($val) or is_integer($val)) return TRUE;
+		if (is_null($val) or is_integer($val) or is_numeric($val)) return TRUE;
 		
 		static::set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
 		
@@ -924,8 +924,17 @@ class Gas_Core {
  		{
  			foreach ($this->_get_child_fields as $index => $child)
  			{
- 				if ($name == $child) return $this->_get_child_nodes[$index];
- 			
+ 				if ($name == $child)
+ 				{
+ 					$type = Gas_Janitor::identify_relations($this->relations, $child);
+
+ 					if($type == 'has_one' or $type == 'belongs_to')
+ 					{
+		 				return $this->_get_child_nodes[$index][$child];
+ 					}
+
+	 				return $this->_get_child_nodes[$index];
+	 			}
  			}
  		}
 
@@ -1033,7 +1042,7 @@ class Gas_Core {
 			
 			Gas_Janitor::tape_record($this->model(), $recorder);
 
-			self::$single = TRUE;
+			$this->single = TRUE;
 
 			return $this->all();
 
@@ -1051,7 +1060,7 @@ class Gas_Core {
 
 			Gas_Janitor::tape_record($this->model(), $recorder);
 
-			self::$single = TRUE;
+			$this->single = TRUE;
 
 			return $this->all();
 
@@ -1126,6 +1135,20 @@ class Gas_Core {
 
 			Gas_Janitor::tape_record($this->model(), $recorder);
 
+			$this->single = FALSE;
+
+			return $this;
+
+		}
+		elseif ($name == 'like')
+		{
+
+			$recorder = array('like' => $args);
+
+			Gas_Janitor::tape_record($this->model(), $recorder);
+
+			$this->single = FALSE;
+
 			return $this;
 
 		}
@@ -1166,7 +1189,7 @@ class Gas_Core {
 			}
 			elseif ($name == 'limit')
 			{
-				if (isset($args[0]) and $args[0] == 1) self::$single = TRUE;
+				if (isset($args[0]) and $args[0] == 1) $this->single = TRUE;
 			}
 			
 			return $this;
@@ -1390,7 +1413,7 @@ class Gas_Bureau {
 
 					$all_results = $results;
 
-					$sample = array_shift($results);
+					$sample = is_array($results) ? array_shift($results) : array();
 
 					if (empty($sample))
 					{
@@ -1483,15 +1506,7 @@ class Gas_Bureau {
 
 		if (empty($relations) or ! is_array($relations)) show_error('Model founds, but missing relationship properties.');
 
-		$peer_relation = '';
-
-		foreach ($relations as $type => $relation)
-		{
-			if (key($relation) == $child)
-			{
- 				$peer_relation = $type;
-			}
-		}
+		$peer_relation = Gas_Janitor::get_input(__METHOD__, Gas_Janitor::identify_relations($relations, $child), FALSE, '');
 
 		if (empty($peer_relation)) show_error('Model founds, but missing relationship properties.');
 
@@ -1570,11 +1585,6 @@ class Gas_Bureau {
 
 		if (count($res) > 0) 
 		{
-			$child_field = array();
-
-			$child_field = array_push($child_field, $child);
-
-			$instance->_get_child_field = $child_field;
 
 			$many = array();
 
@@ -1708,7 +1718,7 @@ class Gas_Bureau {
 					{
 						$rule = substr($callback_rule, 5);
 					
-						if ( ! method_exists($gas, $rule))	die('nothing');
+						if ( ! method_exists($gas, $rule))	continue;
 						
 						if (call_user_func_array(array($gas, $rule), array($field, $entries[$field])) == FALSE)
 						{
@@ -1817,6 +1827,29 @@ class Gas_Janitor {
 		}
 
 		return '';
+	}
+
+	/**
+	 * identify_relations
+	 *
+	 * @access	public
+	 * @param   array
+	 * @param   string
+	 * @return	string
+	 */
+	static function identify_relations($relations, $child)
+	{
+		$peer_relation = null;
+
+		foreach ($relations as $type => $relation)
+		{
+			if (key($relation) == $child)
+			{
+ 				$peer_relation = $type;
+			}
+		}
+
+		return $peer_relation;
 	}
 
 	/**

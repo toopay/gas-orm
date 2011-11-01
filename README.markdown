@@ -6,7 +6,7 @@ A lighweight and easy-to-use ORM for CodeIgniter
 
 Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run **http://localdomain.com/index.php/gasunittest**.
 
-## Overview
+## About Gas
 
 Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
 
@@ -39,7 +39,18 @@ class User extends Gas {
 
 ```
 
-### Usage example
+### Overview
+
+Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface, eg :
+
+```php
+$user = new User;
+
+$user1 = $user->find(1);
+
+// Below implementation is actually similar with above
+$user1 = Gas::factory('user')->find(1);
+```
 
 Below is some of sample of Gas implementation.
 
@@ -49,19 +60,22 @@ Below is some of sample of Gas implementation.
 
 $user = new User;
 
+// Get all users
 $users = $user->all();
 
-if($user->has_result())
+if ($user->has_result())
 {
-    foreach($users as $single_user)
+    foreach ($users as $single_user)
     {
         var_dump($single_user->to_array());
     }
 }
 
-$someuser = $user->find_by_email('foo@bar.com', 1);
+// Finder, with limit result optional
+$someuser = Gas::factory('user')->find_by_email('foo@bar.com', 1);
 
-$join_user = $user->left_join_phone()->find(35);
+// Almost all CI AR is available
+$join_user = $user->left_join_phone('phone.id = user.id')->find(35);
 
 ```
 
@@ -71,26 +85,35 @@ $join_user = $user->left_join_phone()->find(35);
 
 $user = new User;
 
+// Set each field manually
 $user->id = $_POST['id'];
+
 $user->name = $_POST['name'];
+
 $user->email = $_POST['email'];
+
 $user->username = $_POST['username'];
 
-if( ! $user->save(TRUE))
+// Or you can easily mapped $_POST data with fill()
+$user->fill($_POST);
+
+if ( ! $user->save(TRUE))
 {
-    var_dump($user->errors());
+    die($user->errors('<div class="error">', '</div>'));
 }
 else 
 {
     $created_id = $user->last_id();
 }
 
-$user_update = $user->find($created_id);
+$user_update = Gas::factory('user')->find($created_id);
 
-if($user->has_result())
+if ($user_update->has_result())
 {
     $user_update->email = 'changed@world.com';
+
     $user->save();
+
     var_dump($user_update->errors());
 }
 
@@ -104,17 +127,18 @@ var_dump($user->delete(1, 2, 3));
 
 $user1 = $user->find(1);
 
-if($user->has_result())
+if ($user->has_result())
 {
     var_dump($user1->wife->to_array());
+
     var_dump($user1->wife->delete());
 }
 
-$user1 = $user->find(1);
+$user1 = Gas::factory('user')->find(1);
 
-if($user->has_result())
+if ($user1->has_result())
 {
-    foreach($user1->kid as $kid)
+    foreach ($user1->kid as $kid)
     {
         var_dump($kid->to_array());
     }
@@ -130,23 +154,26 @@ $user = new User;
 
 $all_users = $user->with('wife', 'kid', 'job')->all(); 
 
-if($user->has_result())
+if ($user->has_result())
 {
-    foreach($all_users as $single_user)
+    foreach ($all_users as $single_user)
     {
         echo $single_user->name.' has these details :';
 
         echo $single_user->name.' has one wife :';
+
         var_dump($single_user->wife->to_array()); 
 
         echo $single_user->name.' has many kids :';
-        foreach($single_user->kid as $kid) 
+
+        foreach ($single_user->kid as $kid) 
         {
             var_dump($kid->to_array()); 
         }
 
         echo $single_user->name.' has several jobs :';
-        foreach($single_user->job as $job) 
+
+        foreach ($single_user->job as $job) 
         {
             var_dump($job->to_array()); 
         }
