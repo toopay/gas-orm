@@ -4,187 +4,117 @@ A lighweight and easy-to-use ORM for CodeIgniter
 
 ## Installation
 
-Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run **http://localdomain.com/index.php/gasunittest**.
+Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
 
 ## About Gas
 
 Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
 
-### Convention
+## Usage Example
 
 An example model of user :
 
 ```php
-
-class User extends Gas {
-    
-    public $relations = array(
-                            'has_one' => array('wife' => array()),
-                            'has_many' => array('kid' => array()),
-                            'has_and_belong_to' => array('job' => array()),
-                        );
-
-    function _init()
-    {
-        $this->_fields = array(
-          'id'       => Gas::field('auto'),
-          'name'     => Gas::field('char[40]'),
-          'email'    => Gas::field('email'),
-          'username' => Gas::field('char', array('callback_username_check')),
-          'active'   => Gas::field('int[1]'),
-        );
-    }
-
-}
-
-```
-
-### Overview
-
-Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface, eg :
-
-```php
+// Either instantiate new Gas instance or use factory interface
 $user = new User;
 
+// Now you can use any available Gas method, or your User models public method
 $user1 = $user->find(1);
 
 // Below implementation is actually similar with above
 $user1 = Gas::factory('user')->find(1);
-```
 
-Below is some of sample of Gas implementation.
+// FINDER
 
-#### Fetch record (finder)
+// all : will return an array of user's object
+$users = Gas::factory('user')->all();
 
-```php
+$firstuser = Gas::factory('user')->first();
 
-$user = new User;
+$lastuser = Gas::factory('user')->last();
 
-// Get all users
-$users = $user->all();
+$max = Gas::factory('user')->max();
 
-if ($user->has_result())
-{
-    foreach ($users as $single_user)
-    {
-        var_dump($single_user->to_array());
-    }
-}
+$min = Gas::factory('user')->min();
 
-// Finder, with limit result optional
-$someuser = Gas::factory('user')->find_by_email('foo@bar.com', 1);
+$avg = Gas::factory('user')->avg('id', 'average_id');
 
-// Almost all CI AR is available
-$join_user = $user->left_join_phone('phone.id = user.id')->find(35);
+$sum = Gas::factory('user')->sum('id', 'sum_of_id');
 
-```
+$someuser = Gas::factory('user')->find(1);
 
-#### Write Operations (Insert, Update, Delete)
+$someusers = Gas::factory('user')->find(1, 2, 3);
 
-```php
+$someusers = Gas::factory('user')->find_by_email('johndoe@yahoo.com');
 
-$user = new User;
+// CI Active Record : will return all user grouped by email
+$someusers = Gas::factory('user')->group_by('email')->all();
 
-// Set each field manually
-$user->id = $_POST['id'];
+// CI Active Record : will return all user where their email are like '%yahoo.com%'
+$someusers = $user->like('email', 'yahoo.com')->all();
 
-$user->name = $_POST['name'];
+// CI Active Record : will return SELECT * FROM (`user`) LEFT JOIN `job` ON `job`.`id` = `user`.`id`
+$somejoinedusers = $user->left_join_job('job.id = user.id')->all();
 
-$user->email = $_POST['email'];
+// WRITE OPERATION (CREATE, UPDATE, DELETE)
 
-$user->username = $_POST['username'];
+// Suppose you have this $_POST value from some form'
+$_POST = array('id' => null, 'name' => 'Mr. Foo', 'email' => 'foo@world.com', 'username' => 'foo');
 
-// Or you can easily mapped $_POST data with fill()
-$user->fill($_POST);
+// Instantiate User object
+$new_user = new User;
 
-if ( ! $user->save(TRUE))
-{
-    die($user->errors('<div class="error">', '</div>'));
-}
-else 
-{
-    $created_id = $user->last_id();
-}
+// You can easily attach $_POST using 'fill' method, to set a datas for next 'save' method
+$new_user->fill($_POST);
 
-$user_update = Gas::factory('user')->find($created_id);
+// If something goes wrong in validation process, you can retrieve error via 'errors' method
+if ( FALSE == ($affected_rows = $new_user->save(TRUE))) die($new_user->errors());
 
-if ($user_update->has_result())
-{
-    $user_update->email = 'changed@world.com';
+// From last created record, using 'last_id' method, eg : will return '1', because above is first record
+$new_id = $new_user->last_id();
 
-    $user->save();
+// You can use factory interface, to generate an instance of Gas object, without instantiate User class
+$recent_user = Gas::factory('user')->find($new_id);
 
-    var_dump($user_update->errors());
-}
+// Suppose you have this $_POST value from some form, to update recent user'
+$_POST = array('name' => 'Mr. Bar', 'email' => 'bar@world.com');
 
-var_dump($user->delete(1, 2, 3));
+// You can still easily attach $_POST using 'fill' method, to set a datas for next updates
+$recent_user->fill($_POST);
 
-```
+// You can also set some field directly
+$recent_user->username = 'bar';
 
-#### Relationship (one-to-one, one-to-many, many-to-many)
+// You can add additional HTML tag via 'errors' method
+if ( ! $recent_user->save(TRUE)) die($recent_user->errors('
+class="error">', '
+'));
 
-```php
+// To delete something, you can directly assign id, or 'delete' will see through your recorded logic, eg : 
+$now_user = Gas::factory('user')->find($new_id);
 
-$user1 = $user->find(1);
+// Just ensure that data has been updated 
+if ($now_user->username != 'bar') die('Gas update was unsuccessfully executed!');
 
-if ($user->has_result())
-{
-    var_dump($user1->wife->to_array());
+// This will delete user 1 
+$now_user->delete();
 
-    var_dump($user1->wife->delete());
-}
+// RELATIONSHIP (ONE-TO-ONE, ONE-TO-MANY, MANY-TO-MANY)
 
-$user1 = Gas::factory('user')->find(1);
+// One-To-One : Will return an object of wife, which have user_id = 1
+$somewife = Gas::factory('user')->find(1)->wife;
 
-if ($user1->has_result())
-{
-    foreach ($user1->kid as $kid)
-    {
-        var_dump($kid->to_array());
-    }
-}
+// One-To-Many : Will return an array of kid object, which have user_id = 1
+$somekids = Gas::factory('user')->find(1)->kid;
 
-```
+// Many-To-Many : Will return an array of job object, based by pivot table (job_user), which have user_id = 4
+$somejobs = Gas::factory('user')->find(4)->job;
 
-#### Eager Loading
+// EAGER LOADING
 
-```php
-
-$user = new User;
-
-$all_users = $user->with('wife', 'kid', 'job')->all(); 
-
-if ($user->has_result())
-{
-    foreach ($all_users as $single_user)
-    {
-        echo $single_user->name.' has these details :';
-
-        echo $single_user->name.' has one wife :';
-
-        var_dump($single_user->wife->to_array()); 
-
-        echo $single_user->name.' has many kids :';
-
-        foreach ($single_user->kid as $kid) 
-        {
-            var_dump($kid->to_array()); 
-        }
-
-        echo $single_user->name.' has several jobs :';
-
-        foreach ($single_user->job as $job) 
-        {
-            var_dump($job->to_array()); 
-        }
-    }
-}
+// Eager Loading : Will return an array of user object, alongside with each relational table with WHERE IN(N+)
+$allinone = Gas::factory('user')->with('wife', 'kid', 'job')->all();
 
 ```
 
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, use **gasunittest.php** or read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
-
-
-
-
-
