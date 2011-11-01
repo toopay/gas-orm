@@ -3,7 +3,7 @@
 /**
  * CodeIgniter Gas ORM Library
  *
- * A lighweight and scalable ORM for CodeIgniter
+ * A lighweight and easy-to-use ORM for CodeIgniter
  * 
  * This class intend to use as semi-native ORM library for CI, 
  * based on the ActiveRecord pattern. This library uses CI stan-
