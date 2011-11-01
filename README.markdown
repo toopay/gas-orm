@@ -16,7 +16,7 @@ Before start using any of Gas available methods, you should have a gas model, wh
 
 ### FINDER
 
-<pre><code>
+```php
 // all : will return an array of user's object
 $users = Gas::factory('user')->all();
 
@@ -43,11 +43,11 @@ $someusers = Gas::factory('user')->group_by('email')->all();
 $someusers = $user->like('email', 'yahoo.com')->all();
 
 $somejoinedusers = $user->left_join_job('job.id = user.id')->all();
-</code></pre>
+```
 
 ### WRITE OPERATION (CREATE, UPDATE, DELETE)
 
-<pre><code>
+```php
 $_POST = array('id' => null, 'name' => 'Mr. Foo', 'email' => 'foo@world.com', 'username' => 'foo');
 
 $new_user = new User;
@@ -78,11 +78,11 @@ if ($now_user->username != 'bar') die('Gas update was unsuccessfully executed!')
 
 // This will delete user 1 
 $now_user->delete();
-</code></pre>
+```
 
 ### RELATIONSHIP (ONE-TO-ONE, ONE-TO-MANY, MANY-TO-MANY)
 
-<pre><code>
+```php
 // One-To-One : Will return an object of wife, which have user_id = 1
 $somewife = Gas::factory('user')->find(1)->wife;
 
@@ -91,13 +91,13 @@ $somekids = Gas::factory('user')->find(1)->kid;
 
 // Many-To-Many : Will return an array of job object, based by pivot table (job_user), which have user_id = 4
 $somejobs = Gas::factory('user')->find(4)->job;
-</code></pre>
+```
 
 ### EAGER LOADING
 
-<pre><code>
+```php
 // Eager Loading : Will return an array of user object, alongside with each relational table with WHERE IN(N+)
 $allinone = Gas::factory('user')->with('wife', 'kid', 'job')->all();
-</code></pre>
+```
 
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, use **gasunittest.php** or read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
