@@ -12,20 +12,11 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 
 ## Usage Example
 
-An example model of user :
+Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface.
+
+### FINDER
 
 ```php
-// Either instantiate new Gas instance or use factory interface
-$user = new User;
-
-// Now you can use any available Gas method, or your User models public method
-$user1 = $user->find(1);
-
-// Below implementation is actually similar with above
-$user1 = Gas::factory('user')->find(1);
-
-// FINDER
-
 // all : will return an array of user's object
 $users = Gas::factory('user')->all();
 
@@ -47,24 +38,20 @@ $someusers = Gas::factory('user')->find(1, 2, 3);
 
 $someusers = Gas::factory('user')->find_by_email('johndoe@yahoo.com');
 
-// CI Active Record : will return all user grouped by email
 $someusers = Gas::factory('user')->group_by('email')->all();
 
-// CI Active Record : will return all user where their email are like '%yahoo.com%'
 $someusers = $user->like('email', 'yahoo.com')->all();
 
-// CI Active Record : will return SELECT * FROM (`user`) LEFT JOIN `job` ON `job`.`id` = `user`.`id`
 $somejoinedusers = $user->left_join_job('job.id = user.id')->all();
+```
 
-// WRITE OPERATION (CREATE, UPDATE, DELETE)
+### WRITE OPERATION (CREATE, UPDATE, DELETE)
 
-// Suppose you have this $_POST value from some form'
+```php
 $_POST = array('id' => null, 'name' => 'Mr. Foo', 'email' => 'foo@world.com', 'username' => 'foo');
 
-// Instantiate User object
 $new_user = new User;
 
-// You can easily attach $_POST using 'fill' method, to set a datas for next 'save' method
 $new_user->fill($_POST);
 
 // If something goes wrong in validation process, you can retrieve error via 'errors' method
@@ -73,22 +60,15 @@ if ( FALSE == ($affected_rows = $new_user->save(TRUE))) die($new_user->errors())
 // From last created record, using 'last_id' method, eg : will return '1', because above is first record
 $new_id = $new_user->last_id();
 
-// You can use factory interface, to generate an instance of Gas object, without instantiate User class
 $recent_user = Gas::factory('user')->find($new_id);
 
-// Suppose you have this $_POST value from some form, to update recent user'
 $_POST = array('name' => 'Mr. Bar', 'email' => 'bar@world.com');
 
-// You can still easily attach $_POST using 'fill' method, to set a datas for next updates
 $recent_user->fill($_POST);
 
-// You can also set some field directly
 $recent_user->username = 'bar';
 
-// You can add additional HTML tag via 'errors' method
-if ( ! $recent_user->save(TRUE)) die($recent_user->errors('
-class="error">', '
-'));
+if ( ! $recent_user->save(TRUE)) die($recent_user->errors());
 
 // To delete something, you can directly assign id, or 'delete' will see through your recorded logic, eg : 
 $now_user = Gas::factory('user')->find($new_id);
@@ -98,9 +78,11 @@ if ($now_user->username != 'bar') die('Gas update was unsuccessfully executed!')
 
 // This will delete user 1 
 $now_user->delete();
+```
 
-// RELATIONSHIP (ONE-TO-ONE, ONE-TO-MANY, MANY-TO-MANY)
+### RELATIONSHIP (ONE-TO-ONE, ONE-TO-MANY, MANY-TO-MANY)
 
+```php
 // One-To-One : Will return an object of wife, which have user_id = 1
 $somewife = Gas::factory('user')->find(1)->wife;
 
@@ -109,12 +91,13 @@ $somekids = Gas::factory('user')->find(1)->kid;
 
 // Many-To-Many : Will return an array of job object, based by pivot table (job_user), which have user_id = 4
 $somejobs = Gas::factory('user')->find(4)->job;
+```
 
-// EAGER LOADING
+### EAGER LOADING
 
+```php
 // Eager Loading : Will return an array of user object, alongside with each relational table with WHERE IN(N+)
 $allinone = Gas::factory('user')->with('wife', 'kid', 'job')->all();
-
 ```
 
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, use **gasunittest.php** or read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
