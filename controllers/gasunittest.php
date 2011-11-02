@@ -72,7 +72,7 @@ class Gasunittest extends CI_Controller {
 	{
 		$gas = new Gas;
 
-		$config = $gas->_config;
+		$config = $gas->get_config();
 
 		$content = array(
 
@@ -243,7 +243,9 @@ class Gasunittest extends CI_Controller {
 
 		/*<code-write:Instantiate User object>*/$new_user = new User;/*<endcode>*/
 
-		/*<code-write:You can easily attach $_POST using 'fill' method, to set a datas for next 'save' method>*/$new_user->fill($_POST);/*<endcode>*/
+		/*<code-write:You can easily attach $_POST using 'fill' method, to set a datas for next 'save' method>*/$new_user->fill($_POST, TRUE);/*<endcode>*/
+
+		
 
 		/*<code-write:If something goes wrong in validation process, you can retrieve error via 'errors' method>*/if ( FALSE == ($affected_rows = $new_user->save(TRUE))) die($new_user->errors());/*<endcode>*/
 
@@ -681,7 +683,7 @@ class Gasunittest extends CI_Controller {
 
 		$gas = new Gas;
 
-		$config = $gas->_config;
+		$config = $gas->get_config();
 
 		$info[] = '<b>Scanning models directories...</b>';
 
@@ -730,9 +732,11 @@ class Gasunittest extends CI_Controller {
 		{
 			$gas->db()->table_exists($item) or $this->_create_table($item);
 
-			if ( ! in_array($item, array_keys($gas->list_models())))
+			$list_models = is_array($gas->list_models()) ? array_keys($gas->list_models()) : array();
+
+			if ( ! in_array($item, $list_models))
 			{
-				$this->_create_model($item, $gas->_config);
+				$this->_create_model($item, $gas->get_config());
 
 				$gas->scan();
 

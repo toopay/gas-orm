@@ -44,8 +44,6 @@ class Gas_Core {
 	public $single = FALSE;
 
 
-	protected $_config;
-
 	protected $_fields;
 
 	protected $_get_fields = array();
@@ -73,6 +71,8 @@ class Gas_Core {
 
 	public static $with_models = array();
 
+
+	static $config;
 
 	static $transaction_pointer = FALSE;
 
@@ -110,7 +110,7 @@ class Gas_Core {
 
 			$CI->config->load('gas', TRUE, TRUE);
 
-			$this->_config = $CI->config->item('gas');
+			self::$config = $CI->config->item('gas');
 			
 			$this->_scan_models();
 
@@ -125,11 +125,11 @@ class Gas_Core {
 
 		self::$bureau->_models = self::$_models;
 
-		self::$bureau->_config = $this->_config;
+		self::$bureau->_config = Gas_core::$config;
 
 		self::$bureau->_set_fields = self::$_set_fields;
 
-		if ($this->_config['autoload_models']) self::$bureau->load_model('*');
+		if (Gas_core::$config['autoload_models']) self::$bureau->load_model('*');
 
 		if ($init) self::$init = TRUE;
 
@@ -245,9 +245,7 @@ class Gas_Core {
 	 */
 	public function db()
 	{
-		$bureau = self::$bureau;
-
-		return $bureau::engine();
+		return Gas_Bureau::engine();
 	}
 
 	/**
@@ -261,6 +259,71 @@ class Gas_Core {
 	public function list_models()
 	{
 		return self::$_models;
+	}
+
+	/**
+	 * set_type
+	 * 
+	 * Get recent type value
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function set_type($type, $val)
+	{
+		return self::$$type = $val;
+	}
+
+	/**
+	 * get_type
+	 * 
+	 * Get recent type value
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function get_type($type)
+	{
+		return self::$$type;
+	}
+
+	/**
+	 * get_with
+	 * 
+	 * Get eager loading flag
+	 * 
+	 * @access public
+	 * @return bool
+	 */
+	public function get_with()
+	{
+		return self::$with;
+	}
+
+	/**
+	 * get_with
+	 * 
+	 * Get eager loading models
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function get_with_models()
+	{
+		return self::$with_models;
+	}
+
+	/**
+	 * get_config
+	 * 
+	 * Get Gas configuration
+	 * 
+	 * @access public
+	 * @return array
+	 */
+	public function get_config()
+	{
+		return self::$config;
 	}
 
 	/**
@@ -307,7 +370,7 @@ class Gas_Core {
 
 		$this->validate_join();
 
-		return $bureau::compile($this->model(), self::$ar_recorder, $this->single);
+		return $bureau->compile($this->model(), self::$ar_recorder, $this->single);
 	}
 	
 	/**
@@ -522,7 +585,7 @@ class Gas_Core {
 
 		self::$_set_fields = array();
 
-		$bureau::compile($this->model(), self::$ar_recorder);
+		$bureau->compile($this->model(), self::$ar_recorder);
 
 		return $this->db()->affected_rows();
 		
@@ -566,7 +629,7 @@ class Gas_Core {
 
 		self::$_set_fields = array();
 
-		$bureau::compile($this->model(), self::$ar_recorder);
+		$bureau->compile($this->model(), self::$ar_recorder);
 
 		return $this->db()->affected_rows();
 	}
@@ -639,7 +702,7 @@ class Gas_Core {
 	{
 		if (is_null($val) or is_integer($val) or is_numeric($val)) return TRUE;
 		
-		static::set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
+		self::set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
 		
 		return FALSE;
 	}
@@ -656,7 +719,7 @@ class Gas_Core {
 	{
 		if (is_string($val) or $val === '') return TRUE;
 		
-		static::set_message('char_check', 'The %s field was an invalid char field.', $field);
+		self::set_message('char_check', 'The %s field was an invalid char field.', $field);
 		
 		return FALSE;
 	}
@@ -739,6 +802,23 @@ class Gas_Core {
 		
 		return $this;
 	}
+
+	/**
+	 * add_ar_record
+	 * 
+	 * Push CI AR attributes to a Gas model
+	 *
+	 * @access	public
+	 * @param   mixed
+	 * @return	void
+	 */
+	public function add_ar_record($recorder)
+	{
+		array_push(self::$ar_recorder, $recorder);
+
+		return $this;
+	}
+
 
 	/**
 	 * set_ar_record
@@ -864,7 +944,7 @@ class Gas_Core {
 	 */
 	private function _scan_models($path = null)
 	{
-		$models_dir = (is_null($path)) ? APPPATH.$this->_config['models_path'] : $path;
+		$models_dir = (is_null($path)) ? APPPATH.Gas_core::$config['models_path'] : $path;
 
 		if( ! is_dir($models_dir)) show_error('Unable to locate the models path you have specified: '.$models_dir);
 		
@@ -878,11 +958,11 @@ class Gas_Core {
 
 		    if (is_dir($file))  $this->_scan_models($file);
 
-		    if(strpos($file, $this->_config['models_suffix'].'.php') !== FALSE) 
+		    if(strpos($file, Gas_core::$config['models_suffix'].'.php') !== FALSE) 
 			{
 				$model = explode('/', $file);
 
-				self::$_models[str_replace($this->_config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
+				self::$_models[str_replace(Gas_core::$config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
 			}
 		}
 		
@@ -965,7 +1045,7 @@ class Gas_Core {
 
 		$bureau = self::$bureau;
 
-		$engine = $bureau::engine();
+		$engine = $this->db();
 
 		if (empty($this->table)) $this->table = $this->model();
 		
@@ -1114,9 +1194,7 @@ class Gas_Core {
 		}
 		elseif ($name == 'last_id')
 		{
-			
-			return $engine->insert_id();
-
+			return $this->db()->insert_id();
 		}
 		elseif ($name == 'list_fields')
 		{
@@ -1181,7 +1259,7 @@ class Gas_Core {
 
 			if ($medical_history == 'executor' or $medical_history == 'transaction_status')
 			{
-				return $bureau::compile($this->model(), self::$ar_recorder);
+				return $bureau->compile($this->model(), self::$ar_recorder);
 			}
 			elseif (strpos($name, 'join') !== FALSE)
 			{
@@ -1243,7 +1321,7 @@ class Gas_Bureau {
 	}
 
 	/**
-	 * compile
+	 * do_compile
 	 * 
 	 * Compile AR
 	 *
@@ -1253,19 +1331,20 @@ class Gas_Bureau {
 	 * @param	bool
 	 * @return	response
 	 */
-	public static function compile($gas, $recorder, $limit = FALSE)
+	public static function do_compile($gas, $recorder, $limit = FALSE)
 	{
 		$tasks = Gas_Janitor::play_record($recorder);
 
 		foreach ($tasks as $type => $task)
 		{
-			if ($gas::$$type == TRUE)
+			if (Gas::factory($gas)->get_type($type) == TRUE)
 			{
 				foreach($task as $action)
 				{
+
 					$motor = get_class(self::$db);
 
-					if (is_callable($motor.'::'.key($action)))
+					if (method_exists($motor, key($action)))
 					{
 						$method = key($action);
 
@@ -1281,24 +1360,25 @@ class Gas_Bureau {
 
 							if ($method == 'get')
 							{
+								
 								$result = Gas_Janitor::force_and_get(self::$db, $method, $args);
 
-								$gas::$ar_recorder = array();
+								Gas::factory($gas)->set_ar_record(array());
 
-								return self::generator($gas, $result->result(), __FUNCTION__, $limit, $gas::$with);
+								return self::generator($gas, $result->result(), __FUNCTION__, $limit, Gas::factory($gas)->get_with());
 							}
 							elseif (in_array($method, $writes))
 							{
 								Gas_Janitor::force(self::$db, $method, $args);
 
-								$gas::$ar_recorder = array();
+								Gas::factory($gas)->set_ar_record(array());
 								
 								return self::$db->affected_rows();
 							}
 
 							Gas_Janitor::force(self::$db, $method, $args);
 
-							$gas::$ar_recorder = array();
+							Gas::factory($gas)->set_ar_record(array());
 						}
 						else
 						{
@@ -1366,7 +1446,7 @@ class Gas_Bureau {
 		{
 			$childs = array();
 
-			$eager_load_models = $gas::$with_models;
+			$eager_load_models = Gas::factory($gas)->get_with_models();
 
 			foreach ($eager_load_models as $child)
 			{
@@ -1631,6 +1711,24 @@ class Gas_Bureau {
 	}
 
 	/**
+	 * compile
+	 * 
+	 * Dynamic function for ompile AR
+	 *
+	 * @access	public
+	 * @param	string
+	 * @param	array
+	 * @param	bool
+	 * @return	response
+	 */
+	public function compile($gas, $recorder, $limit = FALSE)
+	{
+		$result = self::do_compile($gas, $recorder, $limit);
+		
+		return $result;
+	}
+
+	/**
 	 * load_model
 	 * 
 	 * Get model(s)'s public
@@ -1643,6 +1741,8 @@ class Gas_Bureau {
 	{
 		if ($models == '*')
 		{
+			if(empty($this->_models)) return $this;
+			
 			foreach ($this->_models as $model => $model_path)
 			{
 				$this->_loaded_models[] = $model;
@@ -1719,11 +1819,8 @@ class Gas_Bureau {
 						$rule = substr($callback_rule, 5);
 					
 						if ( ! method_exists($gas, $rule))	continue;
-						
-						if (call_user_func_array(array($gas, $rule), array($field, $entries[$field])) == FALSE)
-						{
-							$success = FALSE;
-						}
+
+						$success = Gas::factory($gas)->$rule($field, $entries[$field]);
 					}
 				}
 			}
@@ -1918,9 +2015,9 @@ class Gas_Janitor {
 				{
 					$success = TRUE;
 
-					$gas::$$type = TRUE;
+					Gas::factory($gas)->set_type($type, TRUE);
 
-					array_push($gas::$ar_recorder, $recorder);
+					Gas::factory($gas)->add_ar_record($recorder);
 				}
 			}
 		}

@@ -2,6 +2,11 @@
 
 A lighweight and easy-to-use ORM for CodeIgniter
 
+## Requirement
+
+* PHP v.5.2.x
+* CodeIgniter v.2.x.x
+
 ## Installation
 
 Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
