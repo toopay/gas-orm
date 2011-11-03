@@ -825,7 +825,7 @@ class Gasunittest extends CI_Controller {
 				."\t".'{'."\n"
 				."\t\t".'if($val == \'me\')'."\n"
 				."\t\t".'{'."\n"
-				."\t\t\t".'$this->set_message(\'username_check\', \'The %s field cannot fill by "me"\', $field);'."\n"."\n"
+				."\t\t\t".'self::set_message(\'username_check\', \'The %s field cannot fill by "me"\', $field);'."\n"."\n"
 				."\t\t\t".'return FALSE;'."\n"
 				."\t\t".'}'."\n"
 				."\t\t".'return TRUE;'."\n"

@@ -14,7 +14,7 @@
  * @version     1.0.3
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://taufanaditya.com/gas-orm
- * @license     GPL
+ * @license     BSD
  */
 
  /* ------------------------------------------------------------------------------------------------- */
@@ -23,7 +23,7 @@
 /**
  * Gas Core Class.
  *
- * @package		Gas Library
+ * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
  * @version     1.0.3
@@ -555,7 +555,9 @@ class Gas_Core {
 		{
 			$this->_init();
 
-			$valid = $bureau->validate($this->model(), array_merge($this->_get_fields, self::$_set_fields), $this->_fields);
+			$entries = is_array(self::$_set_fields) ? array_merge($this->_get_fields, self::$_set_fields) : $this->_get_fields;
+
+			$valid = $bureau->validate($this->model(), $entries, $this->_fields);
 
 			if ( ! $valid) return FALSE;
 		}
@@ -632,6 +634,28 @@ class Gas_Core {
 		$bureau->compile($this->model(), self::$ar_recorder);
 
 		return $this->db()->affected_rows();
+	}
+
+	/**
+	 * tell
+	 * 
+	 * Gas Languange file utilizer.
+	 * 
+	 * @access public
+	 * @param  string
+	 * @param  string
+	 * @return string
+	 */
+	public static function tell($point, $parser_value = null)
+	{
+		self::$bureau->lang()->load('gas');
+
+		if (FALSE === ($msg = self::$bureau->lang()->line($point)))
+		{
+			$msg = '';
+		}
+		
+		return (is_string($parser_value)) ? str_replace('%s', $parser_value, $msg) : $msg;
 	}
 
 	/**
@@ -944,9 +968,9 @@ class Gas_Core {
 	 */
 	private function _scan_models($path = null)
 	{
-		$models_dir = (is_null($path)) ? APPPATH.Gas_core::$config['models_path'] : $path;
+		$models_dir = (is_null($path)) ? APPPATH.Gas_Core::$config['models_path'] : $path;
 
-		if( ! is_dir($models_dir)) show_error('Unable to locate the models path you have specified: '.$models_dir);
+		if( ! is_dir($models_dir)) show_error(Gas_Core::tell('models_not_found', $models_dir));
 		
 		$files = scandir($models_dir);
 
@@ -958,11 +982,11 @@ class Gas_Core {
 
 		    if (is_dir($file))  $this->_scan_models($file);
 
-		    if(strpos($file, Gas_core::$config['models_suffix'].'.php') !== FALSE) 
+		    if(strpos($file, Gas_Core::$config['models_suffix'].'.php') !== FALSE) 
 			{
 				$model = explode('/', $file);
 
-				self::$_models[str_replace(Gas_core::$config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
+				self::$_models[str_replace(Gas_Core::$config['models_suffix'].'.php', '', $model[count($model)-1])] = $file;
 			}
 		}
 		
@@ -1284,7 +1308,7 @@ class Gas_Core {
 /**
  * Gas Bureau Class.
  *
- * @package		Gas Library
+ * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
  * @version     1.0.3
@@ -1584,11 +1608,11 @@ class Gas_Bureau {
 
 		$foreign_key = Gas::factory($child)->primary_key; 
 
-		if (empty($relations) or ! is_array($relations)) show_error('Model founds, but missing relationship properties.');
+		if (empty($relations) or ! is_array($relations)) show_error(Gas_Core::tell('models_found_no_relations', $gas));
 
 		$peer_relation = Gas_Janitor::get_input(__METHOD__, Gas_Janitor::identify_relations($relations, $child), FALSE, '');
 
-		if (empty($peer_relation)) show_error('Model founds, but missing relationship properties.');
+		if (empty($peer_relation)) show_error(Gas_Core::tell('models_found_no_relations', $gas));
 
 		$self = FALSE;
 
@@ -1674,7 +1698,6 @@ class Gas_Bureau {
 
 				if($self and ! $eager_load) 
 				{
-
 					return Gas::factory($child, array('record' => $one));
 				}
 
@@ -1706,7 +1729,7 @@ class Gas_Bureau {
 		}
 		else
 		{
-			return FALSE;
+			return ($peer_relation == 'has_many' or $peer_relation == 'has_and_belongs_to') ? array() : FALSE;
 		}
 	}
 
@@ -1754,7 +1777,7 @@ class Gas_Bureau {
 		{
 			foreach ($models as $model)
 			{
-				if( ! array_key_exists($model, $this->_models)) show_error('Unable to locate the models name you have specifieds: '.$model);
+				if( ! array_key_exists($model, $this->_models)) show_error(Gas_Core::tell('models_not_found', $model));
 
 				$this->_loaded_models[] = $model;
 
@@ -1763,7 +1786,7 @@ class Gas_Bureau {
 		}
 		elseif (is_string($models))
 		{
-			if ( ! array_key_exists($models, $this->_models)) show_error('Unable to locate the models name you have specified: '.$models);
+			if ( ! array_key_exists($models, $this->_models)) show_error(Gas_Core::tell('models_not_found', $models));
 
 			$this->_loaded_models[] = $models;
 
@@ -1885,7 +1908,7 @@ class Gas_Bureau {
 /**
  * Gas Janitor Class.
  *
- * @package		Gas Library
+ * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
  * @version     1.0.3
@@ -2148,7 +2171,7 @@ class Gas_Janitor {
 	{
 		if ( ! isset($input) or empty($input))
 		{
-			if ($die) show_error('Cannot continue executing '.$method.' without any passed parameter.');
+			if ($die) show_error(Gas_Core::tell('empty_arguments', $method));
 
 			$input = $default;
 		}
@@ -2230,7 +2253,7 @@ class Gas_Janitor {
 /**
  * Gas Class.
  *
- * @package		Gas Library
+ * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
  * @version     1.0.3
