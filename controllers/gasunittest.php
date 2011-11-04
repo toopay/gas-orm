@@ -578,8 +578,8 @@ class Gasunittest extends CI_Controller {
 		}
 
 		$someuser = Gas::factory('user')->find(4); 
-	   	// Should return TRUE
-		$this->unit->run($someuser->has_result(), TRUE, '[find]', '-');
+	   	// Should return FALSE
+		$this->unit->run(empty($someuser), FALSE, '[find]', '-');
 		
 		// Should be FALSE, because user 4, didnt have wife
 		$this->unit->run($someuser->wife, FALSE, '[has_one]', 'When there is no result, then FALSE will returned');
@@ -644,8 +644,8 @@ class Gasunittest extends CI_Controller {
 
 		$someuser = Gas::factory('user')->find(3); 
 
-	   	// Should return TRUE
-		$this->unit->run($someuser->has_result(), TRUE, '[eager_loading]', '-');
+	   	// Should return FALSE
+		$this->unit->run(empty($someuser), FALSE, '[eager_loading]', '-');
 
 		// Should return white, because at loop above, we change it :P
 		$this->unit->run($someuser->wife->hair_color, 'white', '[eager_loading]', '-');

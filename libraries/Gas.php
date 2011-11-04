@@ -1073,12 +1073,7 @@ class Gas_Core {
 
 		if (empty($this->table)) $this->table = $this->model();
 		
-		if ($name == 'has_result')
-		{
-			return (bool) count($this->_get_fields) > 0;
-		}
-		
-		elseif ($name == 'fill')
+		if ($name == 'fill')
 		{
 
 			$input = array();
@@ -1843,7 +1838,9 @@ class Gas_Bureau {
 					
 						if ( ! method_exists($gas, $rule))	continue;
 
-						$success = Gas::factory($gas)->$rule($field, $entries[$field]);
+						$entries_value = isset($entries[$field]) ? $entries[$field] : FALSE; 
+
+						$success = Gas::factory($gas)->$rule($field, $entries_value);
 					}
 				}
 			}
