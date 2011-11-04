@@ -1,5 +1,7 @@
 <?php
 
+$lang['db_connection_error']       = 'Tidak dapat menghubungi database dengan koneksi group atau dsn berikut : %s'
+
 $lang['models_not_found']          = 'Tidak bisa mendapatkan path model yang dicari: %s';
 
 $lang['models_found_no_relations'] = 'Model %s ditemukan, tapi propery relations tidak ada.';

@@ -12,6 +12,10 @@ class Gasunittest extends CI_Controller {
 	{
 		parent::__construct();
 
+		$gas = new Gas;
+
+		$this->db = $gas->db();
+
 		$this->load->dbforge();
 
 		$this->load->library('table');

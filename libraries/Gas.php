@@ -159,6 +159,19 @@ class Gas_Core {
 	}
 
 	/**
+	 * Database connection 
+	 * 
+	 * @param   mixed 
+	 * @return  void 
+	 */
+	public static function connect($dns = null)
+	{
+		$dns = Gas_Janitor::get_input(__METHOD__, $dns, TRUE);
+
+		return self::$bureau->connect($dns);
+	}
+
+	/**
 	 * recruit_bureau
 	 * 
 	 * Calling Gas Bureau instance
@@ -1317,6 +1330,8 @@ class Gas_Bureau {
 	
 	protected $_CI;
 
+	protected $_engine;
+
 	protected static $db;
 
 	protected static $validator;
@@ -1328,9 +1343,9 @@ class Gas_Bureau {
 	{
 		$this->_CI = func_get_arg(0);
 		
-		if ( ! isset($this->_CI->db)) $this->_CI->load->database();
+		if ( ! isset($this->_CI->db)) $this->_engine = $this->_CI->load->database('default', TRUE);
 
-		self::$db = $this->_CI->db;
+		self::$db = $this->_engine;
 
 		if ( ! isset($this->_CI->form_validation)) $this->_CI->load->library('form_validation');
 
@@ -1729,6 +1744,26 @@ class Gas_Bureau {
 	}
 
 	/**
+	 * Database connection 
+	 * 
+	 * @param   mixed 
+	 * @return  bool
+	 */
+	public function connect($dns = null)
+	{
+		$this->_engine = $this->_CI->load->database($dns, TRUE);
+		
+		if ( ! is_resource($this->_engine->simple_query("SHOW TABLES")))
+		{
+			show_error(Gas_Core::tell('db_connection_error', $dns));
+		}
+	
+		self::$db = $this->_engine;
+
+		return;
+	}
+
+	/**
 	 * compile
 	 * 
 	 * Dynamic function for ompile AR
@@ -1960,9 +1995,14 @@ class Gas_Janitor {
 
 		foreach ($relations as $type => $relation)
 		{
-			if (key($relation) == $child)
+			foreach ($relation as $model => $config)
 			{
- 				$peer_relation = $type;
+				if ($model == $child)
+				{
+	 				$peer_relation = $type;
+
+	 				continue;
+				}
 			}
 		}
 

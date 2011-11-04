@@ -1,5 +1,7 @@
 <?php
 
+$lang['db_connection_error']       = 'Impossibile connettersi al database con questi gruppi o una stringa di connessione dsn: %s';
+
 $lang['models_not_found']          = 'Il percorso %s specificato nel file di configurazione non &egrave; valido.';
 
 $lang['models_found_no_relations'] = 'Nessuna relazione valida trovata nel Model %s.';

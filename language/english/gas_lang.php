@@ -1,5 +1,7 @@
 <?php
 
+$lang['db_connection_error']       = 'Cannot connect to database with these connection group or dsn string : %s';
+
 $lang['models_not_found']          = 'Unable to locate the models path you have specified: %s';
 
 $lang['models_found_no_relations'] = 'Model %s located, but missing relationship properties.';
