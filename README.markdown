@@ -9,7 +9,9 @@ A lighweight and easy-to-use ORM for CodeIgniter
 
 ## Installation
 
-Put Gas.php on your libraries folder and gas.php in config folder. Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
+There is only one simple step, to start working with Gas ORM in your CodeIgniter application : copy all Gas ORM files respectively. 
+
+Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
 
 ## About Gas
 
@@ -18,6 +20,25 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 ## Usage Example
 
 Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface.
+
+### DATABASE CONNECTION
+
+Gas supported multiple database connection, so you could do something like :
+
+```php
+// You can specify the dsn string
+Gas::connect('mysql://root:password@localhost/my_db');
+
+// This will search from user table at 'my_db' database
+var_dump(Gas::factory('user')->find(1));
+
+
+// You can specify the connection group name
+Gas::connect('develop');
+
+// This will search from user table at database, specified by your 'develop' group configuration
+var_dump(Gas::factory('user')->find(1));
+```
 
 ### FINDER
 
@@ -43,11 +64,13 @@ $someusers = Gas::factory('user')->find(1, 2, 3);
 
 $someusers = Gas::factory('user')->find_by_email('johndoe@yahoo.com');
 
+// almost all CI active record method, can chained with Gas finder method.
+
 $someusers = Gas::factory('user')->group_by('email')->all();
 
-$someusers = $user->like('email', 'yahoo.com')->all();
+$someusers = Gas::factory('user')->like('email', 'yahoo.com')->all();
 
-$somejoinedusers = $user->left_join_job('job.id = user.id')->all();
+$somejoinedusers = Gas::factory('user')->left_join_job('job.id = user.id')->all();
 ```
 
 ### WRITE OPERATION (CREATE, UPDATE, DELETE)

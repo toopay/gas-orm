@@ -164,11 +164,11 @@ class Gas_Core {
 	 * @param   mixed 
 	 * @return  void 
 	 */
-	public static function connect($dns = null)
+	public static function connect($dsn = null)
 	{
-		$dns = Gas_Janitor::get_input(__METHOD__, $dns, TRUE);
+		$dsn = Gas_Janitor::get_input(__METHOD__, $dsn, TRUE);
 
-		return self::$bureau->connect($dns);
+		return self::$bureau->connect($dsn);
 	}
 
 	/**
@@ -1749,13 +1749,13 @@ class Gas_Bureau {
 	 * @param   mixed 
 	 * @return  bool
 	 */
-	public function connect($dns = null)
+	public function connect($dsn = null)
 	{
-		$this->_engine = $this->_CI->load->database($dns, TRUE);
+		$this->_engine = $this->_CI->load->database($dsn, TRUE);
 		
 		if ( ! is_resource($this->_engine->simple_query("SHOW TABLES")))
 		{
-			show_error(Gas_Core::tell('db_connection_error', $dns));
+			show_error(Gas_Core::tell('db_connection_error', $dsn));
 		}
 	
 		self::$db = $this->_engine;
