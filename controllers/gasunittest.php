@@ -127,11 +127,13 @@ class Gasunittest extends CI_Controller {
 
 		$write_example = '';
 
+		$trans_example = '';
+
 		$relations_example = '';
 
 		$eagerloading_example = '';
 
-		$codes = array('finder', 'write', 'relations', 'eagerloading');
+		$codes = array('finder', 'write', 'trans', 'relations', 'eagerloading');
 
 		foreach ($codes as $code)
 		{
@@ -178,7 +180,7 @@ class Gasunittest extends CI_Controller {
 
 				heading('Overview', 3),
 
-				'<p>Before start using any of Gas available methos, you should have a gas model, which follow <a href="/'.GAS_NAME.'/convention" class="link">Gas standard model convention</a>. Then, you can start using it either by instantiate new Gas object or by using factory interface, eg :</p>',
+				'<p>Before start using any of Gas available method, you should have a gas model, which follow <a href="/'.GAS_NAME.'/convention" class="link">Gas standard model convention</a>. Then, you can start using it either by instantiate new Gas object or by using factory interface, eg :</p>',
 
 				'<pre><code>'.implode("\n",$overview).'</code></pre>',
 
@@ -193,6 +195,12 @@ class Gasunittest extends CI_Controller {
 				'<p>Since Gas utilize CI Form Validation, data validation process will not longer need draw a dragon in your code-blocks. Validation is an optional feature, soon you set up your _fields at _init method, your fields will be validated if you try to save a record(s) and passed TRUE parameter into save method. Update and delete process will be follow your recorded logic.</p>',
 
 				'<pre><code>'.$write_example.'</code></pre>',
+
+				heading('Transaction', 3),
+
+				'<p>Like CI Active Record, Gas also inherit those SQL transaction as well, with extra intelegently support AR pattern in transaction blocks.</p>',
+
+				'<pre><code>'.$trans_example.'</code></pre>',
 
 				heading('Relationship (One-To-One, One-To-Many, Many-To-Many)', 3),
 
@@ -282,6 +290,35 @@ class Gasunittest extends CI_Controller {
 		/*<code-write:Just ensure that data has been updated >*/if ($now_user->username != 'bar') die('Gas update was unsuccessfully executed!');/*<endcode>*/
 
 		/*<code-write:This will delete user 1 >*/$now_user->delete();/*<endcode>*/
+
+		/*<code-trans:Create new user instance >*/$user = Gas::factory('user');/*<endcode>*/
+
+		/*<code-trans:This is transaction pointer >*/$user->trans_start();/*<endcode>*/
+
+		/*<code-trans:Lets try to create user 5-9 >*/for($i = 5;$i < 10;$i++)/*<endcode>*/
+		/*<code-trans:running query() method >*/{/*<endcode>*/
+			/*<code-trans:	Here you can use query() method >*/	$user->query('INSERT INTO `user` (`id`, `name`) VALUES ('.$i.', \'user_'.$i.'\')');/*<endcode>*/
+		/*<code-trans:end insert >*/}/*<endcode>*/
+
+		/*<code-trans:Lets try to update above new entries >*/for($i = 5;$i < 10;$i++)/*<endcode>*/
+		/*<code-trans:running some AR method >*/{/*<endcode>*/
+			/*<code-trans:	Hey, in Gas, we could use any finder too! >*/	$new_user = Gas::factory($user->model())->find($i);/*<endcode>*/
+			/*<code-trans:	fill, save and other AR method still available as well! >*/	$new_user->fill(array('name' => 'person_'.$i))->save();/*<endcode>*/
+		/*<code-trans:end update >*/}/*<endcode>*/
+
+		/*<code-trans:If something goes wrong >*/if ($user->trans_status() === FALSE)/*<endcode>*/
+		/*<code-trans:trans_rollback >*/{/*<endcode>*/
+		    /*<code-trans:	will produce SQL : "ROLLBACK" >*/	$user->trans_rollback();/*<endcode>*/
+		/*<code-trans:end trans_rollback >*/}/*<endcode>*/
+		/*<code-trans:If everything ok >*/else/*<endcode>*/
+		/*<code-trans:trans_commmit >*/{/*<endcode>*/
+		    /*<code-trans:	will produce SQL : "COMMIT" >*/	$user->trans_commit();/*<endcode>*/
+		/*<code-trans:end trans_commmit >*/}/*<endcode>*/
+
+		$user9 = Gas::factory('user')->find(9);
+
+		// Should be an array
+		$this->unit->run($user9->name, 'person_9', '[transaction]', 'Transaction test'); 
 
 		$user = new User;
 
@@ -440,9 +477,9 @@ class Gasunittest extends CI_Controller {
 		// Should be 4, because we use 'all', we just grouped/sorted it by email.
 		$this->unit->run(count($someusers), 4, '[ci_ar_group_by]', '-');
 
-		/*<code-finder:CI Active Record : will return all user where their email are like '%yahoo.com%'>*/$someusers = $user->like('email', 'yahoo.com')->all();/*<endcode>*/
+		/*<code-finder:CI Active Record : will return all user where their email are like '%yahoo.com%'>*/$someusers = Gas::factory('user')->like('email', 'yahoo.com')->all();/*<endcode>*/
 
-		/*<code-finder:CI Active Record : will return SELECT * FROM (`user`) LEFT JOIN `job` ON `job`.`id` = `user`.`id`>*/$somejoinedusers = $user->left_join_job('job.id = user.id')->all();/*<endcode>*/
+		/*<code-finder:CI Active Record : will return SELECT * FROM (`user`) LEFT JOIN `job` ON `job`.`id` = `user`.`id`>*/$somejoinedusers = Gas::factory('user')->left_join_job('job.id = user.id')->all();/*<endcode>*/
 
 		$this->unit->run($this->db->last_query(), 'SELECT *'."\n"
 													.'FROM (`user`)'."\n"

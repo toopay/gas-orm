@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.0.3
+ * @version     1.1.0
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://taufanaditya.com/gas-orm
  * @license     BSD
@@ -26,7 +26,7 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.0.3
+ * @version     1.1.0
  */
 
 class Gas_Core {
@@ -1232,10 +1232,16 @@ class Gas_Core {
 		{
 			return $engine->list_fields($this->table);
 		}
-		elseif ($name == 'sql')
+		elseif ($name == 'last_sql')
 		{
 			
 			return $engine->last_query();
+
+		}
+		elseif ($name == 'all_sql')
+		{
+			
+			return $engine->queries;
 
 		}
 		elseif ($name == 'group_by')
@@ -1319,7 +1325,7 @@ class Gas_Core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.0.3
+ * @version     1.1.0
  */
 
 class Gas_Bureau {
@@ -1375,7 +1381,6 @@ class Gas_Bureau {
 			{
 				foreach($task as $action)
 				{
-
 					$motor = get_class(self::$db);
 
 					if (method_exists($motor, key($action)))
@@ -1384,7 +1389,9 @@ class Gas_Bureau {
 
 						$args = array_shift($action);
 
-						if ($type == 'executor' or $type == 'transaction_status')
+						$is_transaction = Gas::factory($gas)->get_type('transaction_pointer');
+
+						if ($type == 'executor')
 						{
 							$executor = Gas_Janitor::$dictionary['executor'];
 
@@ -1394,14 +1401,13 @@ class Gas_Bureau {
 
 							if ($method == 'get')
 							{
-								
 								$result = Gas_Janitor::force_and_get(self::$db, $method, $args);
 
 								Gas::factory($gas)->set_ar_record(array());
 
 								return self::generator($gas, $result->result(), __FUNCTION__, $limit, Gas::factory($gas)->get_with());
 							}
-							elseif (in_array($method, $writes))
+							elseif ( ! $is_transaction and in_array($method, $writes))
 							{
 								Gas_Janitor::force(self::$db, $method, $args);
 
@@ -1409,10 +1415,22 @@ class Gas_Bureau {
 								
 								return self::$db->affected_rows();
 							}
-
+							
 							Gas_Janitor::force(self::$db, $method, $args);
 
 							Gas::factory($gas)->set_ar_record(array());
+						}
+						elseif ($type == 'transaction_executor')
+						{
+							Gas_Janitor::force(self::$db, $method, $args);
+
+							Gas::factory($gas)->set_type('transaction_pointer', FALSE);
+
+							Gas::factory($gas)->set_type('transaction_executor', FALSE);
+						}
+						elseif ($type == 'transaction_status')
+						{
+							return Gas_Janitor::force_and_get(self::$db, $method, $args);
 						}
 						else
 						{
@@ -1943,7 +1961,7 @@ class Gas_Bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.0.3
+ * @version     1.1.0
  */
 
 class Gas_Janitor {
@@ -1952,6 +1970,8 @@ class Gas_Janitor {
 
 		'transaction_pointer' => array('trans_off', 'trans_start', 'trans_begin'),
 
+		'transaction_executor' => array('trans_complete', 'trans_rollback', 'trans_commit'),
+
 		'selector' => array('select', 'select_max', 'select_min', 'select_avg', 'select_sum'),
 
 		'condition' => array('join', 'where', 'or_where', 'where_in', 'or_where_in', 'where_not_in', 'or_where_not_in', 'like', 'or_like', 'not_like', 'or_not_like', 'group_by', 'distinct', 'having', 'or_having', 'order_by', 'limit', 'set'),
@@ -1959,8 +1979,6 @@ class Gas_Janitor {
 		'executor' => array('get', 'count_all_results', 'insert_string', 'update_string', 'query', 'insert', 'insert_batch', 'update', 'delete', 'empty_table', 'truncate', 'insert_id', 'count_all', 'affected_rows', 'platform', 'version', 'last_query'),
 
 		'transaction_status' => array('trans_status'),
-
-		'transaction_executor' => array('trans_complete', 'trans_rollback', 'trans_commit'),
 
 	);
 
@@ -2293,7 +2311,7 @@ class Gas_Janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.0.3
+ * @version     1.1.0
  */
 
 class Gas extends Gas_Core {
