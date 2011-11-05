@@ -13,6 +13,8 @@ There is only one simple step, to start working with Gas ORM in your CodeIgniter
 
 Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
 
+**NOTE : you didnt need to load database when working with Gas, Gas will automatically doing that. Also turn off 'database' from autoload config in autoload.php (under your config folder) if you were previously set it on**
+
 ## About Gas
 
 Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
@@ -20,6 +22,8 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 ## Usage Example
 
 Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface.
+
+You can see Gas convention and examples in these public gist : https://gist.github.com/1339003
 
 ### DATABASE CONNECTION
 
