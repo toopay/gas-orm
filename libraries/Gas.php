@@ -1348,8 +1348,15 @@ class Gas_Bureau {
 	function __construct()
 	{
 		$this->_CI = func_get_arg(0);
-		
-		if ( ! isset($this->_CI->db)) $this->_engine = $this->_CI->load->database('default', TRUE);
+
+		if ( ! isset($this->_CI->db))
+		{
+			$this->_engine = $this->_CI->load->database('default', TRUE);
+		}
+		else
+		{
+			$this->_engine = $this->_CI->db;
+		}
 
 		self::$db = $this->_engine;
 

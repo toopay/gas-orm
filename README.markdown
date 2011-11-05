@@ -13,7 +13,7 @@ There is only one simple step, to start working with Gas ORM in your CodeIgniter
 
 Optionally, there was unit testing packages included as a controller, named gasunittest.php, which will auto-created neccesaryy stuff (files and tables) to performing test to evaluate all available implementation to determine if it is producing the correct data type and result. Copy gasunittest.php into your controllers folder, and run it.
 
-**NOTE : you didnt need to load database when working with Gas, Gas will automatically doing that. Also turn off 'database' from autoload config in autoload.php (under your config folder) if you were previously set it on**
+**NOTE : you didnt need to load database when working with Gas, Gas will automatically doing that.**
 
 ## About Gas
 
