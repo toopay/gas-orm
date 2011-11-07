@@ -931,11 +931,11 @@ class Gas_Core {
 	 * 
 	 * Validating whether current table is valid 
 	 *
-	 * @access	protected
+	 * @access	public
 	 * @param   sring
 	 * @return	void
 	 */
-	protected function validate_table($table = null)
+	public function validate_table($table = null)
 	{
 		$table = (is_null($table)) ? $this->table : $table;
 		
@@ -1509,7 +1509,7 @@ class Gas_Bureau {
 
 			foreach ($eager_load_models as $child)
 			{
-				$childs[$child]['foreign_table'] = Gas_Janitor::get_input(__METHOD__, Gas::factory($child)->table, FALSE, $child);
+				$childs[$child]['foreign_table'] = Gas_Janitor::get_input(__METHOD__, Gas::factory($child)->validate_table()->table, FALSE, $child);
 
 				$childs[$child]['foreign_key'] = Gas::factory($child)->primary_key;
 			}
@@ -1641,6 +1641,8 @@ class Gas_Bureau {
 
 		$primary_key = $instance->primary_key;
 
+		$foreign_table = Gas::factory($child)->validate_table()->table;
+
 		$foreign_key = Gas::factory($child)->primary_key; 
 
 		if (empty($relations) or ! is_array($relations)) show_error(Gas_Core::tell('models_found_no_relations', $gas));
@@ -1659,11 +1661,11 @@ class Gas_Bureau {
 
 			if (count($identifiers) == 1)
 			{
-				self::$db->where(array($new_identifier => $identifiers[0]))->from($child);
+				self::$db->where(array($new_identifier => $identifiers[0]))->from($foreign_table);
 			}
 			elseif (count($identifiers) > 1)
 			{
-				self::$db->where_in($new_identifier, $identifiers)->from($child);
+				self::$db->where_in($new_identifier, $identifiers)->from($foreign_table);
 			}	
 
 			if ($peer_relation == 'has_one') $self = TRUE;
@@ -1674,19 +1676,19 @@ class Gas_Bureau {
 
 			if (is_string($foreign_value) or is_numeric($foreign_value))
 			{
-				self::$db->where(array($foreign_key => $foreign_value))->limit(1)->from($child);
+				self::$db->where(array($foreign_key => $foreign_value))->limit(1)->from($foreign_table);
 				
 			}
 			elseif (is_array($foreign_value))
 			{
-				self::$db->where_in($foreign_key, $foreign_value)->from($child);
+				self::$db->where_in($foreign_key, $foreign_value)->from($foreign_table);
 			}
 
 			$self = TRUE;
 		}
 		elseif ($peer_relation == 'has_and_belongs_to')
 		{
-			$guess_table = Gas_Janitor::combine($table, $child);
+			$guess_table = Gas_Janitor::combine($table, $foreign_table);
 
 			foreach ($guess_table as $link_table)
 			{
@@ -1700,21 +1702,21 @@ class Gas_Bureau {
 
 			$pivot_table = Gas_Janitor::get_input(__METHOD__, $pivot_table, TRUE);
 
-			$origin_fields = self::$db->list_fields($child);
+			$origin_fields = self::$db->list_fields($foreign_table);
 
 			$new_identifier = $table.'_'.$primary_key;
 
 			$global_identifier = $new_identifier;
 
-			self::$db->join($pivot_table, $child.'_'.$foreign_key.' = '.$foreign_key);
+			self::$db->join($pivot_table, $foreign_table.'_'.$foreign_key.' = '.$foreign_key);
 
 			if (count($identifiers) == 1)
 			{
-				self::$db->where(array($new_identifier => $identifiers[0]))->from($child);
+				self::$db->where(array($new_identifier => $identifiers[0]))->from($foreign_table);
 			}
 			elseif (count($identifiers) > 1)
 			{
-				self::$db->where_in($new_identifier, $identifiers)->from($child);
+				self::$db->where_in($new_identifier, $identifiers)->from($foreign_table);
 			}	
 		}
 
