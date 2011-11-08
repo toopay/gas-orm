@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.1.0
+ * @version     1.1.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://taufanaditya.com/gas-orm
  * @license     BSD
@@ -26,7 +26,7 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.1.0
+ * @version     1.1.2
  */
 
 class Gas_Core {
@@ -146,6 +146,7 @@ class Gas_Core {
 	/**
 	 * Produce an empty Gas model instance.
 	 * 
+	 * @access  public 
 	 * @param   string 
 	 * @return  object  Gas Instance
 	 */
@@ -161,6 +162,7 @@ class Gas_Core {
 	/**
 	 * Database connection 
 	 * 
+	 * @access  public 
 	 * @param   mixed 
 	 * @return  void 
 	 */
@@ -391,9 +393,9 @@ class Gas_Core {
 	 * 
 	 * Get record based by given primary key arguments
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	object Gas Instance
+	 * @return  object Gas Instance
 	 */
 	public function find()
 	{
@@ -411,10 +413,10 @@ class Gas_Core {
 	 * 
 	 * Get record based by given arguments
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
 	 * @param   string
-	 * @return	object Gas Instance
+	 * @return  object Gas Instance
 	 */
 	public function find_where_in($args, $type = '')
 	{
@@ -431,7 +433,11 @@ class Gas_Core {
 	 * Get record based by given arguments
 	 *
 	 * @access	public
-	 *
+	 * @param   array
+	 * @param   int
+	 * @param   int
+	 * @param   string
+	 * @return  object Gas Instance
 	 */
 	public function find_where($args, $limit = null, $offset = null, $type = '')
 	{
@@ -464,9 +470,9 @@ class Gas_Core {
 	 * 
 	 * WHERE statement for conditional query
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function where()
 	{
@@ -486,9 +492,9 @@ class Gas_Core {
 	 * 
 	 * OR WHERE statement for conditional query
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function or_where()
 	{
@@ -508,10 +514,10 @@ class Gas_Core {
 	 * 
 	 * WHERE IN statement for conditional query
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
 	 * @param   string
-	 * @return	void
+	 * @return  void
 	 */
 	public function where_in($args, $type = '')
 	{
@@ -554,9 +560,9 @@ class Gas_Core {
 	 * 
 	 * Save or Update a table
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   bool    whether to skip or not the validation process
-	 * @return	int     affected rows
+	 * @return  int     affected rows
 	 */
 	public function save($check = FALSE)
 	{
@@ -611,9 +617,9 @@ class Gas_Core {
 	 * 
 	 * Delete record(s) based by given arguments
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	int     affected rows
+	 * @return  int     affected rows
 	 */
 	public function delete()
 	{
@@ -766,7 +772,7 @@ class Gas_Core {
 	 * 
 	 * Output array of model attributes
 	 *
-	 * @access	private
+	 * @access	public
 	 * @return	string
 	 *
 	 */
@@ -780,7 +786,7 @@ class Gas_Core {
 	 * 
 	 * Output json of model attributes
 	 *
-	 * @access	private
+	 * @access	public
 	 * @return	string
 	 *
 	 */
@@ -794,9 +800,9 @@ class Gas_Core {
 	 * 
 	 * Set model attributes
 	 *
-	 * @access	private
+	 * @access  public
 	 * @param   mixed
-	 * @return	array
+	 * @return  array
 	 *
 	 */
 	public function set_fields($resource)
@@ -811,9 +817,9 @@ class Gas_Core {
 	 * 
 	 * Set CI records into model attributes
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function set_record($resource)
 	{
@@ -827,9 +833,9 @@ class Gas_Core {
 	 * 
 	 * Set Gas child properties
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
-	 * @return	void
+	 * @return  void
 	 */
 	public function set_child($name, $node)
 	{
@@ -845,9 +851,9 @@ class Gas_Core {
 	 * 
 	 * Push CI AR attributes to a Gas model
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function add_ar_record($recorder)
 	{
@@ -862,9 +868,9 @@ class Gas_Core {
 	 * 
 	 * Set CI AR attributes to a Gas model
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function set_ar_record($condition)
 	{
@@ -931,9 +937,9 @@ class Gas_Core {
 	 * 
 	 * Validating whether current table is valid 
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   sring
-	 * @return	void
+	 * @return  void
 	 */
 	public function validate_table($table = null)
 	{
@@ -1011,10 +1017,10 @@ class Gas_Core {
 	 * 
 	 * Overloading method to writing data to inaccessible properties.
 	 *
-	 * @access	public
-	 * @param	string
+	 * @access  public
+	 * @param   string
 	 * @param   array
-	 * @return	mixed
+	 * @return  mixed
 	 */
 	function __set($name, $args)
 	{
@@ -1049,20 +1055,29 @@ class Gas_Core {
  					{
 		 				return $this->_get_child_nodes[$index][$child];
  					}
-
-	 				return $this->_get_child_nodes[$index];
+ 					else
+ 					{
+ 						return ( ! $this->_get_child_nodes[$index][$child]) ? array() : $this->_get_child_nodes[$index][$child];
+ 					}
 	 			}
  			}
  		}
 
  		if (isset(self::$_models[$name]) and ! isset($this->_set_fields[$name]))
  		{
+ 			$relations = $this->relations;
+
+ 			$peer_relation = Gas_Janitor::get_input('Gas_Core::__get', Gas_Janitor::identify_relations($relations, $name), FALSE, '');
+
+			list($custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($relations, $peer_relation, $name);
 
  			$foreign_table = Gas_Janitor::get_input('Gas_Core::__get', Gas::factory($name)->table, FALSE, $name);
 
  			$foreign_key = Gas::factory($name)->primary_key;
 
- 			return Gas_Bureau::generate_child($this->model(), $name, array($this->identifier()), $this->identifier($foreign_table.'_'.$foreign_key));
+ 			$identifier = ($custom_key !== '') ? $custom_key : $foreign_table.'_'.$foreign_key;
+
+ 			return Gas_Bureau::generate_child($this->model(), $name, array($this->identifier()), $this->identifier($identifier));
 	 	}
  	}
 
@@ -1325,7 +1340,7 @@ class Gas_Core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.1.0
+ * @version     1.1.2
  */
 
 class Gas_Bureau {
@@ -1505,10 +1520,14 @@ class Gas_Bureau {
 		{
 			$childs = array();
 
+			$eager_relations = Gas::factory($gas)->relations;
+
 			$eager_load_models = Gas::factory($gas)->get_with_models();
 
 			foreach ($eager_load_models as $child)
 			{
+				$childs[$child]['relations'] = $eager_relations;
+
 				$childs[$child]['foreign_table'] = Gas_Janitor::get_input(__METHOD__, Gas::factory($child)->validate_table()->table, FALSE, $child);
 
 				$childs[$child]['foreign_key'] = Gas::factory($child)->primary_key;
@@ -1522,9 +1541,15 @@ class Gas_Bureau {
 			{
 				if (isset($single->$primary_key)) $ids[] = $single->$primary_key;
 
-				foreach ($childs as $child)
+				foreach ($childs as $child_model => $child)
 				{
-					$foreign_key = $child['foreign_table'].'_'.$child['foreign_key'];
+					$relations = $child['relations'];
+
+					$peer_relation = Gas_Janitor::get_input(__METHOD__, Gas_Janitor::identify_relations($relations, $child_model), FALSE, '');
+
+					list($custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($relations, $peer_relation, $child_model);
+
+					$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
 
 					if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
 				}
@@ -1533,7 +1558,7 @@ class Gas_Bureau {
 
 			foreach ($eager_load_models as $model)
 			{
-				$eager_load_results[$model] = self:: generate_child($gas, $model, $ids, $fids, TRUE);
+				$eager_load_results[$model] = self:: generate_child($gas, $model, $ids, array_unique($fids), TRUE);
 			}
 
 		}
@@ -1560,7 +1585,6 @@ class Gas_Bureau {
 					}
 					else
 					{
-
 						$identifier = $sample['identifier'];
 
 						$self = $sample['self'];
@@ -1570,6 +1594,8 @@ class Gas_Bureau {
 						foreach ($all_results as $result)
 						{
 							$eager_record = Gas_Janitor::get_input(__METHOD__, $result['record'], FALSE, array());
+
+							$eager_type = Gas_Janitor::get_input(__METHOD__, $result['type'], FALSE, '');
 
 							if (isset($result['raw']) and ! empty($result['raw']))
 							{
@@ -1587,8 +1613,23 @@ class Gas_Bureau {
 							{
 								$id = Gas_Janitor::get_input(__METHOD__, $eager_record[$identifier], FALSE, '');
 							}
-							
-							if ($id == $record->$primary_key)
+
+							list($eager_custom_table, $eager_custom_key) = Gas_Janitor::identify_custom_setting($eager_relations, $eager_type, $child);
+
+							if ($eager_type == 'has_one' or $eager_type == 'has_many')
+							{
+								$key = $primary_key;
+							}
+							elseif ($eager_type == 'belongs_to')
+							{
+								$key = ($custom_key !== '') ? $custom_key : $primary_key;
+							}
+							elseif ($eager_type == 'has_and_belongs_to')
+							{
+								$key = $primary_key;
+							}
+
+							if ($id == $record->$key)
 							{
 								if ($self)
 								{
@@ -1651,11 +1692,13 @@ class Gas_Bureau {
 
 		if (empty($peer_relation)) show_error(Gas_Core::tell('models_found_no_relations', $gas));
 
+		list($custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($relations, $peer_relation, $child);
+
 		$self = FALSE;
 
 		if ($peer_relation == 'has_one' or $peer_relation == 'has_many')
 		{
-			$new_identifier = $table.'_'.$primary_key;
+			$new_identifier = ($custom_key !== '') ? $custom_key : $table.'_'.$primary_key;
 
 			$global_identifier = $new_identifier;
 
@@ -1672,43 +1715,62 @@ class Gas_Bureau {
 		}
 		elseif ($peer_relation == 'belongs_to')
 		{
-			$global_identifier = $foreign_key;
+			$new_identifier = $foreign_key;
+
+			$global_identifier = $new_identifier;
 
 			if (is_string($foreign_value) or is_numeric($foreign_value))
 			{
-				self::$db->where(array($foreign_key => $foreign_value))->limit(1)->from($foreign_table);
+				self::$db->where(array($new_identifier => $foreign_value))->limit(1)->from($foreign_table);
 				
 			}
 			elseif (is_array($foreign_value))
 			{
-				self::$db->where_in($foreign_key, $foreign_value)->from($foreign_table);
+				self::$db->where_in($new_identifier, $foreign_value)->from($foreign_table);
 			}
 
 			$self = TRUE;
 		}
 		elseif ($peer_relation == 'has_and_belongs_to')
 		{
-			$guess_table = Gas_Janitor::combine($table, $foreign_table);
-
-			foreach ($guess_table as $link_table)
+			if ($custom_table !== '')
 			{
-				if (self::$db->table_exists($link_table))
-				{
-					$pivot_table = $link_table;
+				$pivot_table = $custom_table;
+			}
+			else
+			{
+				$guess_table = Gas_Janitor::combine($table, $foreign_table);
 
-					continue;
+				foreach ($guess_table as $link_table)
+				{
+					if (self::$db->table_exists($link_table))
+					{
+						$pivot_table = $link_table;
+
+						continue;
+					}
 				}
 			}
-
+			
 			$pivot_table = Gas_Janitor::get_input(__METHOD__, $pivot_table, TRUE);
 
 			$origin_fields = self::$db->list_fields($foreign_table);
 
-			$new_identifier = $table.'_'.$primary_key;
+			$new_identifier = ($custom_key !== '') ? $custom_key : $table.'_'.$primary_key;
+
+			$foreign_relations = Gas::factory($child)->relations;
+
+			$foreign_type = Gas_Janitor::get_input(__METHOD__, Gas_Janitor::identify_relations($foreign_relations, $gas), FALSE, '');
+
+			if (empty($foreign_type)) show_error(Gas_Core::tell('models_found_no_relations', 'has_and_belongs:'.$gas));
+
+			list($custom_foreign_table, $custom_foreign_key) = Gas_Janitor::identify_custom_setting($foreign_relations, $foreign_type, $gas);
+
+			$foreign_identifier = ($custom_foreign_key !== '') ? $custom_foreign_key : $foreign_table.'_'.$foreign_key;
 
 			$global_identifier = $new_identifier;
 
-			self::$db->join($pivot_table, $foreign_table.'_'.$foreign_key.' = '.$foreign_key);
+			self::$db->join($pivot_table, $foreign_identifier.' = '.$foreign_key);
 
 			if (count($identifiers) == 1)
 			{
@@ -1813,9 +1875,9 @@ class Gas_Bureau {
 	 * 
 	 * Get model(s)'s public
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	void
+	 * @return  void
 	 */
 	public function load_model($models = null)
 	{
@@ -1858,11 +1920,11 @@ class Gas_Bureau {
 	 * 
 	 * Validation handler
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
 	 * @param   array
 	 * @param   array
-	 * @return	bool
+	 * @return  bool
 	 */
 	public function validate($gas, $entries, $rules)
 	{
@@ -1970,12 +2032,12 @@ class Gas_Bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.1.0
+ * @version     1.1.2
  */
 
 class Gas_Janitor {
 
-	static $dictionary = array(
+	public static $dictionary = array(
 
 		'transaction_pointer' => array('trans_off', 'trans_start', 'trans_begin'),
 
@@ -1994,11 +2056,11 @@ class Gas_Janitor {
 	/**
 	 * diagnostic
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
-	 * @return	string
+	 * @return  string
 	 */
-	static function diagnostic($name)
+	public static function diagnostic($name)
 	{
 		foreach (self::$dictionary as $type => $nodes)
 		{
@@ -2011,12 +2073,12 @@ class Gas_Janitor {
 	/**
 	 * identify_relations
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
 	 * @param   string
-	 * @return	string
+	 * @return  string
 	 */
-	static function identify_relations($relations, $child)
+	public static function identify_relations($relations, $child)
 	{
 		$peer_relation = null;
 
@@ -2037,13 +2099,37 @@ class Gas_Janitor {
 	}
 
 	/**
+	 * identify_custom_setting
+	 *
+	 * @access  public
+	 * @param   array
+	 * @param   string
+	 * @return  array
+	 */
+	public static function identify_custom_setting($relations = array(), $type = '', $model = '')
+	{
+		$custom_table = '';
+
+		$custom_key = '';
+
+		if ( ! empty ($relations[$type][$model]) and ($custom_setting = $relations[$type][$model]))
+		{
+			isset($custom_setting['foreign_table']) and $custom_table = $custom_setting['foreign_table'];
+
+			isset($custom_setting['foreign_key']) and $custom_key = $custom_setting['foreign_key'];
+		}
+
+		return array($custom_table, $custom_key);
+	}
+
+	/**
 	 * combine
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
-	 * @return	array
+	 * @return  array
 	 */
-	static function combine($a, $b)
+	public static function combine($a, $b)
 	{
 		return array($a.'_'.$b, $b.'_'.$a);
 	}
@@ -2051,11 +2137,11 @@ class Gas_Janitor {
 	/**
 	 * intersect
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
-	 * @return	array
+	 * @return  array
 	 */
-	static function intersect($a, $b)
+	public static function intersect($a, $b)
 	{
 	    if ($a == $b)
 	    {
@@ -2072,10 +2158,10 @@ class Gas_Janitor {
 	/**
 	 * new_record
 	 *
-	 * @access	public
-	 * @return	array
+	 * @access  public
+	 * @return  array
 	 */
-	static function new_record()
+	public static function new_record()
 	{
 		return array_fill(0, count(self::$dictionary), array());
 	}
@@ -2083,12 +2169,12 @@ class Gas_Janitor {
 	/**
 	 * tape_record
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
 	 * @param   array
-	 * @return	void
+	 * @return  void
 	 */
-	static function tape_record($gas, $recorder)
+	public static function tape_record($gas, $recorder)
 	{
 		$success = FALSE;
 
@@ -2115,11 +2201,11 @@ class Gas_Janitor {
 	/**
 	 * play_record
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
-	 * @return	array
+	 * @return  array
 	 */
-	static function play_record($recorder)
+	public static function play_record($recorder)
 	{
 		$blank_disc = self::new_record();
 
@@ -2142,13 +2228,13 @@ class Gas_Janitor {
 	/**
 	 * force
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
 	 * @param   string
 	 * @param   array
-	 * @return	void
+	 * @return  void
 	 */
-	static function force($class, $method, $args)
+	public static function force($class, $method, $args)
 	{
 		$total_args = count($args);
 			
@@ -2179,13 +2265,13 @@ class Gas_Janitor {
 	/**
 	 * force_and_get
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
 	 * @param   string
 	 * @param   array
-	 * @return	mixed
+	 * @return  mixed
 	 */
-	static function force_and_get($class, $method, $args)
+	public static function force_and_get($class, $method, $args)
 	{
 		$total_args = count($args);
 			
@@ -2214,10 +2300,10 @@ class Gas_Janitor {
 	/**
 	 * flush_post
 	 *
-	 * @access	public
-	 * @return	void
+	 * @access  public
+	 * @return  void
 	 */
-	static function flush_post()
+	public static function flush_post()
 	{
 		if (isset($_POST)) $_POST = array();
 	}
@@ -2225,13 +2311,13 @@ class Gas_Janitor {
 	/**
 	 * get_input
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
 	 * @param   bool
 	 * @param   bool
-	 * @return	mixed
+	 * @return  mixed
 	 */
-	static function get_input($method, $input, $die = FALSE, $default = FALSE)
+	public static function get_input($method, $input, $die = FALSE, $default = FALSE)
 	{
 		if ( ! isset($input) or empty($input))
 		{
@@ -2246,11 +2332,11 @@ class Gas_Janitor {
 	/**
 	 * to_array
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   mixed
-	 * @return	array
+	 * @return  array
 	 */
-	static function to_array($var)
+	public static function to_array($var)
 	{
 		return (array) $var;
 	}
@@ -2258,11 +2344,11 @@ class Gas_Janitor {
 	/**
 	 * to_json
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
-	 * @return	string
+	 * @return  string
 	 */
-	static function to_json($var)
+	public static function to_json($var)
 	{
 		return json_encode($var);
 	}
@@ -2270,12 +2356,12 @@ class Gas_Janitor {
 	/**
 	 * where_to_join
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
 	 * @param   string
-	 * @return	array
+	 * @return  array
 	 */
-	static function where_to_join($recorder, $table)
+	public static function where_to_join($recorder, $table)
 	{
 		$condition = self::$dictionary['condition'];
 
@@ -2300,11 +2386,11 @@ class Gas_Janitor {
 	/**
 	 * to_json
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   string
-	 * @return	string
+	 * @return  string
 	 */
-	static function set_label($field)
+	public static function set_label($field)
 	{
 		return str_replace(array('-', '_'), ' ', ucfirst($field));
 	}
@@ -2320,7 +2406,7 @@ class Gas_Janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.1.0
+ * @version     1.1.2
  */
 
 class Gas extends Gas_Core {

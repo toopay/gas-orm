@@ -778,10 +778,6 @@ class Gasunittest extends CI_Controller {
 			if ( ! in_array($item, $list_models))
 			{
 				$this->_create_model($item, $gas->get_config());
-
-				$gas->scan();
-
-				$gas->load($item);
 			}
 		}
 		
