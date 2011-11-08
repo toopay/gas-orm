@@ -3,30 +3,38 @@
 <head>
   <meta charset='utf-8'>
 
-  <title>toopay/CI-GasORM-Library @ GitHub</title>
+  <title>Gas ORM @ GitHub</title>
 
   <style type="text/css">
     body {
       margin-top: 1.0em;
-      background-color: #20a874;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
+      background-color: #000;
+      font-family: Tahoma, Arial, FreeSans, san-serif;
+      color: #787878;
+      text-shadow: -0.1px -0.1px 1px #EAEAEA;
     }
     #container {
       margin: 0 auto;
       width: 700px;
+      padding:30px;
+      background-color: #fff;
+      moz-border-radius: 25px;
+      border-radius: 25px;
     }
-    h1 { font-size: 3.8em; color: #df578b; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #df578b; }
-    h3 { text-align: center; color: #df578b; }
-    a { color: #df578b; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    h1 { font-size: 3.8em; color: #d00; margin-bottom: 3px; }
+    h1 .small { font-size: 0.4em; color: #787878;}
+    h1 .small a { text-decoration: none; color: #787878;}
+    h1 .small a:hover { text-decoration: none; color: #d00;}
+    h1 a { text-decoration: none; color: #d00; }
+    h2 { font-size: 1.5em; color: #787878; }
+    h3 { text-align: center; color: #787878; }
+    a { text-decoration: none; color: #787878; }
+    a:hover { text-decoration: none; color: #d00; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; }
     .download { float: right; }
     pre { background: #000; color: #fff; padding: 15px;}
     hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
+    .footer { text-align:center; padding-top:30px; }
   </style>
 </head>
 
@@ -42,46 +50,37 @@
         <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
     </div>
 
-    <h1><a href="https://github.com/toopay/CI-GasORM-Library">CI-GasORM-Library</a>
+    <h1><a href="https://github.com/toopay/CI-GasORM-Library">Gas ORM</a>
       <span class="small">by <a href="https://github.com/toopay">toopay</a></span></h1>
 
     <div class="description">
       A lighweight and easy-to-use ORM for CodeIgniter
     </div>
+    <h2>Overview</h2>
+    <pre>
+// FINDER
+$all = Gas::factory('user')->all());
+$some_user = Gas::factory('user')->find_by_username('foo');
 
-    
+// WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
+$new_user = new User;
+$new_user->fill($_POST)->save(TRUE);
 
-    
-
-    
-
-    
-
+// RELATIONSHIP & EAGER LOADING
+$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1));
+$some_user_wife = $some_user->wife;
+    </pre>
     
       <h2>Authors</h2>
       <p>toopay (toopay@taufanaditya.com)
 <br/>      </p>
-    
 
-    
-      <h2>Contact</h2>
-      <p>toopay (toopay@taufanaditya.com)
-<br/>      </p>
-    
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="https://github.com/toopay/CI-GasORM-Library/zipball/master">zip</a> or
-      <a href="https://github.com/toopay/CI-GasORM-Library/tarball/master">tar formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
+    <h2>Clone :</h2>
       <pre>$ git clone git://github.com/toopay/CI-GasORM-Library</pre>
     </p>
 
     <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/toopay/CI-GasORM-Library">toopay/CI-GasORM-Library</a>
+      Convention and more examples on : <a href="https://gist.github.com/1339003">gist.github.com/1339003</a>
     </div>
 
   </div>
