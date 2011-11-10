@@ -19,117 +19,39 @@ Optionally, there was unit testing packages included as a controller, named gasu
 
 Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
 
-## Usage Example
+## Features
+
+- Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.
+- Support multiple database connection.
+- Multiple relationship (has_one, has_many, 'belongs_to', 'has_and_belongs_to') with custom relationship setting ('through', 'foreign_key', 'foreign_table')
+- Various finder method (can chained with most of CI AR) and aggregates.
+- Validation and auto-mapping input collection, with minimal setup.
+- Transaction, cache, and other CI AR goodness.
+
+## Planned Features
+
+- Auto-create and auto-synchronize tables (utilize Migration)
+- Support for Hierarchical Data (tree traversal)
+- More useful features, but keep both size and performance for a good use.
+
+## Convention and usage
 
 Before start using any of Gas available methods, you should have a gas model, which follow Gas standard model convention. Then, you can start using it either by instantiate new Gas object or by using factory interface.
 
 You can see Gas convention and examples in these public gist : https://gist.github.com/1339003
 
-### DATABASE CONNECTION
-
-Gas supported multiple database connection, so you could do something like :
-
 ```php
-// You can specify the dsn string
-Gas::connect('mysql://root:password@localhost/my_db');
+// FINDER
+$all = Gas::factory('user')->all());
+$some_user = Gas::factory('user')->find_by_username('foo');
 
-// This will search from user table at 'my_db' database
-var_dump(Gas::factory('user')->find(1));
-
-
-// You can specify the connection group name
-Gas::connect('develop');
-
-// This will search from user table at database, specified by your 'develop' group configuration
-var_dump(Gas::factory('user')->find(1));
-```
-
-### FINDER
-
-```php
-// all : will return an array of user's object
-$users = Gas::factory('user')->all();
-
-$firstuser = Gas::factory('user')->first();
-
-$lastuser = Gas::factory('user')->last();
-
-$max = Gas::factory('user')->max();
-
-$min = Gas::factory('user')->min();
-
-$avg = Gas::factory('user')->avg('id', 'average_id');
-
-$sum = Gas::factory('user')->sum('id', 'sum_of_id');
-
-$someuser = Gas::factory('user')->find(1);
-
-$someusers = Gas::factory('user')->find(1, 2, 3);
-
-$someusers = Gas::factory('user')->find_by_email('johndoe@yahoo.com');
-
-// almost all CI active record method, can chained with Gas finder method.
-
-$someusers = Gas::factory('user')->group_by('email')->all();
-
-$someusers = Gas::factory('user')->like('email', 'yahoo.com')->all();
-
-$somejoinedusers = Gas::factory('user')->left_join_job('job.id = user.id')->all();
-```
-
-### WRITE OPERATION (CREATE, UPDATE, DELETE)
-
-```php
-$_POST = array('id' => null, 'name' => 'Mr. Foo', 'email' => 'foo@world.com', 'username' => 'foo');
-
+// WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
 $new_user = new User;
+$new_user->fill($_POST)->save(TRUE);
 
-$new_user->fill($_POST);
-
-// If something goes wrong in validation process, you can retrieve error via 'errors' method
-if ( FALSE == ($affected_rows = $new_user->save(TRUE))) die($new_user->errors());
-
-// From last created record, using 'last_id' method, eg : will return '1', because above is first record
-$new_id = $new_user->last_id();
-
-$recent_user = Gas::factory('user')->find($new_id);
-
-$_POST = array('name' => 'Mr. Bar', 'email' => 'bar@world.com');
-
-$recent_user->fill($_POST);
-
-$recent_user->username = 'bar';
-
-if ( ! $recent_user->save(TRUE)) die($recent_user->errors());
-
-// To delete something, you can directly assign id, or 'delete' will see through your recorded logic, eg : 
-$now_user = Gas::factory('user')->find($new_id);
-
-// Just ensure that data has been updated 
-if ($now_user->username != 'bar') die('Gas update was unsuccessfully executed!');
-
-// This will delete user 1 
-$now_user->delete();
-```
-
-### RELATIONSHIP (ONE-TO-ONE, ONE-TO-MANY, MANY-TO-MANY)
-
-```php
-// One-To-One : Will return an object of wife, which have user_id = 1
-$somewife = Gas::factory('user')->find(1)->wife;
-
-// One-To-Many : Will return an array of kid object, which have user_id = 1
-$somekids = Gas::factory('user')->find(1)->kid;
-
-// Many-To-Many : Will return an array of job object, based by pivot table (job_user), which have user_id = 4
-$somejobs = Gas::factory('user')->find(4)->job;
-```
-
-### EAGER LOADING
-
-```php
-// Eager Loading : Will return an array of user object, alongside with each relational table with WHERE IN(N+)
-$allinone = Gas::factory('user')->with('wife', 'kid', 'job')->all();
+// RELATIONSHIP & EAGER LOADING
+$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1));
+$some_user_wife = $some_user->wife;
 ```
 
 Comments on those libraries should self explanatory, but if you need to go more depth about Gas, use **gasunittest.php** or read the full post about its functionality available methods and convention at [my blog post](http://taufanaditya.com/gas-orm "Gas ORM").
