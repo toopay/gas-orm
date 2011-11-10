@@ -23,7 +23,7 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 
 - Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.
 - Support multiple database connection.
-- Multiple relationship (has_one, has_many, 'belongs_to', 'has_and_belongs_to') with custom relationship setting ('through', 'foreign_key', 'foreign_table')
+- Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table)
 - Various finder method (can chained with most of CI AR) and aggregates.
 - Validation and auto-mapping input collection, with minimal setup.
 - Transaction, cache, and other CI AR goodness.
