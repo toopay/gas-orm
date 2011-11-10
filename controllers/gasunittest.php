@@ -30,7 +30,7 @@ class Gasunittest extends CI_Controller {
 
 		$this->new_state = FALSE;
 
-		$this->necessary_item = array('user', 'wife', 'kid', 'job');
+		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'user_role');
 
 		$this->title = 'Gas ORM Unit Testing Package';
 
@@ -84,7 +84,7 @@ class Gasunittest extends CI_Controller {
 
 				'<p>Gas makes some assumptions about your database structure. Each table should have primary key, default to <b>id</b>. You can set this dynamically in your Gas model by setting <b>$primary_key</b> property in your model class. Each table should have same name with its corresponding Gas model\'s name, but you still can set this dynamically in your Gas model by setting <b>$table</b> property in your model class.</p>',
 
-				'<p>Gas model should be lower case, and it is came with <b>model_gas.php</b> convention for file-naming. You can change those suffix in <b>gas.php</b> under your config file. So you can still distict Gas models from your native CI models. Gas not enforce you to remove all your native CI model, since it still may usefull in some case for you.</p>',
+				'<p>Gas model should be lower case, and it is came with <b>model_gas.php</b> convention for file-naming. You can change those suffix in <b>gas.php</b> under your config file. So you can still distinct Gas models from your native CI models. Gas not enforce you to remove all your native CI model, since it still may usefull in some case for you.</p>',
 
 				'<p>A typical model, for example user model, in <b>'.APPPATH.$config['models_path'].'/user'.$config['models_suffix'].'.php</b> is something like this :</p>',
 
@@ -92,6 +92,8 @@ class Gasunittest extends CI_Controller {
 				'<p>Lets dig into it. First we have <b>$table</b> and <b>$primary_key</b> properties. This is just an example, which demonstrate that your table can have different name from your model\'s name, and your primary key can be different than <b>id</b>.',
 
 				'<p>Second, <b>$this->_fields</b> properties filled with an array. It define, user\'s fields which you want to set validation rules in it. As you may notice, commonly we have used to have <b>char</b>, <b>int</b> and <b>auto</b> as our datat-types, so this should be easy with Gas field shorthand. You may notice <b>email</b> shorthand too. Now, since Gas utilize CI validation packages, you still can add other rules (required, matches, etc) by assign an array of your rules into second parameter. You even can add your custom callback function, with slightly different convention : add two parameter at your callback function, and if you want to do <b>set_message</b> method, add <b>$field</b> variable as third parameter, just like example above.</p>',
+
+				'<p>To provide a full controll to your models, Gas provide several callbacks, so you can hook into Gas lifecycle. Available callbacks were : <b>_before_check</b>, <b>_after_check</b>, <b>_before_save</b>, <b>_after_save</b>, <b>_before_delete</b>, <b>_after_delete</b>. If you need to run something only once, before anything else happen, use _init instead (_init works in similar way with class constructor)</p>',
 
 				'<p>Above model, have three relations properties : has one <b>wife</b>, has many <b>kid</b> and has many also belongs to (many to many relationship, joining by a pivot table) <b>job</b>.</p>',
 				'<p>If you have those relations properties, corresponding model should reflects that relations too. In this packages, wife model have these structure : <p>',
@@ -102,11 +104,17 @@ class Gasunittest extends CI_Controller {
 
 				'<pre><code>'.implode('<br />', $this->_create_model('kid', $config, FALSE)).'</code></pre>',
 
-				'<p>And job model have these structure : <p>',
+				'<p>While job model have these structure : <p>',
 
 				'<pre><code>'.implode('<br />', $this->_create_model('job', $config, FALSE)).'</code></pre>',
 
-				'<p>Notice that you doesn\'t need to have pivot table\'s defined, for many-to-many relationship, Gas automatically fix that, as long you have <b>modelA_modelB</b> convention name in your pivot table.</p>',
+				'<p>Notice that you doesn\'t need to have pivot table\'s defined, for many-to-many relationship (has_and_belongs_to), Gas automatically fix that, as long you have <b>modelA_modelB</b> convention name in your pivot table. You could also overide this behaviour to fit with your needs, by set <b>foreign_key</b> and/or <b>foreign_table</b>, just make sure your corresponding model represent those relationship too.</p>',
+
+				'<p>And role model have these structure : <p>',
+
+				'<pre><code>'.implode('<br />', $this->_create_model('role', $config, FALSE)).'</code></pre>',
+
+				'<p>Notice that both <b>user</b> model and <b>role</b> model were linked via intermediate table, which is <b>user_role</b>, so if you build this relation, make sure you set <b>through</b> in each relations properties. This is a different case, compared to <b>has_and_belongs_to</b>, because the intermediate table also have its model and other fields, despite both were a many-to-many relationship. Last thing you should notice, because both tables (user and role) have unstandard convention of foreign key (u_id and r_id), both model specify each own <b>foreign_key</b> in their relationship settings. If you follow <b>model_pk</b> convention, you didnt need to set this.</p>',
 		);
 
 		$this->load->view(GAS_NAME, array(
@@ -547,7 +555,45 @@ class Gasunittest extends CI_Controller {
 
 			),
 
+			'role' => array(
+
+				array('id' => 1, 'name' => 'Administrator', 'description' => 'The Ruler, Administrator have the highest privilege.'),
+
+				array('id' => 2, 'name' => 'Moderator', 'description' => 'Moderator have high privilige.'),
+
+				array('id' => 3, 'name' => 'Member', 'description' => 'Member is a general person, without additional special privilige.'),
+
+			),
+
+			'job_user' => array(
+
+				array('user_id' => 1, 'job_id' => 1),
+
+				array('user_id' => 1, 'job_id' => 2),
+
+				array('user_id' => 2, 'job_id' => 1),
+
+				array('user_id' => 2, 'job_id' => 3),
+
+				array('user_id' => 4, 'job_id' => 4),
+
+			),
+
+			'user_role' => array(
+
+				array('id' => null, 'r_id' => 1, 'u_id' => 1),
+
+				array('id' => null, 'r_id' => 4, 'u_id' => 1),
+				
+				array('id' => null, 'r_id' => 4, 'u_id' => 2),
+
+			),
+
 		);
+
+		$role = new Role;
+
+		$role->truncate();
 		
 		$wife = new Wife;
 
@@ -560,6 +606,10 @@ class Gasunittest extends CI_Controller {
 		$job = new Job;
 
 		$job->truncate();
+
+		$user_role = new User_role;
+
+		$user_role->truncate();
 
 		$this->db->truncate('job_user');
 
@@ -617,6 +667,11 @@ class Gasunittest extends CI_Controller {
 			// Should be TRUE, because John Doe kid were Daria Doe and John Doe Jr, which contain Doe in their name
 			$this->unit->run($contain_family_name, TRUE, '[has_many]', '-');
 		}
+
+		/*<code-relations:Through : Will return an array of role object, which have r_id = 1>*/$somerole = Gas::factory('user')->find(1)->role;/*<endcode>*/
+
+		// Should be an array, because this is one-to-many relationship
+		$this->unit->run($somerole, 'is_array', '[through]', 'through is properties which define what intermediate table to use in your relationship across model/table(s)');
 
 		$someuser = Gas::factory('user')->find(4); 
 	   	// Should return FALSE
@@ -829,8 +884,34 @@ class Gasunittest extends CI_Controller {
 
 		$user = 'array('."\n"
 				."\t\t\t\t".'\'has_one\' => array(\'wife\' => array()),'."\n"
-				."\t\t\t\t".'\'has_many\' => array(\'kid\' => array()),'."\n"
+				."\t\t\t\t".'\'has_many\' => array('."\n"
+				."\t\t\t\t\t".'\'kid\' => array(),'."\n"
+				."\t\t\t\t\t".'\'role\' => array('."\n"
+				."\t\t\t\t\t\t".'\'through\' => \'user_role\','."\n"
+				."\t\t\t\t\t\t".'\'foreign_key\' => \'u_id\','."\n"
+				."\t\t\t\t\t".'),'."\n"
+				."\t\t\t\t".'),'."\n"
 				."\t\t\t\t".'\'has_and_belongs_to\' => array(\'job\' => array()),'."\n"
+				."\t".');';
+
+		$user_role = 'array('."\n"
+				."\t\t\t\t".'\'has_one\' => array('."\n"
+				."\t\t\t\t\t".'\'user\' => array('."\n"
+				."\t\t\t\t\t\t".'\'foreign_key\' => \'u_id\','."\n"
+				."\t\t\t\t\t".'),'."\n"
+				."\t\t\t\t\t".'\'role\' => array('."\n"
+				."\t\t\t\t\t\t".'\'foreign_key\' => \'r_id\','."\n"
+				."\t\t\t\t\t".'),'."\n"
+				."\t\t\t\t".'),'."\n"
+				."\t".');';
+		
+		$role = 'array('."\n"
+				."\t\t\t\t".'\'has_many\' => array('."\n"
+				."\t\t\t\t\t".'\'user\' => array('."\n"
+				."\t\t\t\t\t\t".'\'through\' => \'user_role\','."\n"
+				."\t\t\t\t\t\t".'\'foreign_key\' => \'r_id\','."\n"
+				."\t\t\t\t\t".'),'."\n"
+				."\t\t\t\t".'),'."\n"
 				."\t".');';
 
 		$wife = 'array('."\n"
@@ -855,18 +936,30 @@ class Gasunittest extends CI_Controller {
 				."\t\t\t".'\'id\' => Gas::field(\'auto[3]\'),'."\n"
 				."\t\t\t".'\'name\' => Gas::field(\'char[40]\'),'."\n"
 				."\t\t\t".'\'email\' => Gas::field(\'email\'),'."\n"
-				."\t\t\t".'\'username\' => Gas::field(\'char[10]\', array(\'callback_username_check\')),'."\n"
+				."\t\t\t".'\'username\' => Gas::field(\'char[10]\', array(\'required\', \'callback_username_check\')),'."\n"
 				."\t\t".');';
 
 		$user_callback = "\t".'public function username_check($field, $val)'."\n"
 				."\t".'{'."\n"
 				."\t\t".'if($val == \'me\')'."\n"
 				."\t\t".'{'."\n"
-				."\t\t\t".'self::set_message(\'username_check\', \'The %s field cannot fill by "me"\', $field);'."\n"."\n"
+				."\t\t\t".'self::set_message(\'username_check\', \'The %s field cannot fill by "me"\', $field);'."\n\n"
 				."\t\t\t".'return FALSE;'."\n"
 				."\t\t".'}'."\n"
 				."\t\t".'return TRUE;'."\n"
-				."\t".'}';
+				."\t".'}'."\n"
+				."\n\n"
+				."\t".'function _before_check() {}'."\n"
+				."\n\n"
+				."\t".'function _after_check() {}'."\n"
+				."\n\n"
+				."\t".'function _before_save() {}'."\n"
+				."\n\n"
+				."\t".'function _after_save() {}'."\n"
+				."\n\n"
+				."\t".'function _before_delete() {}'."\n"
+				."\n\n"
+				."\t".'function _after_delete() {}'."\n";
 
 		$relations = array(
 
@@ -1072,6 +1165,76 @@ class Gasunittest extends CI_Controller {
 
                     	'default' => '',
                     ),
+        );
+
+         $role = array(
+
+					'id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+						'unsigned' => TRUE,
+
+						'auto_increment' => TRUE,
+
+					),
+                   	'name' => array(
+
+                    	'type' => 'VARCHAR',
+
+                    	'constraint' => 40,
+
+                    	'default' => '',
+
+                    ),
+                    'description' => array(
+
+                    	'type' => 'TEXT',
+
+                    	'constraint' => 40,
+
+                    	'default' => '',
+                    ),
+        );
+
+        $user_role = array(
+
+        			'id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+						'unsigned' => TRUE,
+
+						'auto_increment' => TRUE,
+
+					),
+					'u_id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+					),
+                   	'r_id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+					),
+					'active' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 1,
+
+						'default' => 1,
+
+					),
         );
 
         $job_user = array(

@@ -8,5 +8,7 @@
 |
 */
 $config['models_path'] = 'models';
+
 $config['models_suffix'] = '_gas';
+
 $config['autoload_models'] = TRUE;
