@@ -33,6 +33,7 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 
 - Auto-create and auto-synchronize tables (utilize Migration).
 - Support for tree traversal.
+
 More useful features, but keep both size and performance for a good use.
 
 ## Convention and usage
