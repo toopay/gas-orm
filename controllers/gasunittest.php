@@ -30,9 +30,9 @@ class Gasunittest extends CI_Controller {
 
 		$this->new_state = FALSE;
 
-		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'user_role');
+		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'user_role', 'comment');
 
-		$this->title = 'Gas ORM Unit Testing Package';
+		$this->title = 'Gas ORM Version '.Gas::version().' Unit Testing Package';
 
 	}
 
@@ -95,7 +95,7 @@ class Gasunittest extends CI_Controller {
 
 				'<p>To provide a full controll to your models, Gas provide several callbacks, so you can hook into Gas lifecycle. Available callbacks were : <b>_before_check</b>, <b>_after_check</b>, <b>_before_save</b>, <b>_after_save</b>, <b>_before_delete</b>, <b>_after_delete</b>. If you need to run something only once, before anything else happen, use _init instead (_init works in similar way with class constructor)</p>',
 
-				'<p>Above model, have three relations properties : has one <b>wife</b>, has many <b>kid</b> and has many also belongs to (many to many relationship, joining by a pivot table) <b>job</b>.</p>',
+				'<p>Above model, have several relations properties : has one <b>wife</b>, has many <b>kid</b>, has many <b>comment</b>, has many (many to many relationship, joined by an intermediate table) <b>role</b> and has many also belongs to (many to many relationship, joined by a pivot table) <b>job</b>.</p>',
 				'<p>If you have those relations properties, corresponding model should reflects that relations too. In this packages, wife model have these structure : <p>',
 
 				'<pre><code>'.implode('<br />', $this->_create_model('wife', $config, FALSE)).'</code></pre>',
@@ -110,11 +110,17 @@ class Gasunittest extends CI_Controller {
 
 				'<p>Notice that you doesn\'t need to have pivot table\'s defined, for many-to-many relationship (has_and_belongs_to), Gas automatically fix that, as long you have <b>modelA_modelB</b> convention name in your pivot table. You could also overide this behaviour to fit with your needs, by set <b>foreign_key</b> and/or <b>foreign_table</b>, just make sure your corresponding model represent those relationship too.</p>',
 
-				'<p>And role model have these structure : <p>',
+				'<p>While role model have these structure : <p>',
 
 				'<pre><code>'.implode('<br />', $this->_create_model('role', $config, FALSE)).'</code></pre>',
 
 				'<p>Notice that both <b>user</b> model and <b>role</b> model were linked via intermediate table, which is <b>user_role</b>, so if you build this relation, make sure you set <b>through</b> in each relations properties. This is a different case, compared to <b>has_and_belongs_to</b>, because the intermediate table also have its model and other fields, despite both were a many-to-many relationship. Last thing you should notice, because both tables (user and role) have unstandard convention of foreign key (u_id and r_id), both model specify each own <b>foreign_key</b> in their relationship settings. If you follow <b>model_pk</b> convention, you didnt need to set this.</p>',
+
+				'<p>and comment model have these structure : <p>',
+
+				'<pre><code>'.implode('<br />', $this->_create_model('comment', $config, FALSE)).'</code></pre>',
+
+				'<p>Here also you found, that Gas ORM support self-referential association (which mean, you can also store adjacency column/data). In this case, each comment can be a reply to other comment, mean they reference themself within one table. If you have this kind of table, you can working on it by specify <b>self</b> option in your relations properties. Self-referential works as you need, means it support all of defined relation types. You may also use eager loading as well.</p>',
 		);
 
 		$this->load->view(GAS_NAME, array(
@@ -555,6 +561,18 @@ class Gasunittest extends CI_Controller {
 
 			),
 
+			'comment' => array(
+
+				array('id' => 1, 'parent_id' => null, 'user_id' => 1, 'description' => 'Comment 1'),
+
+				array('id' => 2, 'parent_id' => 1, 'user_id' => 2, 'description' => 'Reply to comment 1'),
+
+				array('id' => 3, 'parent_id' => 1, 'user_id' => 3, 'description' => 'Another repy to comment 1'),
+
+				array('id' => 4, 'parent_id' => 2, 'user_id' => 1, 'description' => 'Reply to comment 2'),
+
+			),
+
 			'role' => array(
 
 				array('id' => 1, 'name' => 'Administrator', 'description' => 'The Ruler, Administrator have the highest privilege.'),
@@ -590,6 +608,10 @@ class Gasunittest extends CI_Controller {
 			),
 
 		);
+
+		$comment = new Comment;
+
+		$comment->truncate();
 
 		$role = new Role;
 
@@ -668,10 +690,18 @@ class Gasunittest extends CI_Controller {
 			$this->unit->run($contain_family_name, TRUE, '[has_many]', '-');
 		}
 
-		/*<code-relations:Through : Will return an array of role object, which have r_id = 1>*/$somerole = Gas::factory('user')->find(1)->role;/*<endcode>*/
+		/*<code-relations:Through : Will return an array of role object, which have r_id = 1>*/$someroles = Gas::factory('user')->find(1)->role;/*<endcode>*/
 
 		// Should be an array, because this is one-to-many relationship
-		$this->unit->run($somerole, 'is_array', '[through]', 'through is properties which define what intermediate table to use in your relationship across model/table(s)');
+		$this->unit->run($someroles, 'is_array', '[through]', 'through is properties which define what intermediate table to use in your relationship across model/table(s)');
+
+		/*<code-relations:Self : Will return an array of comment object(replies in this case), which have parent_id = 1>*/$somecomments = Gas::factory('comment')->find(1)->comment;/*<endcode>*/
+
+		// Should be an array, because this is one-to-many relationship
+		$this->unit->run($somecomments, 'is_array', '[self]', 'self is properties which define a self-referential within a model/table');
+
+		// Should be an 2, because comment id 1 have 2 comments which represent as its replies
+		$this->unit->run(count($somecomments), 2, '[self]', 'self can be your option, while you work on some adjacency data');
 
 		$someuser = Gas::factory('user')->find(4); 
 	   	// Should return FALSE
@@ -886,6 +916,7 @@ class Gasunittest extends CI_Controller {
 				."\t\t\t\t".'\'has_one\' => array(\'wife\' => array()),'."\n"
 				."\t\t\t\t".'\'has_many\' => array('."\n"
 				."\t\t\t\t\t".'\'kid\' => array(),'."\n"
+				."\t\t\t\t\t".'\'comment\' => array(),'."\n"
 				."\t\t\t\t\t".'\'role\' => array('."\n"
 				."\t\t\t\t\t\t".'\'through\' => \'user_role\','."\n"
 				."\t\t\t\t\t\t".'\'foreign_key\' => \'u_id\','."\n"
@@ -912,6 +943,16 @@ class Gasunittest extends CI_Controller {
 				."\t\t\t\t\t\t".'\'foreign_key\' => \'r_id\','."\n"
 				."\t\t\t\t\t".'),'."\n"
 				."\t\t\t\t".'),'."\n"
+				."\t".');';
+
+		$comment = 'array('."\n"
+				."\t\t\t\t".'\'has_many\' => array('."\n"
+				."\t\t\t\t\t".'\'comment\' => array('."\n"
+				."\t\t\t\t\t\t".'\'self\' => TRUE,'."\n"
+				."\t\t\t\t\t\t".'\'foreign_key\' => \'parent_id\','."\n"
+				."\t\t\t\t\t".'),'."\n"
+				."\t\t\t\t".'),'."\n"
+				."\t\t\t\t".'\'belongs_to\' => array(\'user\' => array()),'."\n"
 				."\t".');';
 
 		$wife = 'array('."\n"
@@ -1167,7 +1208,46 @@ class Gasunittest extends CI_Controller {
                     ),
         );
 
-         $role = array(
+        $comment = array(
+
+					'id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+						'unsigned' => TRUE,
+
+						'auto_increment' => TRUE,
+
+					),
+					'parent_id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+						'null' => TRUE,
+
+					),
+					'user_id' => array(
+
+						'type' => 'INT',
+
+						'constraint' => 3,
+
+					),
+                    'description' => array(
+
+                    	'type' => 'TEXT',
+
+                    	'constraint' => 100,
+
+                    	'default' => '',
+                    ),
+        );
+
+        $role = array(
 
 					'id' => array(
 

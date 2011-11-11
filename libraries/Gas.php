@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.2.0
+ * @version     1.2.1
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://taufanaditya.com/gas-orm
  * @license     BSD
@@ -26,10 +26,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.2.0
+ * @version     1.2.1
  */
 
 class Gas_Core {
+
+	const GAS_VERSION = '1.2.1';
 
 	public $table = '';
 
@@ -115,7 +117,7 @@ class Gas_Core {
 			
 			$this->_scan_models();
 
-			$this->_init();
+			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 			$init = TRUE;
 
@@ -140,6 +142,19 @@ class Gas_Core {
 		}
 
 		log_message('debug', 'Gas ORM Core Class Initialized');
+	}
+
+	/**
+	 * version
+	 * 
+	 * Gas Version
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public static function version()
+	{
+		return Gas_Core::GAS_VERSION;
 	}
 
 	/**
@@ -578,7 +593,7 @@ class Gas_Core {
 
 		if ($check)
 		{
-			$this->_init();
+			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 			$entries = is_array($this->_set_fields) ? array_merge($this->_get_fields, $this->_set_fields) : $this->_get_fields;
 
@@ -641,7 +656,7 @@ class Gas_Core {
 
 		$this->validate_table();
 
-		$this->_init();
+		if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 		$args = func_get_args();
 
@@ -1099,7 +1114,7 @@ class Gas_Core {
 
  			$peer_relation = Gas_Janitor::get_input('Gas_Core::__get', Gas_Janitor::identify_relations($parent_relations, $name), FALSE, '');
 
-			list($through, $custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($parent_relations, $peer_relation, $name);
+			list($through, $custom_table, $custom_key, $self_ref) = Gas_Janitor::identify_custom_setting($parent_relations, $peer_relation, $name);
 
  			$foreign_table = $child_table;
 
@@ -1389,7 +1404,7 @@ class Gas_Core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.2.0
+ * @version     1.2.1
  */
 
 class Gas_Bureau {
@@ -1602,7 +1617,7 @@ class Gas_Bureau {
 
 					$peer_relations = Gas_Janitor::get_input(__METHOD__, Gas_Janitor::identify_relations($relations, $child_model), FALSE, '');
 
-					list($through, $custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($relations, $peer_relations, $child_model);
+					list($through, $custom_table, $custom_key, $self_ref) = Gas_Janitor::identify_custom_setting($relations, $peer_relations, $child_model);
 
 					$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
 					
@@ -1687,7 +1702,7 @@ class Gas_Bureau {
 								$id = Gas_Janitor::get_input(__METHOD__, $eager_record[$identifier], FALSE, '');
 							}
 
-							list($eager_through, $eager_custom_table, $eager_custom_key) = Gas_Janitor::identify_custom_setting($relations, $eager_type, $child);
+							list($eager_through, $eager_custom_table, $eager_custom_key, $eager_self_ref) = Gas_Janitor::identify_custom_setting($relations, $eager_type, $child);
 
 							if ($eager_type == 'has_one' or $eager_type == 'has_many')
 							{
@@ -1741,6 +1756,7 @@ class Gas_Bureau {
 	 * @param	string
 	 * @param	string
 	 * @param	array
+	 * @param	array
 	 * @param	mixed
 	 * @param	bool
 	 * @return	mixed
@@ -1759,7 +1775,8 @@ class Gas_Bureau {
 
 		if (empty($peer_relation)) show_error(Gas_Core::tell('models_found_no_relations', $gas));
 
-		list($through, $custom_table, $custom_key) = Gas_Janitor::identify_custom_setting($relations, $peer_relation, $child);
+
+		list($through, $custom_table, $custom_key, $self_ref) = Gas_Janitor::identify_custom_setting($relations, $peer_relation, $child);
 
 		$self = FALSE;
 
@@ -1796,6 +1813,11 @@ class Gas_Bureau {
 		}
 		elseif ($peer_relation == 'belongs_to')
 		{
+			if ($self_ref)
+			{
+				$foreign_value = is_null($foreign_value) ? '' : $foreign_value;
+			}
+
 			$new_identifier = $foreign_key;
 
 			$global_identifier = $new_identifier;
@@ -1814,7 +1836,6 @@ class Gas_Bureau {
 			if (is_string($foreign_value) or is_numeric($foreign_value))
 			{
 				self::$db->where(array($new_identifier => $foreign_value))->limit(1);
-				
 			}
 			elseif (is_array($foreign_value))
 			{
@@ -1856,7 +1877,7 @@ class Gas_Bureau {
 
 			if (empty($foreign_type)) show_error(Gas_Core::tell('models_found_no_relations', 'has_and_belongs:'.$gas));
 
-			list($through, $custom_foreign_table, $custom_foreign_key) = Gas_Janitor::identify_custom_setting($foreign_relations, $foreign_type, $gas);
+			list($through, $custom_foreign_table, $custom_foreign_key, $self_ref) = Gas_Janitor::identify_custom_setting($foreign_relations, $foreign_type, $gas);
 
 			$foreign_identifier = ($custom_foreign_key !== '') ? $custom_foreign_key : $foreign_table.'_'.$foreign_key;
 
@@ -2124,7 +2145,7 @@ class Gas_Bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.2.0
+ * @version     1.2.1
  */
 
 class Gas_Janitor {
@@ -2196,7 +2217,7 @@ class Gas_Janitor {
 
 		$peer_relation = self::get_input(__METHOD__, self::identify_relations($tree['relations'], $tree['child']), TRUE);
 
-		list($child_through, $child_custom_table, $child_custom_key) = self::identify_custom_setting($tree['relations'], $peer_relation, $tree['child']);
+		list($child_through, $child_custom_table, $child_custom_key, $child_self_ref) = self::identify_custom_setting($tree['relations'], $peer_relation, $tree['child']);
 
 		$child_identifier = ($child_custom_key !== '') ? $child_custom_key : $tree['table'].'_'.$tree['key'];
 
@@ -2257,6 +2278,8 @@ class Gas_Janitor {
 
 		$custom_key = '';
 
+		$self = FALSE;
+
 		if ( ! empty ($relations[$type][$model]) and ($custom_setting = $relations[$type][$model]))
 		{
 			isset($custom_setting['through']) and $through = $custom_setting['through'];
@@ -2264,9 +2287,11 @@ class Gas_Janitor {
 			isset($custom_setting['foreign_table']) and $custom_table = $custom_setting['foreign_table'];
 
 			isset($custom_setting['foreign_key']) and $custom_key = $custom_setting['foreign_key'];
+
+			isset($custom_setting['self']) and $self = $custom_setting['self'];
 		}
 
-		return array($through, $custom_table, $custom_key);
+		return array($through, $custom_table, $custom_key, $self);
 	}
 
 	/**
@@ -2381,28 +2406,38 @@ class Gas_Janitor {
 	 * @param   array
 	 * @return  void
 	 */
-	public static function force($class, $method, $args)
+	public static function force($class, $method, $args, $return = FALSE)
 	{
 		$total_args = count($args);
 			
 		if ($total_args == 4)
 		{
+			if ($return === TRUE) return $class->$method($args[0], $args[1], $args[2], $args[3]);
+
 			$class->$method($args[0], $args[1], $args[2], $args[3]);
 		}
 		elseif ($total_args == 3)
 		{
+			if ($return === TRUE) return $class->$method($args[0], $args[1], $args[2]);
+
 			$class->$method($args[0], $args[1], $args[2]);
 		}
 		elseif ($total_args == 2)
 		{
+			if ($return === TRUE) return $class->$method($args[0], $args[1]);
+
 			$class->$method($args[0], $args[1]);
 		}
 		elseif ($total_args == 1)
 		{
+			if ($return === TRUE) return $class->$method($args[0]);
+
 			$class->$method($args[0]);
 		}
 		else
 		{
+			if ($return === TRUE) return $class->$method();
+
 			$class->$method();
 		}
 
@@ -2420,28 +2455,7 @@ class Gas_Janitor {
 	 */
 	public static function force_and_get($class, $method, $args)
 	{
-		$total_args = count($args);
-			
-		if ($total_args == 4)
-		{
-			return $class->$method($args[0], $args[1], $args[2], $args[3]);
-		}
-		elseif ($total_args == 3)
-		{
-			return $class->$method($args[0], $args[1], $args[2]);
-		}
-		elseif ($total_args == 2)
-		{
-			return $class->$method($args[0], $args[1]);
-		}
-		elseif ($total_args == 1)
-		{
-			return $class->$method($args[0]);
-		}
-		else
-		{
-			return $class->$method();
-		}
+		return self::force($class, $method, $args, TRUE);
 	}
 
 	/**
@@ -2553,17 +2567,7 @@ class Gas_Janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.2.0
+ * @version     1.2.1
  */
 
-class Gas extends Gas_Core {
-
-	/**
-	 * _init 
-	 * 
-	 * Initialize method
-	 * 
-	 */
-	function _init() {}
-
-}
+class Gas extends Gas_Core {}
