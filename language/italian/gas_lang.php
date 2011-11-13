@@ -6,6 +6,8 @@ $lang['models_not_found']          = 'Il percorso %s specificato nel file di con
 
 $lang['models_found_no_relations'] = 'Nessuna relazione valida trovata nel Model %s.';
 
+$lang['extensions_not_found']      = 'Il percorso %s specificato nel file di configurazione non &egrave; valido.';
+
 $lang['empty_arguments']           = '%s non pu&ograve; essere invocato senza parametri.';
 
 

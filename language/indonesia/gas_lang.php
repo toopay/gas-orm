@@ -6,6 +6,8 @@ $lang['models_not_found']          = 'Tidak bisa mendapatkan path model yang dic
 
 $lang['models_found_no_relations'] = 'Model %s ditemukan, tapi propery relations tidak ada.';
 
+$lang['extensions_not_found']      = 'Tidak bisa mendapatkan path ekstensi yang dicari:  %s';
+
 $lang['empty_arguments']           = 'Tidak dapat melanjutkan eksekusi %s tanpa parameter.';
 
 

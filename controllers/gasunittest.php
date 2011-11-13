@@ -1,5 +1,13 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+/**
+ * Gas Unit Testing Package.
+ * 
+ * Contain Convention, Documentation and unit testing tasks.
+ *
+ * @package     Gas Library
+ */
+
 class Gasunittest extends CI_Controller {
 
 	public $new_state;
@@ -7,6 +15,8 @@ class Gasunittest extends CI_Controller {
 	public $necesarry_item = array();
 
 	public $title;
+
+	public $dummy_users = array();
 
 	function __construct()
 	{
@@ -33,6 +43,18 @@ class Gasunittest extends CI_Controller {
 		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'user_role', 'comment');
 
 		$this->title = 'Gas ORM Version '.Gas::version().' Unit Testing Package';
+
+		$this->dummy_users = array(
+
+				array('id' => 1, 'name' => 'John Doe', 'email' => 'johndoe@john.com', 'username' => 'johndoe'),
+
+				array('id' => 2, 'name' => 'Derek Jones', 'email' => 'derekjones@world.com','username' => 'derek'),
+
+				array('id' => 3, 'name' => 'Frank Sinatra', 'email' => 'franks@world.com', 'username' => 'fsinatra'),
+
+				array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@coldplay.com', 'username' => 'cmartin'),
+
+			);
 
 	}
 
@@ -239,6 +261,24 @@ class Gasunittest extends CI_Controller {
 		);
 	}
 
+	public function extension()
+	{
+		$user = new User;
+
+		$user->truncate();
+
+		foreach ($this->dummy_users as $new_user) $user->fill($new_user)->save();
+
+		// The convention, to call an extension was :
+		// [instance]->[extension]->[instance_method]->[extension_method]
+		//
+		// So, using factory method, bellow syntax is equivalent with :
+		// echo Gas::factory('user')->dummy->all()->explain('something');
+		echo $user->dummy->all()->explain('something');
+
+		echo '<pre>'.anchor(GAS_NAME.'/index', 'Back to start page').'</pre>';
+	}
+
 	public function test_all()
 	{
 		$this->_start();
@@ -341,17 +381,7 @@ class Gasunittest extends CI_Controller {
 		// Save several datas
 		$input_datas = array(
 
-			'valid' => array(
-
-				array('id' => 1, 'name' => 'John Doe', 'email' => 'johndoe@yahoo.com', 'username' => 'johndoe'),
-
-				array('id' => 2, 'name' => 'Derek Jones', 'email' => 'derekjones@gmail.com','username' => 'derek'),
-
-				array('id' => 3, 'name' => 'Frank Sinatra', 'email' => 'franks@whatever.com', 'username' => 'fsinatra'),
-
-				array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@yahoo.com', 'username' => 'cmartin'),
-
-			),
+			'valid' => $this->dummy_users,
 
 			'invalid' => array(
 
@@ -467,7 +497,7 @@ class Gasunittest extends CI_Controller {
 		// Should be 1, because we search for 1 valid entries and 3 invalid id.
 		$this->unit->run(count($someusers), 1, '[find]', '-');
 	   	
-		/*<code-finder:find_by_column : will return an array of user's object, where their email are 'johndoe@yahoo.com'>*/$someusers = Gas::factory('user')->find_by_email('johndoe@yahoo.com');/*<endcode>*/
+		/*<code-finder:find_by_column : will return an array of user's object, where their email are 'johndoe@yahoo.com'>*/$someusers = Gas::factory('user')->find_by_email('johndoe@john.com');/*<endcode>*/
 
 		// Should be an array, because we didnt specify the limit
 		$this->unit->run($someusers, 'is_array', '[find_by_something]', 'Without passing limit as second params, Gas will always return an array');
@@ -475,7 +505,7 @@ class Gasunittest extends CI_Controller {
 		// Should be 1, because we search for 1 valid entries.
 		$this->unit->run(count($someusers), 1, '[find_by_something]', '-');
 
-		/*<code-finder:find_by_column : will return an object of user, where his/her email is 'derekjones@gmail.com', because limit is set to 1>*/$someuser = $user->find_by_email('derekjones@gmail.com', 1); 
+		/*<code-finder:find_by_column : will return an object of user, where his/her email is 'derekjones@gmail.com', because limit is set to 1>*/$someuser = $user->find_by_email('derekjones@world.com', 1); 
 
 		// Should be an object, because we specify the limit to 1
 		$this->unit->run($someuser, 'is_object', '[find_by_something]', 'By passing limit = 1, object will returned instead an array');
@@ -491,7 +521,7 @@ class Gasunittest extends CI_Controller {
 		// Should be 4, because we use 'all', we just grouped/sorted it by email.
 		$this->unit->run(count($someusers), 4, '[ci_ar_group_by]', '-');
 
-		/*<code-finder:CI Active Record : will return all user where their email are like '%yahoo.com%'>*/$someusers = Gas::factory('user')->like('email', 'yahoo.com')->all();/*<endcode>*/
+		/*<code-finder:CI Active Record : will return all user where their email are like '%world.com%'>*/$someusers = Gas::factory('user')->like('email', 'world.com')->all();/*<endcode>*/
 
 		/*<code-finder:CI Active Record : will return SELECT * FROM (`user`) LEFT JOIN `job` ON `job`.`id` = `user`.`id`>*/$somejoinedusers = Gas::factory('user')->left_join_job('job.id = user.id')->all();/*<endcode>*/
 
@@ -501,9 +531,9 @@ class Gasunittest extends CI_Controller {
 													'[ci_ar_join]', 'JOIN statement is supported');
 
 		// Should be an array, because we use 'all'
-		$this->unit->run($someusers, 'is_array', '[ci_ar_like]', 'Where email like "yahoo.com"');
+		$this->unit->run($someusers, 'is_array', '[ci_ar_like]', 'Where email like "world.com"');
 
-		// Should be 2, because there are two user created with yahoo email
+		// Should be 2, because there are two user created with world email
 		$this->unit->run(count($someusers), 2, '[ci_ar_like]', '-');
 
 		// Save several datas, for other table as well.
@@ -1426,11 +1456,13 @@ class Gasunittest extends CI_Controller {
 
 		$menu = array(
 
-			anchor(GAS_NAME.'/index', 'Gas ORM Start Page', $css_anchor),
+			anchor(GAS_NAME.'/index', 'Start Page', $css_anchor),
 
-			anchor(GAS_NAME.'/convention', 'Gas ORM Convention', $css_anchor),
+			anchor(GAS_NAME.'/convention', 'Convention', $css_anchor),
 
-			anchor(GAS_NAME.'/documentation', 'Gas ORM Documentation', $css_anchor),
+			anchor(GAS_NAME.'/documentation', 'Documentation', $css_anchor),
+
+			anchor(GAS_NAME.'/extension', 'Extension', $css_anchor),
 
 			anchor(GAS_NAME.'/test_all', 'Run Unit Test', $css_unittest),
 

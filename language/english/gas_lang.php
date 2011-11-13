@@ -6,6 +6,8 @@ $lang['models_not_found']          = 'Unable to locate the models path you have 
 
 $lang['models_found_no_relations'] = 'Model %s located, but missing relationship properties.';
 
+$lang['extensions_not_found']      = 'Unable to locate the extensions path you have specified: %s';
+
 $lang['empty_arguments']           = 'Cannot continue executing %s without any passed parameter.';
 
 

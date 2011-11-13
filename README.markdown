@@ -27,6 +27,8 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 - Self-referential and adjacency column/data (hierarchical data).
 - Various finder method (can chained with most of CI AR) and aggregates.
 - Validation and auto-mapping input collection, with minimal setup.
+- Hooks points, to control over your model.
+- Extensions, to share your common function/library across your model.
 - Transaction, cache, and other CI AR goodness.
 
 ## Planned Features

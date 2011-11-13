@@ -1,4 +1,4 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /*
 | -------------------------------------------------------------------
 | Gas Configuration
@@ -12,3 +12,7 @@ $config['models_path'] = 'models';
 $config['models_suffix'] = '_gas';
 
 $config['autoload_models'] = TRUE;
+
+$config['extensions'] = array('dummy');
+
+$config['autoload_extensions'] = TRUE;
