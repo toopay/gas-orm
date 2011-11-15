@@ -86,7 +86,7 @@
     <h2>Overview</h2>
     <pre>
 // FINDER
-$all = Gas::factory('user')->all());
+$all = Gas::factory('user')->all();
 $some_user = Gas::factory('user')->find_by_username('foo');
 
 // WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
@@ -94,7 +94,7 @@ $new_user = new User;
 $new_user->fill($_POST)->save(TRUE);
 
 // RELATIONSHIP & EAGER LOADING
-$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1));
+$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1);
 $some_user_wife = $some_user->wife;
     </pre>
     
@@ -106,7 +106,7 @@ $some_user_wife = $some_user->wife;
 
     <div class="footer">
       Join the discussion on : <a href="http://codeigniter.com/forums/viewthread/202669/">CI Forum</a>.<br />
-      Submit issue(s) on  : <a href="https://github.com/toopay/CI-GasORM-Library/issues">Issues section</a>. <br />Convention and more examples on : <a href="https://gist.github.com/1339003">gist.github.com/1339003</a>
+      Submit issue(s) on  : <a href="https://github.com/toopay/CI-GasORM-Library/issues">Issues section</a>. <br />Convention and more examples on : <a href="http://gasorm-doc.taufanaditya.com/">Home of Gas ORM</a>
     </div>
 
   </div>
