@@ -292,9 +292,9 @@ class Gas_core {
 
 			if (count($constraint) == 2)
 			{
-				$rules[] = 'min_length['.$constraint[0].']';
+				$rules[] = 'min_length['.trim($constraint[0]).']';
 
-				$rules[] = 'max_length['.$constraint[1].']';
+				$rules[] = 'max_length['.trim($constraint[1]).']';
 			}
 			else
 			{
