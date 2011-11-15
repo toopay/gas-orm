@@ -2,7 +2,7 @@ html, body,
 h1, h2, h3, h4, h5, h6,
 p, ul, ol, li, dl, dd, dt, pre, form, fieldset{ margin: 0; padding: 0; } 
 
-body{ background-color: #F9F9F9; color: #383838; font: normal normal 14px "Tahoma", "Arial", Sans-Serif; }
+body{ background-color: #F9F9F9; color: #383838; font: normal 14px Arial, Sans-Serif; }
 
 pre, kbd, var, samp, tt{ font-family: "Courier", Monospace; }
 
@@ -23,7 +23,7 @@ kbd, samp{ color: #B83044; }
 
 kbd{ font-style: italic; }
 
-h1, h2, h3, h4, h5, h6, pre{ color: #484848; text-shadow: -0.3px -0.3px 1px #787878 !important;}
+h1, h2, h3, h4, h5, h6, pre{ color: #E0941B; text-shadow: -0.3px -0.3px 1px #787878 !important;}
 
 h1{ font-size: 24px; }
 
@@ -100,7 +100,7 @@ td{ font-size: 12px; }
   -webkit-box-shadow: inset 1px 1px 1px 0px rgba(135, 135, 135, 0.1), inset -1px -1px 1px 0px rgba(135, 135, 135, 0.1);
   box-shadow: inset 1px 1px 1px 0px rgba(135, 135, 135, 0.1), inset -1px -1px 1px 0px rgba(135, 135, 135, 0.1);
   color: #fff;
-  font-family: Tahoma;
+  font-family: Arial;
   font-size: 14px;
   font-weight: bold;
   line-height: 1;

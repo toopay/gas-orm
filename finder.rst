@@ -48,8 +48,6 @@ Using factory method, give you flexibility. But if you are working with a set of
 
 	echo "\n";
 
-	// and so on
-
 Normally, if you use **find** method and passed a single id as above, Gas will return an user instance at a time.
 
 To find several **ids**, you can do that by : ::
@@ -79,11 +77,11 @@ You can use **find_by_collumn** to fetch a record(s) based by some collumn. For 
 		echo "\n";
 	}
 
-By default, **find_by_column** will returning an array of object. While you just need to match and returned one record, as an instance, passing second parameter (limit) to 1 will do that. ::
+By default, **find_by_column** will returning an array of object. While you just need to match and returned one record, as an instance, passing second parameter (that is **limit**) to 1 will do that. ::
 
 	$user = new User;
 
-	$moderators = $user->find_by_role('moderator', 3);
+	$moderators = $user->find_by_role('moderator', 3, 1);
 
 	foreach ($moderators as $moderator)
 	{
@@ -96,7 +94,25 @@ By default, **find_by_column** will returning an array of object. While you just
 
 	echo 'My name is '.$me->name;
 
-Unless you passing 1 as second parameter, **find_by_column** will returning an array of object/instance.
+You can passing **offset** as third parameter as well. Notice that unless you passing 1 as second parameter, **find_by_column** will returning an array of object/instance.
+
+find_where()
++++++++++++++++++
+
+If **find_by_collumn** doesn't enough, you can use **find_where** to fetch a set of record(s) based by several collumns. For example ::
+
+	$bad_condition = array('behaviour' => 'bad', 'attitude' => 'bad');
+
+	$bad_user = Gas::factory('user')->find_where($bad_condition, 20, 10);
+
+	foreach ($active_users as $active_user)
+	{
+		echo 'User '.$active_user->id.' is active, and his name is '.$active_user->name;
+
+		echo "\n";
+	}
+
+You can passing **limit** as second parameter and **offset** as third parameter as well. Notice that unless you passing 1 as second parameter, **find_where** will returning an array of object/instance.
 
 first() and last()
 ++++++++++++++++++

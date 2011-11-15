@@ -29,13 +29,13 @@ Lets throw an example scenario. Suppose we are about inserting new record into o
  		{
  			$this->_fields = array(
 
- 				'id'       => Gas::field('auto'),
+ 				'id'       => Gas::field('auto[11]'),
 
  				'name'     => Gas::field('char[40]'),
 
  				'email'    => Gas::field('email'),
 
- 				'username' => Gas::field('char[10]'),
+ 				'username' => Gas::field('char[3,10]'),
 
  				'active'   => Gas::field('int[1]'),
 
@@ -50,7 +50,7 @@ This is one-time set-up, unless in the future, we need to change our table schem
 - **email** : for email data (a shorthand for native **valid_email** rule in CI validation)
 - **int** : for INT, TINYINT or other integer number
 
-It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]**.
+It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]** or specify both min length and max length using **[n,n]**.
 
 Additional Rules
 ++++++++++++++++

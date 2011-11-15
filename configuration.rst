@@ -12,8 +12,17 @@ Models path is a directory you are telling Gas ORM to look for your model classe
 
 	$config['models_path'] = 'models';
 
-Otherwise, you will need to specify it. The value above is relative to your application folder. Gas support for cascading directories, so you can have as many sub-level folder as you want, in your primary models directory.
+Otherwise, you will need to specify it. 
 
+If you working with **modular directory structure** , you will need to set it to your modules path. For example, if you put your modules directories under **aplication** folder, then you can set **models_path** as bellow : ::
+
+	$config['models_path'] = array(APPPATH.'models', APPPATH.'modules');
+
+This way, will scans both your **application/models** and **application/modules**, for any exists Gas models.
+
+Gas support for cascading directories, so you can have as many sub-level folder as you want, in your primary models directory.
+
+.. note:: If your **modules** directory is not located under application folder, you need to specify the path. You doesn't need to set up each of your module's models directories, just point it to your modules folder, and Gas will start collecting all of your module's models
 
 Models Suffix
 ++++++++++++++
@@ -33,6 +42,12 @@ Gas ORM comes with an **autoload** feature that permits your models to be loaded
 
 But Gas ORM will do what you tell it to do. So if you feel loading manually your models is better, you can turn off this option. 
 
+If you decide to turn off autoload models functionality, you can load your model manually like bellow : ::
+
+	Gas::load_model('user');
+
+You can also load several models at a time, by passing an array instead a string.
+
 Autoload Extensions
 +++++++++++++++++++
 
@@ -42,10 +57,16 @@ Same with **autoload** models, if you need certain extensions globally throughou
 
 Otherwise, you can always turn it off. 
 
+If you decide to turn off autoload models functionality, you can load your extension manually like bellow : ::
+
+	Gas::load_extension('dummy');
+
+You can also load several extensions at a time, by passing an array instead a string.
+
 Extensions
 ++++++++++
 
-If you autoload extension, Gas will only load values inside this array. ::
+If you turn on autoload extension option, Gas will only load values inside this array. ::
 
 	$config['extensions'] = array('dummy');
 

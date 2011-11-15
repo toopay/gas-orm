@@ -120,7 +120,7 @@ In previous example, Gas assume your intermediate table were job_user or user_jo
 
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_and_belongs_to* values which also contain **foreign_table** option.
+Make sure job model represent this relationship as well, by setting up **has_and_belongs_to** values which also contain **foreign_table** option.
 
 foreign_key
 +++++++++++
@@ -149,7 +149,7 @@ In previous example, you successfully define your intermediate table name to **j
 
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_and_belongs_to* values which also contain **foreign_key** option.
+Make sure job model represent this relationship as well, by setting up **has_and_belongs_to** values which also contain **foreign_key** option.
 
 through
 +++++++

@@ -66,6 +66,8 @@ You already meet the :doc:`Finder method <finder>`, also you already specify eac
 
 	echo 'User 1 name is '.$someuser->name.' and his wife name is '.$someuser->wife->name;
 
+As you can see, you can directly get the user's wife, by accessing **wife** properties from user instance. This properties is refer to **related model's class name** , not a table name. So even the real table was **wifes** or **wf** or whateer it is, only **related model's class name** that you specicy in user's relations properties which really matter.
+
 For **one-to-many** relationship, you can iterate the child nodes, something like : ::
 
 	$someuser = Gas::factory('user')->find(1);
@@ -169,6 +171,14 @@ To delete a single record : ::
 	$someuser = Gas::factory('user')->find(1);
 
 	$someuser->delete();
+
+You can also related instance as well. ::
+
+	$someuser = Gas::factory('user')->find(1);
+
+	$related_wife = $someuser->wife;
+
+	$related_wife->delete();
 
 Or you can explicitly specify the **id** : ::
 

@@ -88,10 +88,19 @@ So in this example, we are adding some fields into our data, for next process. I
 
 	function _before_save()
 	{
-		$is_new = empty($this->identifier());
+		$is_new = $this->empty;
+
+		if ($is_new == TRUE)
+		{
+			echo 'I have to do something before INSERT';
+		}
+		else
+		{
+			echo 'I have to do something before UPDATE';
+		}
 	}
 
-By calling **identifier** method, we actually checked is there a record being hold by some Gas instance. If yes, then above **is_new** variable will set to FALSE, mean UPDATE process is the next event. Otherwise, it will be an INSERT event.
+By checking **empty** property, we actually checked is there a record being hold by some Gas instance. If yes, then above **is_new** variable will set to FALSE, mean UPDATE process is the next event. Otherwise, it will be an INSERT event.
 
 _after_save()
 +++++++++++++
