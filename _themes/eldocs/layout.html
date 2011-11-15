@@ -1,0 +1,140 @@
+{%- block doctype -%}
+<!DOCTYPE html>
+{%- endblock %}
+{%- set reldelim1 = reldelim1 is not defined and ' &rsaquo;' or reldelim1 %}
+{%- set reldelim2 = reldelim2 is not defined and ' |' or reldelim2 %}
+{%- set url_root = pathto('', 1) %}
+{%- if url_root == '#' %}{% set url_root = '' %}{% endif %}
+{% set project_abbreviation = 'gas-orm' %}
+{% set project_domain = 'gasorm-doc.taufanaditya.com' %}
+{% set quickstart = 'gasorm-doc.taufanaditya.com/quickstart.html' %}
+
+<html>
+	<head>
+		{%- if not embedded and docstitle %}
+	      {%- set titlesuffix = " &mdash; "|safe + docstitle|e %}
+	      {%- set metadesc = " "|safe + docstitle|e %}
+	    {%- else %}
+	      {%- set titlesuffix = "" %}
+	    {%- endif %}
+		<meta charset="{{ encoding }}">
+		<meta name="keywords" content="gas orm, gas orm documenation" />
+		<meta name="description" content="{{ title|striptags|e }}. Gas ORM is a lighweight and easy-to-use ORM for CodeIgniter." />
+	    {{ metatags }}
+	   
+	    {%- block htmltitle %}
+	    <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
+	    {%- endblock %}
+
+	    <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
+	    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
+	    {%- for cssfile in css_files %}
+	    <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
+	    {%- endfor %}
+	
+    {%- if not embedded %}
+	   
+	    {%- for scriptfile in script_files %}
+	    <script type="text/javascript" src="{{ pathto(scriptfile, 1) }}"></script>
+	    {%- endfor %}
+
+	    {%- if favicon %}
+	    <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
+	    {%- endif %}
+	{%- endif %}
+	
+	{%- block linktags %}
+	    {%- if hasdoc('about') %}
+	    <link rel="author" title="{{ _('About these documents') }}" href="{{ pathto('about') }}" />
+	    {%- endif %}
+	    {%- if hasdoc('genindex') %}
+	    <link rel="index" title="{{ _('Index') }}" href="{{ pathto('genindex') }}" />
+	    {%- endif %}
+	    {%- if hasdoc('search') %}
+	    <link rel="search" title="{{ _('Search') }}" href="{{ pathto('search') }}" />
+	    {%- endif %}
+	    {%- if hasdoc('copyright') %}
+	    <link rel="copyright" title="{{ _('Copyright') }}" href="{{ pathto('copyright') }}" />
+	    {%- endif %}
+	    <link rel="top" title="{{ docstitle|e }}" href="{{ pathto('index') }}" />
+	    {%- if parents %}
+	    <link rel="up" title="{{ parents[-1].title|striptags|e }}" href="{{ parents[-1].link|e }}" />
+	    {%- endif %}
+	    {%- if next %}
+	    <link rel="next" title="{{ next.title|striptags|e }}" href="{{ next.link|e }}" />
+	    {%- endif %}
+	    {%- if prev %}
+	    <link rel="prev" title="{{ prev.title|striptags|e }}" href="{{ prev.link|e }}" />
+	    {%- endif %}
+	{%- endblock %}
+		{%- block extrahead %} {% endblock %}
+		 <script type="text/javascript">
+		    var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-24517173-1']);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+	    </script>
+	</head>
+	<body>
+	{%- block content %}
+		<div id="table-contents">
+			<div class="toctree-wrapper compound">
+			{{ toctree(collapse=true) }}
+			</div>
+		</div>
+
+		<div id="gas_label" class="{{ project_abbreviation }}">
+			<a href="http://{{ project_domain }}/"><img src="{{ pathto('_static/asset/img/' + project_abbreviation + '-logo.gif', 1) }}" alt="{{ project }}"></a>
+			<p>{{ release }} User Guide</p>
+			{%- if show_source and has_source and sourcename %}
+		    <p><a href="{{ pathto('_sources/' + sourcename, true)|e }}"
+			           rel="nofollow">{{ _('Show Source') }}</a></p>
+			{%- endif %}
+		</div>
+
+		<div id="header">
+			<ul>
+				{%- block rootrellink %}
+				<li><a href="{{ pathto(master_doc) }}">Home</a>&nbsp;&nbsp;{{ reldelim1 }}</li>
+				<li><a id="toc-link" href="{{ pathto(master_doc) }}">Table of Contents</a>&nbsp;&nbsp;{{ reldelim1 }}</li>
+				{%- endblock %}
+				
+				{%- for parent in parents %}
+				<li><a href="{{ parent.link|e }}" {% if loop.last %}{{ accesskey("U") }}{% endif %}>{{ parent.title }}</a>&nbsp;&nbsp; {{ reldelim1 }}</li>
+		        {%- endfor %}
+
+				<li><strong>{{ title }}</strong></li>
+			</ul>
+			<div class="quickstart"><a href="http://{{ (quickstart) }}">Quick Start</a></div>
+		</div>
+
+		<div class="section" id="content">
+			{{ body }}
+			{% if title|striptags|e == 'Credits' %}
+			<script type="text/javascript" src="http://www.ohloh.net/p/587254/widgets/project_users_logo.js"></script>
+			{% endif %}
+		</div>
+	{%- endblock %}
+	
+	{%- block footer %}			
+		<div id="footer">
+			<p class="top">
+				{% if prev %}
+				<span class="prev">Previous : <a href="{{ prev.link }}">{{ prev.title }}</a></span> &nbsp;|
+				{% endif %}
+				{% if next %}
+				&nbsp;<span class="next">Next : <a href="{{ next.link }}">{{ next.title }}</a></span>&nbsp;&nbsp;
+				{% endif %}
+				<a href="#header" title="Return to top">Return to top</a>
+			</p>
+			<p><a href="{{ project_url }}">{{ project }}</a> &ndash; Copyright &copy; {{ copyright }}</a></p>
+		</div>
+	{%- endblock %}
+	</script>
+	</body>
+</html>
