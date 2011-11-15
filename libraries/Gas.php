@@ -180,6 +180,8 @@ class Gas_core {
 	{
 		$model = $name;
 
+		if ( ! class_exists($model)) show_error(Gas_core::tell('models_not_found', $model));
+
 		$gas = new $model($records);
 
 		if (is_callable(array($gas, '_init'), TRUE))
@@ -837,7 +839,7 @@ class Gas_core {
 	 */
 	public function auto_check($field, $val)
 	{
-		if (is_null($val) or is_integer($val) or is_numeric($val)) return TRUE;
+		if (empty($val) or is_integer($val) or is_numeric($val)) return TRUE;
 
 		self::set_message('auto_check', 'The %s field was an invalid autoincrement field.', $field);
 		
@@ -1124,15 +1126,29 @@ class Gas_core {
 	 * @return	void
 	 *
 	 */
-	private function _scan_models($path = null)
+	private function _scan_models()
 	{
-		$model_path = APPPATH.Gas_core::$config['models_path'];
+		$models = array();
+
+		$models_path = Gas_core::$config['models_path'];
+		
+		if (is_string($models_path))
+	 	{
+	 		$models[] = APPPATH.$models_path;
+		}
+		elseif (is_array($models_path))
+		{
+			$models = $models_path;
+		}
 
 		$model_type = 'models';
 
 		$model_identifier = Gas_core::$config['models_suffix'].'.php';
-		
-		$this->_scan_files(null, $model_path, $model_type, $model_identifier);
+
+		foreach ($models as $model)
+		{
+			if (is_dir($model)) $this->_scan_files(null, $model, $model_type, $model_identifier);
+		}
 
 		return $this;
 	}
@@ -2258,6 +2274,8 @@ class Gas_bureau {
 
 		$callbacks = array();
 
+		$callback_success = array();
+
 		foreach ($rules as $field => $rule)
 		{
 			$old_rule = explode('|', $rule['rules']);
@@ -2276,7 +2294,6 @@ class Gas_bureau {
 
 			if ( ! empty($new_rule)) $validator->set_rules($field, Gas_janitor::set_label($field), $new_rule);
 		}
-		
 
 		if($validator->run() == FALSE)
 		{
@@ -2291,7 +2308,6 @@ class Gas_bureau {
 		{
 			foreach ($callback_rules as $callback_rule)
 			{
-				$callback_success = array();
 
 				$rule = substr($callback_rule, 9);
 				
@@ -2300,18 +2316,18 @@ class Gas_bureau {
 				$entries_value = isset($entries[$field]) ? $entries[$field] : FALSE; 
 
 				$callback_success[] = Gas::factory($gas)->$rule($field, $entries_value);
+			}
+		}
 
-				if ( ! empty($callback_success) and $success == TRUE)
+		if ( ! empty($callback_success) and $success == TRUE)
+		{
+			foreach ($callback_success as $single_result)
+			{
+				if ($single_result == FALSE )
 				{
-					foreach ($callback_success as $single_result)
-					{
-						if ($single_result == FALSE )
-						{
-							$success = FALSE;
+					$success = FALSE;
 
-							continue;
-						}
-					}
+					continue;
 				}
 			}
 		}

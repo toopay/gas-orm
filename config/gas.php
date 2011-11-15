@@ -7,7 +7,7 @@
 | used by the Gas ORM library.
 |
 */
-$config['models_path'] = 'models';
+$config['models_path'] = array(APPPATH.'models', APPPATH.'modules', FCPATH.'modules');
 
 $config['models_suffix'] = '_gas';
 
