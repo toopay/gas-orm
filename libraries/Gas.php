@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://taufanaditya.com/gas-orm
  * @license     BSD
@@ -26,18 +26,20 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.3.1';
+	const GAS_VERSION = '1.3.2';
 
 	public $table = '';
 
 	public $primary_key = 'id';
 
 	public $relations = array();
+
+	public $empty = TRUE;
 
 	public $errors = array();
 
@@ -103,6 +105,9 @@ class Gas_core {
 	protected static $_rules = array();
 
 	protected static $_error_callbacks = array();
+
+	public static $_errors_validation = array();
+
 	
 	/**
 	 * Constructor
@@ -150,7 +155,12 @@ class Gas_core {
 		{
 			$args = func_get_arg(0);
 
-			if (isset($args['record'])) $this->_get_fields = Gas_janitor::get_input(__METHOD__, $args['record'], FALSE, array());
+			if (isset($args['record']))
+			{
+				$this->_get_fields = Gas_janitor::get_input(__METHOD__, $args['record'], FALSE, array());
+
+				$this->empty = (bool) (count($this->_get_fields) == 0);
+			}
 		}
 
 		log_message('debug', 'Gas ORM Core Class Initialized');
@@ -278,7 +288,18 @@ class Gas_core {
 		{
 			$type = $m[1];
 
-			$rules[] = 'max_length['.$m[2].']';
+			$constraint = explode(',', $m[2]);
+
+			if (count($constraint) == 2)
+			{
+				$rules[] = 'min_length['.$constraint[0].']';
+
+				$rules[] = 'max_length['.$constraint[1].']';
+			}
+			else
+			{
+				$rules[] = 'max_length['.$constraint[0].']';
+			}
 		}
 		
 		switch ($type) 
@@ -656,6 +677,10 @@ class Gas_core {
 
 			$valid = $bureau->validate($this->model(), $entries, $this->_fields);
 
+			$this->errors = self::$_errors_validation;
+
+			self::$_errors_validation = array();
+
 			if ( ! $valid) return FALSE;
 		}
 
@@ -690,7 +715,13 @@ class Gas_core {
 
 		Gas_janitor::flush_post();
 
+		$this->errors = array();
+
+		self::$_errors_validation = array();
+
 		$this->_set_fields = array();
+
+		self::$_error_callbacks = array();
 
 		return $this->db()->affected_rows();
 		
@@ -796,7 +827,30 @@ class Gas_core {
 			$line = $msg;
 		}
 
-		self::$_error_callbacks[] = str_replace('%s', Gas_janitor::set_label($field), $line);
+		$str_error = str_replace('%s', Gas_janitor::set_label($field), $line);
+
+		self::$_error_callbacks[] = $str_error;
+
+		self::set_error($field, $str_error);
+	}
+
+	/**
+	 * set_error
+	 * 
+	 * Stack any errors
+	 * 
+	 * @access public
+	 * @param  string
+	 * @param  string
+	 * @return void
+	 */
+	public static function set_error($field = null, $error = null)
+	{
+		$field = Gas_janitor::get_input(__METHOD__, $field, TRUE);
+
+		$error = Gas_janitor::get_input(__METHOD__, $error, TRUE);
+
+		self::$_errors_validation[$field] = $error;
 	}
 	
 	/**
@@ -811,22 +865,18 @@ class Gas_core {
 	 */
 	public function errors($prefix = '', $suffix = '')
 	{
-		$validator = self::$bureau->validator();
-		
 		$prefix = ($prefix == '') ? '<p>' : $prefix;
 
 		$suffix = ($suffix == '') ? '</p>' : $suffix;
 		
 		$errors = '';
 
-		foreach (self::$_error_callbacks as $error)
+		foreach ($this->errors as $error)
 		{
 			$errors .= $prefix.$error.$suffix."\n";
 		}
 
-		$str_errors = $errors.$validator->error_string($prefix, $suffix);
-
-		return $str_errors;
+		return $errors;
 	}
 	
 	/**
@@ -1604,7 +1654,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  */
 
 class Gas_bureau {
@@ -2276,6 +2326,10 @@ class Gas_bureau {
 
 		$callback_success = array();
 
+		$is_post = (bool) count($_POST) > 0;
+
+		if ( ! $is_post) $_POST = $entries;
+
 		foreach ($rules as $field => $rule)
 		{
 			$old_rule = explode('|', $rule['rules']);
@@ -2294,15 +2348,28 @@ class Gas_bureau {
 
 			if ( ! empty($new_rule)) $validator->set_rules($field, Gas_janitor::set_label($field), $new_rule);
 		}
+		
 
-		if($validator->run() == FALSE)
+		if ($validator->run() == FALSE)
 		{
+			foreach ($entries as $field => $data)
+			{
+				if (($error = $validator->error($field, '  ', '  ')) and $error != '')
+				{
+					$error = str_replace('  ', '', $error);
+
+					Gas::set_error($field, $error);
+				}
+			}
+
 			$success = FALSE;
 		}
 		else
 		{
 			$success = TRUE;
 		}
+
+		if ( ! $is_post) Gas_janitor::flush_post();
 		
 		foreach ($callbacks as $field => $callback_rules)
 		{
@@ -2315,7 +2382,7 @@ class Gas_bureau {
 
 				$entries_value = isset($entries[$field]) ? $entries[$field] : FALSE; 
 
-				$callback_success[] = Gas::factory($gas)->$rule($field, $entries_value);
+				if ($entries_value !== FALSE) $callback_success[] = Gas::factory($gas)->$rule($field, $entries_value);
 			}
 		}
 
@@ -2394,7 +2461,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  */
 
 class Gas_janitor {
@@ -2816,7 +2883,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  */
 interface Gas_extension {
 	
@@ -2833,7 +2900,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.1
+ * @version     1.3.2
  */
 
 class Gas extends Gas_core {}
