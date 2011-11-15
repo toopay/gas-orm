@@ -35,6 +35,7 @@ Gas ORM Features
 
 - Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.
 - Support multiple database connection.
+- Support modular models directories.
 - Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table, self)
 - Self-referential and adjacency column/data (hierarchical data).
 - Various finder method (can chained with most of CI AR) and aggregates.

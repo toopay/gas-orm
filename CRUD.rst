@@ -49,11 +49,17 @@ What if you want to create a record, but not from **$_POST** data? Well, nativel
 	if ( ! $new_user->save(TRUE))
 	{
 		echo $new_user->errors('<p class="error">', '</p>');
+
+		echo 'The raw errors were : ';
+
+		print_r($new_user->errors);
 	}
 	else
 	{
 		echo 'New user successfully created. And her id is '.$new_user->last_id();
 	}
+
+If you need to output the full string of error message, you can use **errors** method with first parameter as prefix (html tag) and second parameter as suffix (also html tag, must be match with prefix). If you need to process it in you own way, you can access **errors** properties of your model instance.
 
 Notice that **fill** will auto mapped our corresponding field rules with our data collection, and because we pass **TRUE** as second parameter, it will treated the data as **$_POST** data, so CI validation will be invoked. There are several :doc:`Hooks point <callbacks>` which you may use, to fully control the creating process within your model.
 
