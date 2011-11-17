@@ -11,9 +11,9 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  * @author      Taufan Aditya A.K.A Toopay
- * @link        http://taufanaditya.com/gas-orm
+ * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
  */
 
@@ -26,12 +26,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.3.2';
+	const GAS_VERSION = '1.3.3';
 
 	public $table = '';
 
@@ -184,9 +184,11 @@ class Gas_core {
 	 * 
 	 * @access  public 
 	 * @param   string 
+	 * @param   array 
+	 * @param   bool 
 	 * @return  object  Gas Instance
 	 */
-	public static function factory($name, $records = array())
+	public static function factory($name, $records = array(), $init = TRUE)
 	{
 		$model = $name;
 
@@ -194,7 +196,7 @@ class Gas_core {
 
 		$gas = new $model($records);
 
-		if (is_callable(array($gas, '_init'), TRUE))
+		if (is_callable(array($gas, '_init'), TRUE) and $init == TRUE)
 		{
 			$gas->_init();
 
@@ -448,6 +450,25 @@ class Gas_core {
 	}
 
 	/**
+	 * produce
+	 * 
+	 * Compile record and return result
+	 * 
+	 * @access public
+	 * @return mixed
+	 */
+	public function produce()
+	{
+		$bureau = self::$bureau;
+
+		$is_extension = (bool) ! empty($this->extensions);
+
+		$args = array($this->model(), self::$ar_recorder, $this->single, $is_extension);
+
+		return Gas_janitor::force_and_get($bureau, 'compile', $args);
+	}
+
+	/**
 	 * all
 	 * 
 	 * Fetch records
@@ -459,8 +480,6 @@ class Gas_core {
 	{
 		$is_extension = (bool) ! empty($this->extensions);
 
-		$bureau = self::$bureau;
-
 		$this->validate_table();
 		
 		$recorder = array('get' => array($this->table));
@@ -469,15 +488,13 @@ class Gas_core {
 
 		$this->validate_join();
 
-		$args = array($this->model(), self::$ar_recorder, $this->single, $is_extension);
-
-		$res = Gas_janitor::force_and_get($bureau, 'compile', $args);
+		$res = $this->produce();
 
 		if ($is_extension)
 		{
 			$this->set_reflection_record($res);
 
-			$this->set_record(array_shift($res));
+			$this->set_record(array());
 
 			return $this;
 		}
@@ -547,7 +564,6 @@ class Gas_core {
 			$recorder = array('limit' => array($limit, $offset));
 
 			Gas_janitor::tape_record($this->model(), $recorder);
-			
 		}
 
 		if ($type == 'or')
@@ -659,9 +675,10 @@ class Gas_core {
 	 *
 	 * @access  public
 	 * @param   bool    whether to skip or not the validation process
+	 * @param   bool    whether to return affected rows or not
 	 * @return  int     affected rows
 	 */
-	public function save($check = FALSE)
+	public function save($check = FALSE, $skip_affected_rows = FALSE)
 	{
 		$bureau = self::$bureau;
 
@@ -669,7 +686,7 @@ class Gas_core {
 
 		if ($check)
 		{
-			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
+			if (is_callable(array($this, '_init'), TRUE) and empty($this->_fields)) $this->_init();
 
 			$entries = is_array($this->_set_fields) ? array_merge($this->_get_fields, $this->_set_fields) : $this->_get_fields;
 
@@ -709,7 +726,7 @@ class Gas_core {
 
 		Gas_janitor::tape_record($this->model(), $recorder);
 
-		$bureau->compile($this->model(), self::$ar_recorder);
+		$res = $bureau->compile($this->model(), self::$ar_recorder, $skip_affected_rows);
 
 		if (is_callable(array($this, '_after_save'), TRUE)) $this->_after_save();
 
@@ -723,7 +740,7 @@ class Gas_core {
 
 		self::$_error_callbacks = array();
 
-		return $this->db()->affected_rows();
+		return $res;
 		
 	}
 
@@ -741,8 +758,6 @@ class Gas_core {
 		$bureau = self::$bureau;
 
 		$this->validate_table();
-
-		if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 		$args = func_get_args();
 
@@ -1262,7 +1277,6 @@ class Gas_core {
 				{
 					self::$_extensions[str_replace(array($identifier, '.php'), '', $item[count($item)-1])] = $file;
 				}
-				
 			}
 		}
 		
@@ -1343,7 +1357,6 @@ class Gas_core {
 
  			$identifier = ($custom_key !== '') ? $custom_key : $foreign_table.'_'.$foreign_key;
 			
-
  			if($through !== '')
  			{
  				$tree = array(
@@ -1389,8 +1402,6 @@ class Gas_core {
 	{
 		$this->validate_table();
 
-		$bureau = self::$bureau;
-
 		$engine = $this->db();
 		
 		$extensions = $this->get_extensions();
@@ -1412,7 +1423,6 @@ class Gas_core {
 				$_POST = $raw_input;
 
 				$this->_set_fields = $raw_input;
-
 			}
 			elseif (isset($_POST))
 			{
@@ -1433,17 +1443,13 @@ class Gas_core {
 			}
 
 			return $this;
-
 		}
 		elseif ($name == 'filled_fields')
 		{
-
 			return $this->_set_fields;
-
 		}
 		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) AND count($m) == 2)
 		{
-
 			$field = $m[1];
 
 			$value = array_shift($args);
@@ -1453,11 +1459,9 @@ class Gas_core {
 			$offset = array_shift($args);
 			
 			return $this->find_where(array($field => $value), $limit, $offset);
-
 		}
 		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) AND count($m) == 2)
 		{
-
 			if (empty($args)) $args = array($this->primary_key);
 			
 			$recorder = array('select_'.$m[1] => $args);
@@ -1467,11 +1471,9 @@ class Gas_core {
 			$this->single = TRUE;
 
 			return $this->all();
-
 		}
 		elseif (preg_match('/^(first|last)$/', $name, $m) AND count($m) == 2)
 		{
-
 			$column = array_shift($args);
 
 			$order = is_null($column) ? $this->primary_key : $column;
@@ -1485,11 +1487,9 @@ class Gas_core {
 			$this->single = TRUE;
 
 			return $this->all();
-
 		}
 		elseif (preg_match('/^join_([^)]+)$/', $name, $m) AND count($m) == 2)
 		{
-
 			$joined_field = $m[1];
 
 			$on = array_shift($args);
@@ -1503,11 +1503,9 @@ class Gas_core {
 			self::$join = TRUE;
 			
 			return $this;
-
 		}
 		elseif (preg_match('/^([^)]+)_join_([^)]+)$/', $name, $m) AND count($m) == 3)
 		{
-
 			$allowed_type = array('left', 'right', 'outer', 'inner', 'left outer', 'right outer');
 
 			$join_type = str_replace('_', ' ', $m[1]);
@@ -1532,11 +1530,10 @@ class Gas_core {
 			self::$join = TRUE;
 			
 			return $this;
-
 		}
 		elseif ($name == 'last_id')
 		{
-			return $this->db()->insert_id();
+			return $engine->insert_id();
 		}
 		elseif ($name == 'list_fields')
 		{
@@ -1544,19 +1541,14 @@ class Gas_core {
 		}
 		elseif ($name == 'last_sql')
 		{
-			
 			return $engine->last_query();
-
 		}
 		elseif ($name == 'all_sql')
 		{
-			
 			return $engine->queries;
-
 		}
 		elseif ($name == 'group_by')
 		{
-
 			$recorder = array('group_by' => $args);
 
 			Gas_janitor::tape_record($this->model(), $recorder);
@@ -1564,11 +1556,9 @@ class Gas_core {
 			$this->single = FALSE;
 
 			return $this;
-
 		}
 		elseif ($name == 'like')
 		{
-
 			$recorder = array('like' => $args);
 
 			Gas_janitor::tape_record($this->model(), $recorder);
@@ -1576,15 +1566,14 @@ class Gas_core {
 			$this->single = FALSE;
 
 			return $this;
-
 		}
 		elseif (method_exists($engine, $name))
 		{
 			$executor = Gas_janitor::$dictionary['executor'];
 
-			$direct = array_splice($executor, -6);
+			$direct = array_splice($executor, -5);
 
-			$tables = array_splice($executor, -2);
+			$tables = array_splice($executor, -3);
 
 			$writes = array_splice($executor, -4);
 
@@ -1607,7 +1596,7 @@ class Gas_core {
 
 			if ($medical_history == 'executor' or $medical_history == 'transaction_status')
 			{
-				return $bureau->compile($this->model(), self::$ar_recorder);
+				return $this->produce();
 			}
 			elseif (strpos($name, 'join') !== FALSE)
 			{
@@ -1654,7 +1643,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  */
 
 class Gas_bureau {
@@ -1672,6 +1661,12 @@ class Gas_bureau {
 	protected static $db;
 
 	protected static $validator;
+
+	protected static $task_manager;
+
+	protected static $thread_resource;
+
+	protected static $empty_executor = array('writes' => FALSE, 'operation' => FALSE);
 	
 	/**
 	 * Constructor
@@ -1716,76 +1711,184 @@ class Gas_bureau {
 	{
 		$tasks = Gas_janitor::play_record($recorder);
 
-		foreach ($tasks as $type => $task)
+		$motor = get_class(self::$db);
+
+		$bundle = array(
+
+			'engine' => $motor,
+
+			'compiler' => array(
+
+				'gas' => $gas,
+
+				'limit' => $limit,
+
+				'raw' => $raw,
+
+			),
+
+			'flag' => array('condition', 'selector')
+
+		);
+
+		if ( ! empty ($tasks['executor']))
 		{
-			if (Gas::factory($gas)->get_type($type) == TRUE)
-			{
-				foreach($task as $action)
-				{
-					$motor = get_class(self::$db);
+			$executor = Gas_janitor::$dictionary['executor'];
 
-					if (method_exists($motor, key($action)))
-					{
-						$method = key($action);
+			$operations = array_splice($executor, -8);
 
-						$args = array_shift($action);
+			$writes = array_splice($executor, -4);
 
-						$is_transaction = Gas::factory($gas)->get_type('transaction_pointer');
+			$bundle['executor_list'] = array(
 
-						if ($type == 'executor')
-						{
-							$executor = Gas_janitor::$dictionary['executor'];
+				'operation' => $operations, 
 
-							$operations = array_splice($executor, -8);
-
-							$writes = array_splice($executor, -4);
-
-							if ($method == 'get')
-							{
-								$result = Gas_janitor::force_and_get(self::$db, $method, $args);
-
-								Gas::factory($gas)->set_ar_record(array());
-
-								if ($raw === TRUE) return $result->result_array();
-
-								return self::generator($gas, $result->result(), __FUNCTION__, $limit, Gas::factory($gas)->get_with());
-							}
-							elseif ( ! $is_transaction and in_array($method, $writes))
-							{
-								Gas_janitor::force(self::$db, $method, $args);
-
-								Gas::factory($gas)->set_ar_record(array());
-								
-								return self::$db->affected_rows();
-							}
-							
-							Gas_janitor::force(self::$db, $method, $args);
-
-							Gas::factory($gas)->set_ar_record(array());
-						}
-						elseif ($type == 'transaction_executor')
-						{
-							Gas_janitor::force(self::$db, $method, $args);
-
-							Gas::factory($gas)->set_type('transaction_pointer', FALSE);
-
-							Gas::factory($gas)->set_type('transaction_executor', FALSE);
-						}
-						elseif ($type == 'transaction_status')
-						{
-							return Gas_janitor::force_and_get(self::$db, $method, $args);
-						}
-						else
-						{
-							Gas_janitor::force(self::$db, $method, $args);
-						}
-					}
-				}
-
-			}
+				'writes' => $writes
+			
+			);
 		}
 
+		self::$task_manager = $bundle;
+
+		array_walk($tasks, 'Gas_bureau::sort_task');
+
+		$resource = self::$thread_resource and self::$thread_resource = null;
+		
+		return $resource;
+	}
+
+	/**
+	 * sort_task
+	 * 
+	 * Sort record compilation
+	 *
+	 * @access	public
+	 * @param	array
+	 * @param	int
+	 * @return	response
+	 */
+	public static function sort_task($tasks, $key)
+	{
+		if (empty($tasks) or empty(self::$task_manager)) return;
+
+		array_walk($tasks, 'Gas_bureau::do_task', $key);
+
 		return;
+	}
+
+	/**
+	 * do_task
+	 * 
+	 * Do each record task
+	 *
+	 * @access	public
+	 * @param	array
+	 * @param	string
+	 * @param	string
+	 * @return	response
+	 */
+	public static function do_task($arguments, $key, $task)
+	{
+		if (empty(self::$task_manager)) return;
+
+		$flag = ! in_array($task, self::$task_manager['flag']);
+
+		$action = key($arguments);
+
+		$args = array_shift($arguments);
+
+		if ($flag)
+		{
+			$compiler = self::$task_manager['compiler'];
+
+			$is_transaction = Gas::factory($compiler['gas'], array(), FALSE)->get_type('transaction_pointer');
+
+			Gas::factory($compiler['gas'], array(), FALSE)->set_ar_record(array());
+
+			if ($action == 'get')
+			{
+				$result = Gas_janitor::force_and_get(self::$db, $action, $args);
+
+				if ($compiler['raw'] === TRUE) 
+				{
+					$res = $result->result_array();
+				}
+				else
+				{
+					$with = Gas::factory($compiler['gas'], array(), FALSE)->get_with();
+
+					$res = self::generator($compiler['gas'], $result->result(), __FUNCTION__, $compiler['limit'], $with);
+				}
+
+				self::$task_manager = array();
+
+				self::$thread_resource = $res;
+
+				return;
+			}
+			
+			if (isset(self::$task_manager['executor_list']))
+			{
+				$executor_list = self::$task_manager['executor_list'];
+			}
+			else
+			{
+				$executor_list = self::$empty_executor;
+			}
+
+			$writes = Gas_janitor::get_input(__METHOD__, $executor_list['writes'], FALSE, '');
+
+			$operations = Gas_janitor::get_input(__METHOD__, $executor_list['operation'], FALSE, '');
+
+			if ($task == 'transaction_status')
+			{
+				$res = Gas_janitor::force_and_get(self::$db, $action, $args);
+			}
+			elseif ($task == 'transaction_executor')
+			{
+				$res = Gas_janitor::force(self::$db, $action, $args);
+
+				Gas::factory($compiler['gas'], array(), FALSE)->set_type('transaction_pointer', FALSE);
+
+				Gas::factory($compiler['gas'], array(), FALSE)->set_type('transaction_executor', FALSE);
+			}
+			elseif ( ! $is_transaction and in_array($action, $writes))
+			{
+				Gas_janitor::force(self::$db, $action, $args);
+				
+				$res = ($compiler['limit']) ? TRUE : self::$db->affected_rows();
+
+				self::$task_manager = array();
+			}
+			elseif ( ! $is_transaction and in_array($action, $operations))
+			{
+				array_splice($operations, 2);
+
+				$non_explicit = $operations;
+
+				if (in_array($action, $non_explicit))
+				{
+					$res = Gas_janitor::force(self::$db, $action, $args);
+				}
+				else
+				{
+					$res = Gas_janitor::force_and_get(self::$db, $action, $args);
+				}
+			}
+			else
+			{
+				$res = Gas_janitor::force(self::$db, $action, $args);
+			}
+
+			self::$thread_resource = $res;
+
+			return;
+		}
+		else
+		{
+			return Gas_janitor::force(self::$db, $action, $args);
+		}
+
 	}
 
 	/**
@@ -1817,8 +1920,6 @@ class Gas_bureau {
 	 */
 	public static function generator($gas, $resource, $method, $limit = FALSE, $with = FALSE, $locked = FALSE)
 	{
-		list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
-
 		$instances = array();
 
 		$eager_load_models = array();
@@ -1839,6 +1940,8 @@ class Gas_bureau {
 
 		if ($with)
 		{
+			list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
+
 			$childs = array();
 
 			$eager_load_models = Gas::factory($gas)->get_with_models();
@@ -1855,7 +1958,6 @@ class Gas_bureau {
 
 					'foreign_relations' => $r,
 				);
-
 			}
 
 			$ids = array();
@@ -2461,7 +2563,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  */
 
 class Gas_janitor {
@@ -2476,11 +2578,15 @@ class Gas_janitor {
 
 		'condition' => array('join', 'where', 'or_where', 'where_in', 'or_where_in', 'where_not_in', 'or_where_not_in', 'like', 'or_like', 'not_like', 'or_not_like', 'group_by', 'distinct', 'having', 'or_having', 'order_by', 'limit', 'set'),
 
-		'executor' => array('get', 'count_all_results', 'insert_string', 'update_string', 'query', 'insert', 'insert_batch', 'update', 'delete', 'empty_table', 'truncate', 'insert_id', 'count_all', 'affected_rows', 'platform', 'version', 'last_query'),
+		'executor' => array('get', 'count_all_results', 'insert_string', 'update_string', 'query', 'insert', 'insert_batch', 'update', 'delete', 'empty_table', 'truncate', 'count_all', 'insert_id', 'affected_rows', 'platform', 'version', 'last_query'),
 
 		'transaction_status' => array('trans_status'),
 
 	);
+
+	public static $hidden_keys;
+
+	public static $num_keys;
 
 	/**
 	 * diagnostic
@@ -2641,6 +2747,95 @@ class Gas_janitor {
 	    }
 	    
 	    return -1;
+	}
+
+	/**
+	 * arr_trim
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  array
+	 */
+	public static function arr_trim($arrays)
+	{
+    	if ( ! is_array($arrays)) return trim($arrays);
+ 
+    	return array_map('Gas_janitor::arr_trim', $arrays);
+	}
+
+	/**
+	 * arr_hide
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  array
+	 */
+	public static function arr_hide($val)
+	{
+    	return ( ! in_array($val, self::$hidden_keys));
+	}
+
+	/**
+	 * hide_key
+	 *
+	 * @access  public
+	 * @param   array
+	 * @param   mixed
+	 * @return  void
+	 */
+	public static function hide_key(&$arrays, $index)
+	{
+		$hidden_keys = self::$hidden_keys;
+
+		foreach ($hidden_keys as $key)
+		{
+			if(isset($arrays[$key])) 
+			{
+				unset($arrays[$key]);
+			}
+		}
+
+		return;
+	}
+
+	/**
+	 * num_to_bool
+	 *
+	 * @access  public
+	 * @param   array
+	 * @param   mixed
+	 * @return  void
+	 */
+	public static function num_to_bool(&$arrays, $index)
+	{
+		$num_keys = self::$num_keys;
+
+		foreach ($num_keys as $key)
+		{
+			if(isset($arrays[$key])) 
+			{
+				$bool = (bool) ((int) $arrays[$key]);
+
+				$arrays[$key] = var_export($bool, TRUE);
+			}
+		}
+		
+		return;
+	}
+
+	/**
+	 * arr_ucfirst
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  void
+	 */
+	public static function arr_ucfirst(&$val, $index)
+	{
+		$val = ucfirst($val);
+
+		return;
 	}
 
 	/**
@@ -2883,7 +3078,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  */
 interface Gas_extension {
 	
@@ -2900,7 +3095,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.2
+ * @version     1.3.3
  */
 
 class Gas extends Gas_core {}

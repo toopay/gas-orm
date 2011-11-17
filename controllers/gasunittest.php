@@ -78,7 +78,17 @@ class Gasunittest extends CI_Controller {
 
 				'Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.<br /><br />',
 
-				'If you found any issues, you can submit it : <a href="https://github.com/toopay/CI-GasORM-Library" target="_blank" class="link">Gas on GitHub</a>.',
+				heading('Documentation', 3),
+
+				'For full documenation, convention and example go to : <a href="http://gasorm-doc.taufanaditya.com" target="_blank" class="link">Home of Gas ORM</a>.',
+
+				heading('Repositories', 3),
+
+				'If you have a request or found any issues, you can submit it : <a href="https://github.com/toopay/CI-GasORM-Library" target="_blank" class="link">Gas on GitHub</a>.',
+
+				heading('Discussion', 3),
+
+				'Join on-going discussion (and release history) on : <a href="http://codeigniter.com/forums/viewthread/202669/" target="_blank" class="link">CodeIgniter forum</a>.',
 
 		);
 
@@ -102,7 +112,11 @@ class Gasunittest extends CI_Controller {
 
 		$content = array(
 
-				heading('Convention', 3),
+				heading('Convention Documentation', 3),
+
+				'For complete convention and detailed explanation go to : <a href="http://gasorm-doc.taufanaditya.com/convention.html#convention" target="_blank" class="link">Convention Section</a>.',
+
+				heading('Quick Brief', 3),
 
 				'<p>Gas makes some assumptions about your database structure. Each table should have primary key, default to <b>id</b>. You can set this dynamically in your Gas model by setting <b>$primary_key</b> property in your model class. Each table should have same name with its corresponding Gas model\'s name, but you still can set this dynamically in your Gas model by setting <b>$table</b> property in your model class.</p>',
 
@@ -214,7 +228,11 @@ class Gasunittest extends CI_Controller {
 
 		$content = array(
 
-				heading('Overview', 3),
+				heading('Usage Documentation', 3),
+
+				'For complete API usage and detailed explanation go to : <a href="http://gasorm-doc.taufanaditya.com/quickstart.html#quick-start" target="_blank" class="link">Quickstart Section</a>.',
+
+				heading('Quick Brief', 3),
 
 				'<p>Before start using any of Gas available method, you should have a gas model, which follow <a href="/'.GAS_NAME.'/convention" class="link">Gas standard model convention</a>. Then, you can start using it either by instantiate new Gas object or by using factory interface, eg :</p>',
 
@@ -940,7 +958,14 @@ class Gasunittest extends CI_Controller {
 	{
 		$this->new_state = TRUE;
 
-		$file = APPPATH.$config['models_path'].'/'.$model.$config['models_suffix'].'.php';
+		if (is_string($config['models_path']))
+		{
+			$file = APPPATH.$config['models_path'].'/'.$model.$config['models_suffix'].'.php';
+		}
+		else
+		{
+			$file = APPPATH.'models/'.$model.$config['models_suffix'].'.php';
+		}
 
 		$user = 'array('."\n"
 				."\t\t\t\t".'\'has_one\' => array(\'wife\' => array()),'."\n"
@@ -1460,7 +1485,7 @@ class Gasunittest extends CI_Controller {
 
 			anchor(GAS_NAME.'/convention', 'Convention', $css_anchor),
 
-			anchor(GAS_NAME.'/documentation', 'Documentation', $css_anchor),
+			anchor(GAS_NAME.'/documentation', 'Quick Start', $css_anchor),
 
 			anchor(GAS_NAME.'/extension', 'Extension', $css_anchor),
 
