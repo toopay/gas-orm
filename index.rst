@@ -16,6 +16,7 @@ Gas ORM version 1.3 Documentation
 	validation
 	callbacks
 	relationship
+	reserved
 	finder
 	CRUD
 	utility
