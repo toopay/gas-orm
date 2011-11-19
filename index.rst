@@ -22,10 +22,25 @@ Gas ORM version 1.3 Documentation
 	extension
 	credits
 
-Download 
-++++++++
+
+Download
+++++++++++++
+
+Ready? Grab the latest version_ then.  
+
+Repositories
+++++++++++++
 
 Watch, fork, clone or just download the zip files on GitHub repo_ 
+
+Upgrade Instruction
++++++++++++++++++++
+
+.. toctree::
+	:glob:
+	:titlesonly:
+	
+	upgrade_instructure/index
 
 Issues
 +++++++
@@ -41,5 +56,6 @@ Join on-going discussion (and release history) on CodeIgniter forum_
 .. _repo: https://github.com/toopay/CI-GasORM-Library
 .. _request: http://help.github.com/pull-requests/
 .. _issues: https://github.com/toopay/CI-GasORM-Library/issues
+.. _version : http://gasorm-doc.taufanaditya.com/GasORM.zip
 
 

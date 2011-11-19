@@ -53,11 +53,11 @@ Gas ORM is licensed under BSD. [#bsd]_
 
 
 
-.. [#light] The main library's file size is just 57 Kb.
+.. [#light] The main library's file size is just 60 Kb.
 .. [#easy] If you follow the convention, the setup is minimal.
 .. [#orm_wikipedia] http://en.wikipedia.org/wiki/Object-relational_mapping.
 .. [#ar_wikipedia] http://en.wikipedia.org/wiki/Active_record.
-.. [#save] There is gasunittest.php contain unit testing, to ensure all method working properly as it should.
+.. [#save] There are 20+ PHPUnit files passed, also an optional controller : gasunittest.php contain (browser) unit testing, to ensure all method working properly as it should.
 .. [#benchmark] https://github.com/toopay/CI-GasORM-Library/downloads.
 .. [#bsd] http://en.wikipedia.org/wiki/BSD_licenses
 

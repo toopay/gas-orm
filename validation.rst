@@ -39,7 +39,7 @@ Lets throw an example scenario. Suppose we are about inserting new record into o
 
  				'active'   => Gas::field('int[1]'),
 
-        	);
+			);
  		}
 	}
 

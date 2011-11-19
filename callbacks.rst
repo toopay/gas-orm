@@ -71,17 +71,13 @@ So in this example, we are rebuild our data, for next process.
 _before_save()
 +++++++++++++++
 
-You can place this method within your Gas model. Let say, we want adding some value. ::
+You can place this method within your Gas model. Let say, we want adding some **updated_at** value. ::
 
 	function _before_save()
 	{
-		$post_data = $this->filled_fields();
+		$this->updated_at = time();
 
-		$timestamp = array('updated_at', time());
-
-		$full_data = array_merge($post_data, $timestamp);
-
-		$this->set_fields($full_data);
+		return $this;
 	}
 
 So in this example, we are adding some fields into our data, for next process. In Gas ORM, saving process can be an INSERT event, or UPDATE event. How to know which event at a time? ::

@@ -25,8 +25,8 @@ Before start using any of Gas available methods, you should have a gas model, wh
 	$new_user->fill($_POST)->save(TRUE);
 
 	// RELATIONSHIP AND EAGER LOADING
-	$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1);
-	$some_user_wife = $some_user->wife;
+	$some_wife = $user->wife;
+	$users = Gas::factory('user')->with('wife', 'kid', 'job')->all();
 
 Thats how you will use Gas ORM, in your application.
 
@@ -38,6 +38,7 @@ Gas ORM Features
 - Support modular models directories.
 - Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table, self)
 - Self-referential and adjacency column/data (hierarchical data).
+- Eager Loading, to maximize your relationship queries (for performance manner).
 - Various finder method (can chained with most of CI AR) and aggregates.
 - Validation and auto-mapping input collection, with minimal setup.
 - Hooks points, to control over your model.

@@ -15,6 +15,15 @@ This method is actually inherit from CI AR, so it should be straight forward. ::
 
 It will drop all of your table records.
 
+count_all()
++++++++++++
+
+You may often need to just retrieve the table total records, use this. This method is actually inherit from CI AR, so it should be straight forward. ::
+
+	Gas::factory('user')->count_all();
+
+It return total records from your table.
+
 last_sql() and all_sql()
 ++++++++++++++++++++++++
 
