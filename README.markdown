@@ -9,7 +9,7 @@ A lighweight and easy-to-use ORM for CodeIgniter
 
 ## About Gas
 
-Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
+Gas was a highly optimized ORM that built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages of its validator class. Gas provide methods that will map your database table and its relation, into accesible object.
 
 ## Features
 
@@ -22,7 +22,8 @@ Gas was built specifically for CodeIgniter app. It uses standard CI DB packages,
 - Validation and auto-mapping input collection, with minimal setup.
 - Hooks points, to control over your model.
 - Extensions, to share your common function/library across your model.
-- Transaction, cache, and other CI AR goodness.
+- Per-request caching
+- Transaction and other CI AR goodness.
 
 ## Planned Features
 

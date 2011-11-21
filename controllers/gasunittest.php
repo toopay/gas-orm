@@ -824,10 +824,12 @@ class Gasunittest extends CI_Controller {
 		// Should return white, because at loop above, we change it :P
 		$this->unit->run($someuser->wife->hair_color, 'white', '[eager_loading]', '-');
 
-		$someuser->wife->hair_color = 'brunette';
+		$somewife = $someuser->wife;
+
+		$somewife->hair_color = 'brunette';
 
 		// Should return 1 row affected, because woman with white hair is wick
-		$this->unit->run($someuser->wife->save(), 1, '[eager_loading]', '-');
+		$this->unit->run($somewife->save(), 1, '[eager_loading]', '-');
 		
 		unset($_POST);
 
@@ -863,7 +865,14 @@ class Gasunittest extends CI_Controller {
 
 		foreach ($this->necessary_item as $item)
 		{
-			$model = APPPATH.$config['models_path'].'/'.$item.$config['models_suffix'].'.php';
+			if (is_string($config['models_path']))
+			{
+				$model = APPPATH.$config['models_path'].'/'.$item.$config['models_suffix'].'.php';
+			}
+			else
+			{
+				$model = APPPATH.'models/'.$item.$config['models_suffix'].'.php';
+			}
 			
 			if (file_exists($model ))
 			{

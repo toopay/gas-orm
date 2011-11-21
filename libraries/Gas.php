@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -26,12 +26,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.3.3';
+	const GAS_VERSION = '1.4.0';
 
 	public $table = '';
 
@@ -100,13 +100,15 @@ class Gas_core {
 
 	protected static $_models;
 
+	protected static $_models_fields;
+
 	protected static $_extensions;
 
 	protected static $_rules = array();
 
 	protected static $_error_callbacks = array();
 
-	public static $_errors_validation = array();
+	protected static $_errors_validation = array();
 
 	
 	/**
@@ -198,9 +200,18 @@ class Gas_core {
 
 		if (is_callable(array($gas, '_init'), TRUE) and $init == TRUE)
 		{
-			$gas->_init();
+			if ( ! isset(self::$_models_fields[$name]))
+			{
+				$gas->_init();
 
-			self::$loaded_models[$name] = TRUE;
+				self::$loaded_models[$name] = TRUE;
+
+				self::$_models_fields[$name] = $gas->_fields;
+			}
+			else
+			{
+				$gas->_fields = self::$_models_fields[$name];
+			}
 		}
 
 		return $gas;
@@ -268,6 +279,28 @@ class Gas_core {
 	public static function load_extension($extension)
 	{
 		return self::$bureau->load_item($extension, 'extensions');
+	}
+
+	/**
+	 * Generate resource reports
+	 * 
+	 * @access  public 
+	 * @return  array
+	 */
+	public static function reports()
+	{
+		return self::$bureau->log_resource();
+	}
+
+	/**
+	 * Stop and flush all caching process/resources
+	 * 
+	 * @access  public 
+	 * @return  void
+	 */
+	public static function flush_cache()
+	{
+		return self::$bureau->reset_cache();
 	}
 
 	/**
@@ -400,7 +433,7 @@ class Gas_core {
 	}
 
 	/**
-	 * get_with
+	 * get_with)models
 	 * 
 	 * Get eager loading models
 	 * 
@@ -413,12 +446,44 @@ class Gas_core {
 	}
 
 	/**
+	 * set_with
+	 * 
+	 * Set eager loading flag
+	 * 
+	 * @access public
+	 * @param  bool
+	 * @return void
+	 */
+	public function set_with($pointer = FALSE)
+	{
+		self::$with = $pointer;
+
+		return;
+	}
+
+	/**
+	 * set_with_models
+	 * 
+	 * Set eager loading models
+	 * 
+	 * @access  public
+	 * @param   array
+	 * @return  array
+	 */
+	public function set_with_models($models = array())
+	{
+		self::$with_models = $models;
+
+		return; 
+	}
+
+	/**
 	 * get_config
 	 * 
 	 * Get Gas configuration
 	 * 
-	 * @access public
-	 * @return array
+	 * @access  public
+	 * @return  array
 	 */
 	public function get_config()
 	{
@@ -430,8 +495,8 @@ class Gas_core {
 	 * 
 	 * Eager loading pointer
 	 * 
-	 * @access public
-	 * @return void
+	 * @access  public
+	 * @return  void
 	 */
 	public function with()
 	{
@@ -454,8 +519,8 @@ class Gas_core {
 	 * 
 	 * Compile record and return result
 	 * 
-	 * @access public
-	 * @return mixed
+	 * @access  public
+	 * @return  mixed
 	 */
 	public function produce()
 	{
@@ -473,8 +538,8 @@ class Gas_core {
 	 * 
 	 * Fetch records
 	 * 
-	 * @access public
-	 * @return object Gas Instance
+	 * @access  public
+	 * @return  object Gas Instance
 	 */
 	public function all()
 	{
@@ -546,7 +611,7 @@ class Gas_core {
 	 * 
 	 * Get record based by given arguments
 	 *
-	 * @access	public
+	 * @access  public
 	 * @param   array
 	 * @param   int
 	 * @param   int
@@ -790,11 +855,11 @@ class Gas_core {
 
 		$this->_set_fields = array();
 
-		$bureau->compile($this->model(), self::$ar_recorder);
+		$res = $bureau->compile($this->model(), self::$ar_recorder);
 
 		if (is_callable(array($this, '_after_delete'), TRUE)) $this->_after_delete();
 
-		return $this->db()->affected_rows();
+		return $res;
 	}
 
 	/**
@@ -802,10 +867,10 @@ class Gas_core {
 	 * 
 	 * Gas Languange file utilizer.
 	 * 
-	 * @access public
-	 * @param  string
-	 * @param  string
-	 * @return string
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @return  string
 	 */
 	public static function tell($point, $parser_value = null)
 	{
@@ -825,11 +890,11 @@ class Gas_core {
 	 * Creates a message for custom callback function
 	 * Note: The key name has to match the  function name that it corresponds to.
 	 * 
-	 * @access public
-	 * @param  string
-	 * @param  string
-	 * @param  string
-	 * @return void
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @param   string
+	 * @return  void
 	 */
 	public static function set_message($key, $msg, $field = null)
 	{
@@ -854,10 +919,10 @@ class Gas_core {
 	 * 
 	 * Stack any errors
 	 * 
-	 * @access public
-	 * @param  string
-	 * @param  string
-	 * @return void
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @return  void
 	 */
 	public static function set_error($field = null, $error = null)
 	{
@@ -873,10 +938,10 @@ class Gas_core {
 	 *
 	 * Gets the error(s) message associated with validation process
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	string
-	 * @return	string
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @return  string
 	 */
 	public function errors($prefix = '', $suffix = '')
 	{
@@ -897,10 +962,10 @@ class Gas_core {
 	/**
 	 * auto_check (custom callback function for checking auto field)
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	mixed
-	 * @return	bool
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  bool
 	 */
 	public function auto_check($field, $val)
 	{
@@ -914,10 +979,10 @@ class Gas_core {
 	/**
 	 * char_check (custom callback function for checking varchar/char field)
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	mixed
-	 * @return	bool
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  bool
 	 */
 	public function char_check($field, $val)
 	{
@@ -933,8 +998,8 @@ class Gas_core {
 	 * 
 	 * Output array of model attributes
 	 *
-	 * @access	public
-	 * @return	string
+	 * @access  public
+	 * @return  string
 	 *
 	 */
 	public function to_array()
@@ -947,8 +1012,8 @@ class Gas_core {
 	 * 
 	 * Output json of model attributes
 	 *
-	 * @access	public
-	 * @return	string
+	 * @access  public
+	 * @return  string
 	 *
 	 */
 	public function to_json()
@@ -1080,8 +1145,8 @@ class Gas_core {
 	 * 
 	 * Get CI AR attributes of a Gas model
 	 *
-	 * @access	public
-	 * @return	array
+	 * @access  public
+	 * @return  array
 	 */
 	public function get_ar_record()
 	{
@@ -1093,8 +1158,8 @@ class Gas_core {
 	 * 
 	 * Get all loaded and marked extensions
 	 *
-	 * @access	public
-	 * @return	array
+	 * @access  public
+	 * @return  array
 	 */
 	public function get_extensions()
 	{
@@ -1106,8 +1171,8 @@ class Gas_core {
 	 * 
 	 * Get Gas model name
 	 *
-	 * @access	public
-	 * @return	string
+	 * @access  public
+	 * @return  string
 	 *
 	 */
 	public function model($gas = null)
@@ -1120,8 +1185,8 @@ class Gas_core {
 	 * 
 	 * Get identifier key array
 	 *
-	 * @access	public
-	 * @return	array
+	 * @access  public
+	 * @return  array
 	 *
 	 */
 	public function identifier($column = null)
@@ -1166,8 +1231,8 @@ class Gas_core {
 	 * 
 	 * Validating whether JOIN statement has been declared
 	 *
-	 * @access	protected
-	 * @return	void
+	 * @access  protected
+	 * @return  void
 	 */
 	protected function validate_join()
 	{
@@ -1187,8 +1252,8 @@ class Gas_core {
 	 * 
 	 * Scan model directories recursively and set global models collections
 	 *
-	 * @access	private
-	 * @return	void
+	 * @access  private
+	 * @return  void
 	 *
 	 */
 	private function _scan_models()
@@ -1223,8 +1288,8 @@ class Gas_core {
 	 * 
 	 * Scan all needed extensions and set global extensions collections
 	 *
-	 * @access	private
-	 * @return	void
+	 * @access  private
+	 * @return  void
 	 *
 	 */
 	private function _scan_extensions()
@@ -1245,8 +1310,8 @@ class Gas_core {
 	 * 
 	 * Scan files and set class collections
 	 *
-	 * @access	private
-	 * @return	void
+	 * @access  private
+	 * @return  void
 	 *
 	 */
 	private function _scan_files($path = null, $root_path, $type, $identifier)
@@ -1308,9 +1373,9 @@ class Gas_core {
 	 * 
 	 * Overloading method utilized for reading data from inaccessible properties.
 	 *
-	 * @access	public
-	 * @param	string
-	 * @return	mixed
+	 * @access  public
+	 * @param   string
+	 * @return  mixed
 	 *
 	 */
 	function __get($name) 
@@ -1393,10 +1458,10 @@ class Gas_core {
 	 * 
 	 * Overloading method triggered when invoking special method.
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	array
-	 * @return	void
+	 * @access  public
+	 * @param   string
+	 * @param   array
+	 * @return  void
 	 */
 	function __call($name, $args)
 	{
@@ -1539,6 +1604,16 @@ class Gas_core {
 		{
 			return $engine->list_fields($this->table);
 		}
+		elseif ($name == 'field_exist')
+		{
+			$field = array_shift($args);
+
+			return $engine->field_exist($field, $this->table);
+		}
+		elseif ($name == 'field_data')
+		{
+			return $engine->field_data($this->table);
+		}
 		elseif ($name == 'last_sql')
 		{
 			return $engine->last_query();
@@ -1643,7 +1718,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  */
 
 class Gas_bureau {
@@ -1667,6 +1742,12 @@ class Gas_bureau {
 	protected static $thread_resource;
 
 	protected static $empty_executor = array('writes' => FALSE, 'operation' => FALSE);
+
+	protected static $cache_resource;
+
+	protected static $cache_key;
+
+	protected static $resource_state;
 	
 	/**
 	 * Constructor
@@ -1700,16 +1781,18 @@ class Gas_bureau {
 	 * 
 	 * Compile AR
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	array
-	 * @param	bool
-	 * @param	bool
-	 * @return	response
+	 * @access  public
+	 * @param   string
+	 * @param   array
+	 * @param   bool
+	 * @param   bool
+	 * @return  response
 	 */
 	public static function do_compile($gas, $recorder, $limit = FALSE, $raw = FALSE)
 	{
 		$tasks = Gas_janitor::play_record($recorder);
+
+		self::cache_start($tasks);
 
 		$motor = get_class(self::$db);
 
@@ -1762,10 +1845,10 @@ class Gas_bureau {
 	 * 
 	 * Sort record compilation
 	 *
-	 * @access	public
-	 * @param	array
-	 * @param	int
-	 * @return	response
+	 * @access  public
+	 * @param   array
+	 * @param   int
+	 * @return  response
 	 */
 	public static function sort_task($tasks, $key)
 	{
@@ -1781,11 +1864,11 @@ class Gas_bureau {
 	 * 
 	 * Do each record task
 	 *
-	 * @access	public
-	 * @param	array
-	 * @param	string
-	 * @param	string
-	 * @return	response
+	 * @access  public
+	 * @param   array
+	 * @param   string
+	 * @param   string
+	 * @return  response
 	 */
 	public static function do_task($arguments, $key, $task)
 	{
@@ -1805,10 +1888,21 @@ class Gas_bureau {
 
 			Gas::factory($compiler['gas'], array(), FALSE)->set_ar_record(array());
 
-			if ($action == 'get')
+			if ($action == 'get' and ($read_arguments = $args))
 			{
-				$result = Gas_janitor::force_and_get(self::$db, $action, $args);
+				$resource_name = array_shift($read_arguments);
 
+				if (self::validate_cache() and self::changed_resource($resource_name) == FALSE)
+				{
+					$result = self::fetch_cache();
+				}
+				else
+				{
+					$result = Gas_janitor::force_and_get(self::$db, $action, $args);
+
+					self::cache_end($result);
+				}
+				
 				if ($compiler['raw'] === TRUE) 
 				{
 					$res = $result->result_array();
@@ -1852,8 +1946,12 @@ class Gas_bureau {
 
 				Gas::factory($compiler['gas'], array(), FALSE)->set_type('transaction_executor', FALSE);
 			}
-			elseif ( ! $is_transaction and in_array($action, $writes))
+			elseif ( ! $is_transaction and in_array($action, $writes) and ($write_arguments = $args))
 			{
+				$resource_name = array_shift($write_arguments);
+				
+				self::track_resource($resource_name, $action);
+
 				Gas_janitor::force(self::$db, $action, $args);
 				
 				$res = ($compiler['limit']) ? TRUE : self::$db->affected_rows();
@@ -1909,14 +2007,14 @@ class Gas_bureau {
 	 * 
 	 * Generate Gas based by AR
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	mixed
-	 * @param	string
-	 * @param	bool
-	 * @param	bool
-	 * @param	bool
-	 * @return	mixed
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @param   string
+	 * @param   bool
+	 * @param   bool
+	 * @param   bool
+	 * @return  mixed
 	 */
 	public static function generator($gas, $resource, $method, $limit = FALSE, $with = FALSE, $locked = FALSE)
 	{
@@ -1940,160 +2038,29 @@ class Gas_bureau {
 
 		if ($with)
 		{
-			list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
-
-			$childs = array();
-
-			$eager_load_models = Gas::factory($gas)->get_with_models();
-
-			foreach ($eager_load_models as $child)
-			{
-				list($t, $pk, $r) = Gas_janitor::identify_meta($child);
-
-				$childs[$child] = array(
-
-					'foreign_table' => $t,
-
-					'foreign_key' => $pk,
-
-					'foreign_relations' => $r,
-				);
-			}
-
-			$ids = array();
-
-			$fids = array();
-
-			foreach ($resource as $single)
-			{
-				if (isset($single->$primary_key)) $ids[] = $single->$primary_key;
-
-				foreach ($childs as $child_model => $child)
-				{
-					$link = array();
-
-					$peer_relations = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($relations, $child_model), FALSE, '');
-
-					list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($relations, $peer_relations, $child_model);
-
-					$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
-					
-					if ($through !== '')
-		 			{
-		 				$tree = array(
-
-		 					'relations' => $child['foreign_relations'],
-
-		 					'table' => $child['foreign_table'],
-
-		 					'key' => $child['foreign_key'],
-
-		 					'child' => $gas,
-			 			);
-
-		 				$link = Gas_janitor::identify_link($through, $foreign_key, $tree);
-			 			
-			 			if ($peer_relations == 'belongs_to')$foreign_key = $primary_key;
-		 			}
-
-					if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
-				}
-
-			}
-
-			foreach ($eager_load_models as $model)
-			{
-				$eager_load_results[$model] = self:: generate_child($gas, $model, $link, $ids, array_unique($fids), TRUE);
-			}
-
+			$eager_load_results = self::prepare_with($gas, $resource);
+			
+			$primary_key = array_shift($eager_load_results);
 		}
+
+		$self = (bool) count($resource) == 1;
 
 		foreach ($resource as $record)
 		{
-			$model = ucfirst($gas);
-
-			$instance = Gas::factory($model, array('record' => (array) $record));
+			$instance = Gas::factory($gas, array('record' => (array) $record));
 
 			if ($with)
 			{
 				foreach ($eager_load_results as $child => $results)
 				{
-					$success = FALSE;
+					$childs = self::populate_with($child, $results, $record, $primary_key);
 
-					$all_results = $results;
-
-					$sample = is_array($results) ? array_shift($results) : array();
-
-					if (empty($sample))
-					{
-						$instance->set_child($child, FALSE);
-					}
-					else
-					{
-						$identifier = $sample['identifier'];
-
-						$self = $sample['self'];
-
-						$eager_records = FALSE;
-
-						foreach ($all_results as $result)
-						{
-							$eager_record = Gas_janitor::get_input(__METHOD__, $result['record'], FALSE, array());
-
-							$eager_type = Gas_janitor::get_input(__METHOD__, $result['type'], FALSE, '');
-
-							if (isset($result['raw']) and ! empty($result['raw']))
-							{
-								if (isset($result['raw'][$identifier]))
-								{
-									$id = Gas_janitor::get_input(__METHOD__, $result['raw'][$identifier], FALSE, '');
-								}
-								else
-								{
-									$id = FALSE;
-								}
-								
-							}
-							else
-							{
-								$id = Gas_janitor::get_input(__METHOD__, $eager_record[$identifier], FALSE, '');
-							}
-
-							list($eager_through, $eager_custom_table, $eager_custom_key, $eager_self_ref) = Gas_janitor::identify_custom_setting($relations, $eager_type, $child);
-
-							if ($eager_type == 'has_one' or $eager_type == 'has_many')
-							{
-								$key = $primary_key;
-							}
-							elseif ($eager_type == 'belongs_to')
-							{
-								$key = ($custom_key !== '') ? $custom_key : $primary_key;
-
-								if ($eager_through) $key = $primary_key;
-							}
-							elseif ($eager_type == 'has_and_belongs_to')
-							{
-								$key = $primary_key;
-							}
-
-							if ($id == $record->$key)
-							{
-								if ($self)
-								{
-									$eager_records = Gas::factory($child, array('record' => $eager_record));
-
-									continue;
-								}
-								else
-								{
-									$eager_records[] = Gas::factory($child, array('record' => $eager_record));
-								}
-							}
-						}
-
-						$instance->set_child($child, $eager_records);
-					}
+					$instance->set_child($child, $childs);
 				}
+
+				Gas::factory($gas, array(), FALSE)->set_with();
+
+				Gas::factory($gas, array(), FALSE)->set_with_models();
 			}
 
 			if ($limit) return $instance;
@@ -2109,105 +2076,80 @@ class Gas_bureau {
 	 * 
 	 * Generate Relationship Nodes
 	 *
-	 * @access	public
-	 * @param	string
-	 * @param	string
-	 * @param	array
-	 * @param	array
-	 * @param	mixed
-	 * @param	bool
-	 * @return	mixed
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @param   array
+	 * @param   array
+	 * @param   mixed
+	 * @param   bool
+	 * @return  mixed
 	 */
 	public static function generate_child($gas, $child, $link = array(), $identifiers = array(), $foreign_value = null, $eager_load = FALSE)
 	{
-		$global_identifier = '';
+		$relationship_limitation = array(
+
+			'has_one' => TRUE,
+
+			'belongs_to' => TRUE,
+
+			'has_many' => FALSE,
+
+			'has_and_belongs_to' => FALSE,
+
+			'has_many_through' => FALSE,
+		
+		);
+
+		$many_to_many = array(
+
+			'has_and_belongs_to',
+
+			'has_many_through',
+
+		);
+
+		$raw_records = array();
 
 		list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
 
 		list($foreign_table, $foreign_key, $foreign_relations) = Gas_janitor::identify_meta($child);
 
-		if (empty($relations) or ! is_array($relations)) show_error(Gas_core::tell('models_found_no_relations', $gas));
-
-		$peer_relation = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($relations, $child), FALSE, '');
-
-		if (empty($peer_relation)) show_error(Gas_core::tell('models_found_no_relations', $gas));
-
-
-		list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($relations, $peer_relation, $child);
-
-		$self = FALSE;
-
-		if ( ! empty($link))
+		if (empty($relations) or ! is_array($relations))
 		{
-			$origin_fields = self::$db->list_fields($foreign_table);
-
-			self::$db->from($link['intermediate']);
-
-			$join_link = $foreign_table.'.'.$link['child_key'].' = '.$link['child_identifier'];
-
-			self::$db->join($foreign_table, $join_link);
+			show_error(Gas_core::tell('models_found_no_relations', $gas));
 		}
 
-		if ($peer_relation == 'has_one' or $peer_relation == 'has_many')
+		$parent_relation = Gas_janitor::identify_relations($relations, $child);
+
+		$peer_relation = Gas_janitor::get_input(__METHOD__, $parent_relation, FALSE, '');
+
+		$child_relation = Gas_janitor::identify_relations($foreign_relations, $gas);
+
+		$foreign_peer_relation = Gas_janitor::get_input(__METHOD__, $child_relation, FALSE, '');
+
+		if (empty($peer_relation) or empty($foreign_peer_relation))
 		{
-			$new_identifier = ($custom_key !== '') ? $custom_key : $table.'_'.$primary_key;
-
-			$global_identifier = $new_identifier;
-
-			if (empty($through)) self::$db->from($foreign_table);
-
-			if (count($identifiers) == 1)
-			{
-				self::$db->where(array($new_identifier => $identifiers[0]));
-			}
-			elseif (count($identifiers) > 1)
-			{
-				self::$db->where_in($new_identifier, $identifiers);
-			}	
-
-			if ($peer_relation == 'has_one') $self = TRUE;
-			
+			show_error(Gas_core::tell('models_found_no_relations', $gas));
 		}
-		elseif ($peer_relation == 'belongs_to')
+
+		$parent_identity = Gas_janitor::identify_custom_setting($relations, $peer_relation, $child);
+
+		list($through, $custom_table, $custom_key, $self_ref) = $parent_identity;
+
+		$child_identity = Gas_janitor::identify_custom_setting($foreign_relations, $foreign_peer_relation, $gas);
+
+		list($foreign_through, $foreign_custom_table, $foreign_custom_key, $foreign_self_ref) = $child_identity;
+
+		$identifier = ($custom_key !== '') ? $custom_key : $table.'_'.$primary_key;
+
+		$foreign_identifier = ($foreign_custom_key !== '') ? $foreign_custom_key : $foreign_table.'_'.$foreign_key;
+
+		if ( ! empty($through) and $peer_relation == 'has_many') $peer_relation = 'has_many_through';
+
+		if (in_array($peer_relation, $many_to_many))
 		{
-			if ($self_ref)
-			{
-				$foreign_value = is_null($foreign_value) ? '' : $foreign_value;
-			}
-
-			$new_identifier = $foreign_key;
-
-			$global_identifier = $new_identifier;
-
-			if (empty($through))
-			{
-				self::$db->from($foreign_table);
-			}
-			else
-			{
-				$new_identifier = $link['parent_identifier'];
-
-				$global_identifier = $new_identifier;
-			}
-
-			if (is_string($foreign_value) or is_numeric($foreign_value))
-			{
-				self::$db->where(array($new_identifier => $foreign_value))->limit(1);
-			}
-			elseif (is_array($foreign_value))
-			{
-				self::$db->where_in($new_identifier, $foreign_value);
-			}
-
-			$self = TRUE;
-		}
-		elseif ($peer_relation == 'has_and_belongs_to')
-		{
-			if ($custom_table !== '')
-			{
-				$pivot_table = $custom_table;
-			}
-			else
+			if (empty($custom_table))
 			{
 				$guess_table = Gas_janitor::combine($table, $foreign_table);
 
@@ -2221,85 +2163,195 @@ class Gas_bureau {
 					}
 				}
 			}
+			else
+			{
+				$pivot_table = $custom_table;
+			}
+
+			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $pivot_table);
+
+			$raw_intermediate_records = self::do_compile($gas, $recorder, FALSE, TRUE);
 			
-			$pivot_table = Gas_janitor::get_input(__METHOD__, $pivot_table, TRUE);
+			$raw_ids = array();	
 
-			$origin_fields = self::$db->list_fields($foreign_table);
-
-			$new_identifier = ($custom_key !== '') ? $custom_key : $table.'_'.$primary_key;
-
-			$foreign_relations = Gas::factory($child)->relations;
-
-			$foreign_type = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($foreign_relations, $gas), FALSE, '');
-
-			if (empty($foreign_type)) show_error(Gas_core::tell('models_found_no_relations', 'has_and_belongs:'.$gas));
-
-			list($through, $custom_foreign_table, $custom_foreign_key, $self_ref) = Gas_janitor::identify_custom_setting($foreign_relations, $foreign_type, $gas);
-
-			$foreign_identifier = ($custom_foreign_key !== '') ? $custom_foreign_key : $foreign_table.'_'.$foreign_key;
-
-			$global_identifier = $new_identifier;
-
-			self::$db->join($pivot_table, $foreign_identifier.' = '.$foreign_key);
-
-			if (count($identifiers) == 1)
+			foreach ($raw_intermediate_records as $intermediate_records)
 			{
-				self::$db->where(array($new_identifier => $identifiers[0]))->from($foreign_table);
-			}
-			elseif (count($identifiers) > 1)
-			{
-				self::$db->where_in($new_identifier, $identifiers)->from($foreign_table);
-			}	
-		}
-
-		$q = self::$db->get();
-
-		$res = $q->result_array();
-
-		if (count($res) > 0) 
-		{
-
-			$many = array();
-
-			foreach ($res as $one)
-			{
-				$raw = array();
-
-				if (isset($origin_fields))
-				{
-					if ($eager_load) $raw = $one;
-
-					$keys = array_values($origin_fields);
-
-					$values = array_keys($origin_fields);
-					
-					$levenshtein = array_combine($keys, $values);
-					
-					$one = array_intersect_ukey($one, $levenshtein, 'Gas_janitor::intersect');
-				}
-
-				if($self and ! $eager_load) 
-				{
-					return Gas::factory($child, array('record' => $one));
-				}
-
-				if ($eager_load)
-				{
-					$many[] = array('identifier' => $global_identifier, 'self' => $self, 'type' => $peer_relation, 'record' => $one, 'raw' => $raw);
-				}
-				else
-				{
-					$many[] = Gas::factory($child, array('record' => $one));
-				}
-				
+				$raw_ids[] = $intermediate_records[$foreign_identifier];
 			}
 
-			return $many;
+			$raw_ids = array_unique($raw_ids);
+			
+			if ( ! empty($raw_ids))
+			{
+				$recorder = Gas_janitor::tape_track($foreign_key, $raw_ids, $foreign_table);
+
+				$raw_records = self::do_compile($gas, $recorder, FALSE, TRUE);
+			}
 		}
 		else
 		{
-			return ($peer_relation == 'has_many' or $peer_relation == 'has_and_belongs_to') ? array() : FALSE;
+			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $foreign_table);
+
+			$raw_records = self::do_compile($gas, $recorder, FALSE, TRUE);
 		}
+
+		$limitation = $relationship_limitation[$peer_relation];
+
+		$records = ($limitation and ! $eager_load) ? array_shift($raw_records) : $raw_records;
+
+		if ($limitation and ! $eager_load)
+		{
+			$node = empty($records) ? FALSE : Gas::factory($child, array('record' => $records));
+		}
+		else
+		{
+			$node = array();
+
+			if ( ! empty($records))
+			{
+				if ($eager_load)
+				{
+					$node[] = array('identifier' => $identifier, 'self' => $limitation, 'raw' => $records);
+				}
+				else
+				{
+					foreach ($records as $record)
+					{
+						$node[] = Gas::factory($child, array('record' => $record));
+					}
+				}
+			}
+		}
+
+		return $node;
+	}
+
+	/**
+	 * prepare_with
+	 * 
+	 * Prepare for eager loading
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  array
+	 */
+	public static function prepare_with($gas, $resource)
+	{
+		list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
+
+		$childs = array();
+
+		$eager_load_models = Gas::factory($gas, array(), FALSE)->get_with_models();
+
+		foreach ($eager_load_models as $child)
+		{
+			list($t, $pk, $r) = Gas_janitor::identify_meta($child);
+
+			$childs[$child] = array(
+
+				'foreign_table' => $t,
+
+				'foreign_key' => $pk,
+
+				'foreign_relations' => $r,
+			);
+		}
+
+		$ids = array();
+
+		$fids = array();
+
+		foreach ($resource as $single)
+		{
+			if (isset($single->$primary_key)) $ids[] = $single->$primary_key;
+
+			foreach ($childs as $child_model => $child)
+			{
+				$link = array();
+
+				$peer_relations = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($relations, $child_model), FALSE, '');
+
+				list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($relations, $peer_relations, $child_model);
+
+				$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
+				
+				if ($through !== '')
+	 			{
+	 				$tree = array(
+
+	 					'relations' => $child['foreign_relations'],
+
+	 					'table' => $child['foreign_table'],
+
+	 					'key' => $child['foreign_key'],
+
+	 					'child' => $gas,
+		 			);
+
+	 				$link = Gas_janitor::identify_link($through, $foreign_key, $tree);
+		 			
+		 			if ($peer_relations == 'belongs_to')$foreign_key = $primary_key;
+	 			}
+
+				if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
+			}
+
+		}
+
+		$eager_load_results[] = $primary_key;
+
+		foreach ($eager_load_models as $model)
+		{
+			$eager_load_results[$model] = self:: generate_child($gas, $model, $link, $ids, array_unique($fids), TRUE);
+		}
+
+		return $eager_load_results;
+	}
+
+	/**
+	 * populate_with
+	 * 
+	 * Populate all eager loaded resource
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @param   object
+	 * @param   string
+	 * @return  mixed
+	 */
+	public static function populate_with($child, $results, $record, $primary_key)
+	{
+		$childs = array();
+
+		foreach ($results as $result)
+		{
+			$identifier = $result['identifier'];
+
+			$many = ! $result['self'];
+			
+			foreach ($result['raw'] as $raw_child)
+			{
+				if (isset($raw_child[$identifier]) and $raw_child[$identifier] == $record->$primary_key)
+				{
+					$child_node = Gas::factory($child, array('record' => $raw_child));
+
+					if ($many)
+					{
+						$childs[] = $child_node;
+					}
+					else
+					{
+						$childs = $child_node;
+
+						continue;
+					}
+				}
+			}
+		}
+
+		return $childs;
 	}
 
 	/**
@@ -2342,6 +2394,19 @@ class Gas_bureau {
 	}
 
 	/**
+	 * log_resource
+	 * 
+	 * Create a report for all "in-operation" resource
+	 *
+	 * @access	public
+	 * @return	array
+	 */
+	public function log_resource()
+	{
+		return self::$resource_state;
+	}
+
+	/**
 	 * load_item
 	 * 
 	 * Load Gas item
@@ -2371,7 +2436,7 @@ class Gas_bureau {
 
 		if ($identifier == '*')
 		{
-			if(empty($items)) return $this;
+			if (empty($items)) return $this;
 			
 			foreach ($items as $item => $item_path)
 			{
@@ -2384,7 +2449,7 @@ class Gas_bureau {
 		{
 			foreach ($identifier as $item)
 			{
-				if( ! array_key_exists($item, $items)) show_error(Gas_core::tell($type.'_not_found', $item));
+				if ( ! array_key_exists($item, $items)) show_error(Gas_core::tell($type.'_not_found', $item));
 
 				$this->_loaded_components[$type][] = $item;
 
@@ -2484,7 +2549,7 @@ class Gas_bureau {
 
 				$entries_value = isset($entries[$field]) ? $entries[$field] : FALSE; 
 
-				if ($entries_value !== FALSE) $callback_success[] = Gas::factory($gas)->$rule($field, $entries_value);
+				if ($entries_value !== FALSE) $callback_success[] = Gas::factory($gas, array(), FALSE)->$rule($field, $entries_value);
 			}
 		}
 
@@ -2529,7 +2594,151 @@ class Gas_bureau {
 	{
 		return $this->_CI->lang;
 	}
+
+	/**
+	 * reset_cache
+	 * 
+	 * Stop caching
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function reset_cache()
+	{
+		self::$cache_resource = null;
+
+		return;
+	}
+
+	/**
+	 * track_resource
+	 * 
+	 * Tracking resource state
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @return  void
+	 */
+	protected static function track_resource($resource, $action)
+	{
+		if ( ! isset(self::$resource_state[$resource])) self::$resource_state[$resource] = array();
+
+		$action = strtoupper($action);
+
+		if ( ! isset(self::$resource_state[$resource][$action]))
+		{
+			self::$resource_state[$resource][$action] = 1;
+		}
+		else
+		{
+			$action_count = self::$resource_state[$resource][$action];
+
+			$action_count++;
+
+			self::$resource_state[$resource][$action] = $action_count;
+		}
+
+		return;
+	}
+
+	/**
+	 * changed_resource
+	 * 
+	 * Monitoring resource state
+	 *
+	 * @access  public
+	 * @param   string
+	 * @return  bool
+	 */
+	protected static function changed_resource($resource)
+	{
+		return isset(self::$resource_state[$resource]);
+	}
+
+	/**
+	 * cache_start
+	 * 
+	 * Writes cache pointer for each compile tasks
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  void
+	 */
+	protected static function cache_start($task)
+	{
+		if ( ! self::get_cache_schema()) return;
+
+		self::$cache_key = md5(serialize($task));
+
+		return;
+	}
 	
+	/**
+	 * cache_end
+	 * 
+	 * Writes sibling hash for each resource's records
+	 *
+	 * @access  public
+	 * @param   string
+	 * @return  void
+	 */
+	protected static function cache_end($resource)
+	{
+		if ( ! self::get_cache_schema()) return;
+
+		$key = self::$cache_key;
+
+		self::$cache_resource[$key] = $resource;
+
+		return;
+	}
+
+	/**
+	 * validate_cache
+	 * 
+	 * Validate cache state
+	 *
+	 * @access  public
+	 * @return  bool
+	 */
+	protected static function validate_cache()
+	{
+		if ( ! self::get_cache_schema()) return;
+
+		return isset(self::$cache_resource[self::$cache_key]);
+	}
+
+	/**
+	 * fetch_cache
+	 * 
+	 * Fetching cache collections
+	 *
+	 * @access  public
+	 * @return  mixed
+	 */
+	protected static function fetch_cache()
+	{
+		if ( ! self::get_cache_schema()) return;
+
+		return self::$cache_resource[self::$cache_key];
+	}
+
+	/**
+	 * get_cache_schema
+	 * 
+	 * Get cache base configuration
+	 *
+	 * @access  public
+	 * @return  bool
+	 */
+	private static function get_cache_schema()
+	{
+		if ( ! isset(Gas_core::$config['cache_request'])) return FALSE;
+
+		return Gas_core::$config['cache_request'];
+	}
+
 	/**
 	 * __call
 	 * 
@@ -2563,7 +2772,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  */
 
 class Gas_janitor {
@@ -2614,7 +2823,7 @@ class Gas_janitor {
 	 */
 	public static function identify_meta($gas)
 	{
-		$root = Gas::factory($gas);
+		$root = Gas::factory($gas, array(), FALSE);
 
 		$table = self::get_input(__METHOD__, $root->validate_table()->table, TRUE);
 
@@ -2635,7 +2844,7 @@ class Gas_janitor {
 	 */
 	public static function identify_link($through, $identifier, $tree = array())
 	{
-		$through_table = Gas::factory($through)->validate_table()->table;
+		$through_table = Gas::factory($through, array(), FALSE)->validate_table()->table;
 
 		$peer_relation = self::get_input(__METHOD__, self::identify_relations($tree['relations'], $tree['child']), TRUE);
 
@@ -2871,14 +3080,34 @@ class Gas_janitor {
 				{
 					$success = TRUE;
 
-					Gas::factory($gas)->set_type($type, TRUE);
+					Gas::factory($gas, array(), FALSE)->set_type($type, TRUE);
 
-					Gas::factory($gas)->add_ar_record($recorder);
+					Gas::factory($gas, array(), FALSE)->add_ar_record($recorder);
 				}
 			}
 		}
 
 		return;
+	}
+
+	/**
+	 * tape_track
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @param   string
+	 * @return  array
+	 */
+	public static function tape_track($identifier, $identifiers, $table)
+	{
+		return array(
+
+			array('where_in' => array($identifier, $identifiers)),
+
+			array('get' => array($table)),
+
+		);
 	}
 
 	/**
@@ -3078,7 +3307,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  */
 interface Gas_extension {
 	
@@ -3095,7 +3324,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.3.3
+ * @version     1.4.0
  */
 
 class Gas extends Gas_core {}
