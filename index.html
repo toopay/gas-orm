@@ -74,13 +74,17 @@
     <ul>
     <li>Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.</li>
     <li>Support multiple database connection.</li>
+    <li>Support modular models directories.</li>
     <li>Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table).</li>
+    <li>Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.</li>
+    <li>Per-request caching.</li>
     <li>Self-referential and adjacency column/data (hierarchical data).</li>
+    <li>Eager Loading, to maximize your relationship queries (for performance manner).</li>
     <li>Various finder method (can chained with most of CI AR) and aggregates.</li>
     <li>Validation and auto-mapping input collection, with minimal setup.</li>
     <li>Hooks points, to control over your model.</li>
     <li>Extensions, to share your common function/library across your model</li>
-    <li>Transaction, cache, and other CI AR goodness.</li>
+    <li>Transaction and other CI AR goodness.</li>
     </ul>
 
     <h2>Overview</h2>
@@ -94,7 +98,7 @@ $new_user = new User;
 $new_user->fill($_POST)->save(TRUE);
 
 // RELATIONSHIP & EAGER LOADING
-$some_user = Gas::factory('user')->with('wife', 'kid', 'job')->find(1);
+$some_users = Gas::factory('user')->with('wife', 'kid', 'job')->all();
 $some_user_wife = $some_user->wife;
     </pre>
     
