@@ -17,17 +17,18 @@ Gas was a highly optimized ORM that built specifically for CodeIgniter app. It u
 - Support multiple database connection.
 - Support modular models directories.
 - Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table, self)
+- Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.
+- Per-request caching.
 - Self-referential and adjacency column/data (hierarchical data).
+- Eager Loading, to maximize your relationship queries (for performance manner).
 - Various finder method (can chained with most of CI AR) and aggregates.
 - Validation and auto-mapping input collection, with minimal setup.
 - Hooks points, to control over your model.
 - Extensions, to share your common function/library across your model.
-- Per-request caching
-- Transaction and other CI AR goodness.
+- Transaction, and other CI AR goodness.
 
 ## Planned Features
 
-- Auto-create and auto-synchronize tables (utilize Migration).
 - Support for tree traversal.
 
 More useful features, but keep both size and performance for a good use.
