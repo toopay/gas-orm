@@ -14,3 +14,5 @@ $lang['empty_arguments']           = 'Tidak dapat melanjutkan eksekusi %s tanpa 
 $lang['auto_check']                = 'Bidang %s adalah karakter auto yang tidak valid.';
 
 $lang['char_check']                = 'Bidang %s adalah karakter char yang tidak valid.';
+
+$lang['date_check']                = 'Bidang %s adalah karakter datetime yang tidak valid.';

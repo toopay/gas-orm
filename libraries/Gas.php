@@ -110,6 +110,8 @@ class Gas_core {
 
 	protected static $_errors_validation = array();
 
+	protected static $_migrated = FALSE;
+
 	
 	/**
 	 * Constructor
@@ -126,7 +128,13 @@ class Gas_core {
 
 			$CI->config->load('gas', TRUE, TRUE);
 
+			$CI->config->load('migration', TRUE, TRUE);
+
 			self::$config = $CI->config->item('gas');
+
+			self::$config['migration_config'] = $CI->config->item('migration');
+
+			Gas_core::$bureau = new Gas_bureau($CI);
 			
 			$this->_scan_models();
 
@@ -135,8 +143,6 @@ class Gas_core {
 			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 			$init = TRUE;
-
-			Gas_core::$bureau = new Gas_bureau($CI);
 		}
 
 		self::$bureau =& Gas_core::recruit_bureau(); 
@@ -151,7 +157,10 @@ class Gas_core {
 
 		if (Gas_core::$config['autoload_extensions']) self::$bureau->load_item(Gas_core::$config['extensions'], 'extensions');
 
-		if ($init) self::$init = TRUE;
+		if (self::is_migrated() == FALSE and self::is_initialize() == FALSE)
+		{
+			$this->check_migration(self::$_models);
+		}
 
 		if (func_num_args() == 1)
 		{
@@ -164,6 +173,8 @@ class Gas_core {
 				$this->empty = (bool) (count($this->_get_fields) == 0);
 			}
 		}
+
+		if ($init) self::$init = TRUE;
 
 		log_message('debug', 'Gas ORM Core Class Initialized');
 	}
@@ -258,6 +269,19 @@ class Gas_core {
 	}
 
 	/**
+	 * is_migrated
+	 * 
+	 * Check Migration State
+	 * 
+	 * @access public
+	 * @return bool
+	 */
+	public static function is_migrated()
+	{
+		return Gas_core::$_migrated;
+	}
+
+	/**
 	 * Load model(s).
 	 * 
 	 * @access  public 
@@ -311,14 +335,17 @@ class Gas_core {
 	 * @access public
 	 * @param  string
 	 * @param  array
+	 * @param  string
 	 * @return array
 	 */
-	public static function field($type = '', $args = array())
+	public static function field($type = '', $args = array(), $schema = '')
 	{
 		$rules = array();
 
 		$args = is_array($args) ? $args : (array) $args;
-		
+
+		$annotations = array();
+
 		if (preg_match('/^([^)]+)\[(.*?)\]$/', $type, $m) AND count($m) == 3)
 		{
 			$type = $m[1];
@@ -330,10 +357,14 @@ class Gas_core {
 				$rules[] = 'min_length['.trim($constraint[0]).']';
 
 				$rules[] = 'max_length['.trim($constraint[1]).']';
+
+				$annotations[] = trim($constraint[1]);
 			}
 			else
 			{
 				$rules[] = 'max_length['.$constraint[0].']';
+
+				$annotations[] = $constraint[0];
 			}
 		}
 		
@@ -343,11 +374,51 @@ class Gas_core {
 
 				$rules[] = 'callback_auto_check'; 
 
+				$annotations[] = 'INT';
+
+				$annotations[] = 'unsigned';
+
+				$annotations[] = 'auto_increment';
+
+				break;
+
+			case 'datetime':
+
+				$rules[] = 'callback_date_check'; 
+
+				$annotations[] = 'DATETIME';
+
 				break;
 			
+			case 'string':
+
+				$rules[] = 'callback_char_check'; 
+
+				$annotations[] = 'TEXT';
+
+				break;
+
+			case 'spatial':
+				
+				$rules[] = 'callback_char_check'; 
+
+				$annotations[] = 'GEOMETRY';
+
+				break;
+
 			case 'char':
 
 				$rules[] = 'callback_char_check'; 
+
+				$annotations[] = 'VARCHAR';
+
+				break;
+
+			case 'numeric':
+
+				$rules[] = 'numeric'; 
+
+				$annotations[] = 'TINYINT';
 
 				break;
 				
@@ -355,16 +426,41 @@ class Gas_core {
 
 				$rules[] = 'integer';
 
+				$annotations[] = 'INT';
+
 				break;
 			
 			case 'email':
 
 				$rules[] = 'valid_email';
 
+				$annotations[] = 'VARCHAR';
+
 				break;
 		}
+
+		$other_annotations = explode(',', $schema);
+
+		if ( ! empty($other_annotations))
+		{
+			$other_annotations = Gas_janitor::arr_trim($other_annotations);
+
+			$annotations = array_merge($annotations, $other_annotations);
+		}
 		
-		return array('rules' => implode('|', array_merge($rules, $args)));
+		return array('rules' => implode('|', array_merge($rules, $args)), 'annotations' => $annotations);
+	}
+
+	public function check_migration()
+	{
+		if ( ! self::is_migrated())
+		{
+			self::$_migrated = TRUE;
+
+			return self::$bureau->check_auto_migrate(self::$_models);
+		}
+
+		return;
 	}
 
 	/**
@@ -381,16 +477,19 @@ class Gas_core {
 	}
 
 	/**
-	 * list_models
+	 * list_all_models
 	 * 
-	 * Get list of available models
+	 * Get list of available models with its fields
 	 * 
 	 * @access public
+	 * @param  string
 	 * @return array
 	 */
-	public function list_models()
+	public static function list_all_models($model = '')
 	{
-		return self::$_models;
+		if (isset(self::$_models_fields[$model])) return self::$_models_fields[$model];
+
+		return self::$_models_fields;
 	}
 
 	/**
@@ -433,7 +532,7 @@ class Gas_core {
 	}
 
 	/**
-	 * get_with)models
+	 * get_with_models
 	 * 
 	 * Get eager loading models
 	 * 
@@ -977,7 +1076,7 @@ class Gas_core {
 	}
 	
 	/**
-	 * char_check (custom callback function for checking varchar/char field)
+	 * char_check (custom callback function for checking string field)
 	 *
 	 * @access  public
 	 * @param   string
@@ -989,6 +1088,23 @@ class Gas_core {
 		if (is_string($val) or $val === '') return TRUE;
 		
 		self::set_message('char_check', 'The %s field was an invalid char field.', $field);
+		
+		return FALSE;
+	}
+
+	/**
+	 * date_check (custom callback function for checking datetime field)
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  bool
+	 */
+	public function date_check($field, $val)
+	{
+		if (is_string($val) or $val === '') return TRUE;
+		
+		self::set_message('date_check', 'The %s field was an invalid datetime field.', $field);
 		
 		return FALSE;
 	}
@@ -1326,13 +1442,13 @@ class Gas_core {
 		{
 		    if ($file == '.' OR $file == '..' OR $file == '.svn') continue;
 
-		    $file = "$dir/$file";
+		    $file = $dir.DIRECTORY_SEPARATOR.$file;
 
 		    if (is_dir($file))  $this->_scan_files($file, $root_path, $type, $identifier);
 
 		    if(strpos($file, $identifier) !== FALSE) 
 			{
-				$item = explode('/', $file);
+				$item = explode(DIRECTORY_SEPARATOR, $file);
 
 				if ($type == 'models')
 				{
@@ -1473,7 +1589,11 @@ class Gas_core {
 
 		if (empty($this->table)) $this->table = $this->model();
 		
-		if ($name == 'fill')
+		if ($name == 'list_models')
+		{
+			return self::$_models;
+		}
+		elseif ($name == 'fill')
 		{
 			$input = array();
 
@@ -1733,6 +1853,10 @@ class Gas_bureau {
 
 	protected $_engine;
 
+	protected static $auto_migrate = FALSE;
+
+	protected static $execute_migrate = FALSE;
+
 	protected static $db;
 
 	protected static $validator;
@@ -1773,6 +1897,43 @@ class Gas_bureau {
 
 		self::$validator = $this->_CI->form_validation;
 
+		$auto_create_models = FALSE;
+
+		$auto_create_tables = FALSE;
+
+		if (strpos(CI_VERSION, '2.1') === 0)
+		{
+			if (isset(Gas_core::$config['auto_create_models']))
+			{
+				$auto_create_models = Gas_core::$config['auto_create_models'];
+			}
+			if (isset(Gas_core::$config['auto_create_tables']))
+			{
+				$auto_create_tables = Gas_core::$config['auto_create_tables'];
+
+				if ($auto_create_models and $auto_create_tables)
+				{
+					show_error('Gas ORM cannot execute both auto-created tabels and models at once, disabled one of them.');
+				}
+			}
+
+			if ( ! function_exists('write_file')) $this->_CI->load->helper('file');
+
+			if ($auto_create_models)
+			{
+				self::$auto_migrate = TRUE;
+
+				self::generate_models();
+			}
+
+			if ($auto_create_tables)
+			{
+				self::$auto_migrate = TRUE;
+
+				self::$execute_migrate = TRUE;
+			}
+		}
+		
 		log_message('debug', 'Gas ORM Bureau Class Initialized');
 	}
 
@@ -2407,6 +2568,42 @@ class Gas_bureau {
 	}
 
 	/**
+	 * check_auto_migrate
+	 * 
+	 * Create whether should doing some migration tasks or not.
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function check_auto_migrate($models)
+	{
+		if (self::$auto_migrate == TRUE)
+		{
+			$all_models = array_keys($models);
+			
+			$this->load_item($all_models, 'models');
+
+			self::sync_migrate($all_models);
+
+			$this->_CI->db = self::$db;
+
+			if ( ! class_exists('CI_Migration')) $this->_CI->load->library('migration');
+
+			if (self::$execute_migrate)
+			{
+				if ( ! $this->_CI->migration->latest())
+				{
+					show_error($this->_CI->migration->error_string());
+				}
+			}
+
+			return;
+		}
+
+		return;
+	}
+
+	/**
 	 * load_item
 	 * 
 	 * Load Gas item
@@ -2611,6 +2808,288 @@ class Gas_bureau {
 	}
 
 	/**
+	 * sync_migrate
+	 * 
+	 * Check and generate each gas model's migration sibling
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  void
+	 */
+	public static function sync_migrate($all_models)
+	{
+		$path = '';
+
+		if (isset(Gas_core::$config['migration_config']) and ($migration_config = Gas_core::$config['migration_config']))
+		{
+			if ($migration_config['migration_enabled'] === FALSE)
+			{
+				show_error('Gas ORM auto-migrate stopped, because migration was disabled.');
+			}
+			elseif ($migration_config['migration_version'] !== 0)
+			{
+				show_error('Gas ORM auto-migrate stopped, because migration version is above \'0\'.');
+			}
+			else
+			{
+				$path = $migration_config['migration_path'];
+
+				if ( ! is_dir($path))
+				{
+					if ( ! mkdir($path)) 
+					{
+    					show_error('Gas ORM auto-migrate stopped, because no migrations directory found.');
+					}
+				}
+			}
+		}
+		else
+		{
+			show_error('Gas ORM auto-migrate stopped, because no migration settings found.');
+		}
+
+		foreach ($all_models as $model)
+		{
+			self::generate_migration($model, $path);
+		}
+
+		self::$auto_migrate = FALSE;
+
+		return;
+	}
+
+	/**
+	 * generate_migration
+	 * 
+	 * Generate and create migration file
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @return  void
+	 */
+	public static function generate_migration($model, $path)
+	{
+		$gas = Gas::factory($model);
+
+		$primary_key = $gas->primary_key;
+
+		$forge_fields = array();
+
+		foreach (Gas::list_all_models($model) as $field => $properties)
+		{
+			$forge_fields[$field] = Gas_janitor::identify_annotation($properties['annotations']);
+		}
+
+		$fields = array();
+
+		foreach ($forge_fields as $forge_field => $forge_conf)
+		{
+			$forge_item = "\t\t\t".'\''.$forge_field.'\' => array('."\n\n";
+
+			foreach ($forge_conf as $forge_key => $forge_val)
+			{
+				$forge_item .= "\t\t\t\t".'\''.$forge_key.'\' => '.var_export($forge_val, TRUE).', '."\n\n";
+			}
+
+			$forge_item .= "\t\t\t".'), '."\n\n";
+
+			$fields[] = $forge_item;
+		}
+
+		$header = self::generate_file_header('Migration class');
+
+		$create_table = "\t\t".'$this->dbforge->add_field(array('."\n\n"
+						.implode("\n", $fields)
+						."\t\t".'));'."\n\n"
+						."\t\t".'$this->dbforge->add_key(\''.$primary_key.'\', TRUE);'."\n\n"
+						."\t\t".'$this->dbforge->create_table(\''.$model.'\');'."\n";
+
+		$migration_convention = array(
+
+				$header,
+
+				'class Migration_'.ucfirst($model).' extends CI_Migration {',
+
+				'',
+
+				"\t".'function up()',
+
+				"\t".'{',
+
+				$create_table,
+
+				"\t".'}',
+
+				'',
+
+				"\t".'function down()',
+
+				"\t".'{',
+
+				"\t\t".'$this->dbforge->drop_table(\''.$model.'\');',
+
+				"\t".'}',
+
+				'}',
+
+		);
+		
+		$migration_file = '001_'.$model.'.php';
+
+		$created = self::create_file($path, $migration_file, $migration_convention);
+
+		if ($created !== TRUE) show_error('Gas ORM cannot create migration of '.$model.' at '.$path);
+
+		return;
+	}
+
+	/**
+	 * generate_models
+	 * 
+	 * Migrate all availabe and existed tables schema into gas models
+	 *
+	 * @access  public
+	 * @return  void
+	 */
+	public static function generate_models()
+	{
+		$tables = array();
+
+		$tables = self::$db->list_tables();
+
+		foreach ($tables as $table)
+		{
+			$fields = self::$db->field_data($table);
+
+			if ($table !== 'migrations') self::generate_model($table, $fields);
+		}
+
+		return;
+		
+	}
+
+	/**
+	 * generate_model
+	 * 
+	 * Generate and create gas model
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   object
+	 * @return  void
+	 */
+	public static function generate_model($model, $meta_fields)
+	{
+		$meta_fields = Gas_janitor::get_input(__METHOD__, $meta_fields, TRUE);
+
+		$fields = array();
+
+		$key = 'id';
+
+		foreach ($meta_fields as $meta_field)
+		{
+			list($field_name, $field_type, $field_length, $is_key) = Gas_janitor::define_field($meta_field);
+
+			list($forge_name, $forge_type, $forge_length, $forge_key) = Gas_janitor::define_field($meta_field, 'forge_field');
+
+			$field_annotation = '';
+
+			$field_annotation = $forge_type;
+
+			$fields[] = "\t\t\t".'\''.$field_name.'\' => Gas::field(\''.$field_type.$field_length.'\','
+						.' array(), \''.$field_annotation.'\'),';
+		}
+
+		$model = Gas_janitor::get_input(__METHOD__, $model, TRUE) and $model = strtolower($model);
+
+		$header = self::generate_file_header();
+
+		$table = "\n\t".'public $table = \''.$model.'\';'."\n";
+
+		$primary_key = "\n\t".'public $primary_key = \''.$key.'\';'."\n";
+
+		$validation = "\t\t".'$this->_fields = array('."\n\n"
+				.implode("\n\n", $fields)
+				."\n\n"
+				."\t\t".');';
+
+		$callback = "\n\n"
+					."\t".'function _before_check() {}'."\n"
+					."\n\n"
+					."\t".'function _after_check() {}'."\n"
+					."\n\n"
+					."\t".'function _before_save() {}'."\n"
+					."\n\n"
+					."\t".'function _after_save() {}'."\n"
+					."\n\n"
+					."\t".'function _before_delete() {}'."\n"
+					."\n\n"
+					."\t".'function _after_delete() {}'."\n";
+
+		$model_convention = array(
+
+				$header,
+
+				'class '.ucfirst($model).' extends Gas {',
+
+				$table.$primary_key,
+
+				'',
+
+				"\t".'function _init()',
+
+				"\t".'{',
+
+				$validation,
+
+				"\t".'}',
+
+				''.$callback,
+
+				'}',
+
+		);
+
+		if (is_string(Gas_core::$config['models_path']))
+		{
+			$model_dir = APPPATH.$config['models_path'];
+		}
+		else
+		{
+			$model_dir = APPPATH.'models';
+		}
+
+		$model_file = $model.Gas_core::$config['models_suffix'].'.php';
+
+		$created = self::create_file($model_dir, $model_file, $model_convention);
+
+		if ($created !== TRUE) show_error('Gas ORM cannot create '.$model.' at '.$model_dir);
+
+		return;
+	}
+
+	/**
+	 * generate_file_header
+	 * 
+	 * Generate file header portion
+	 *
+	 * @access  public
+	 * @param   string
+	 * @return  string
+	 */
+	public static function generate_file_header($type = 'Gas model')
+	{
+		$header = '<?php if ( ! defined(\'BASEPATH\')) exit(\'No direct script access allowed\');';
+
+		$header .= "\n\n".'/*'
+					.' This basic '.$type.' has been auto-generated by the Gas ORM '
+					.'*/'."\n";
+
+		return $header;
+	}
+
+	/**
 	 * track_resource
 	 * 
 	 * Tracking resource state
@@ -2740,6 +3219,29 @@ class Gas_bureau {
 	}
 
 	/**
+	 * create_file
+	 * 
+	 * Create a file
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   string
+	 * @param   array
+	 * @return  bool
+	 */
+	private static function create_file($dir, $file, $content)
+	{
+		if (is_dir($dir))
+		{
+			return write_file($dir.DIRECTORY_SEPARATOR.$file, implode("\n", $content));
+		}
+		else
+		{
+			return write_file($dir.$file, implode("\n", $content));
+		}
+	}
+
+	/**
 	 * __call
 	 * 
 	 * Overloading method triggered when invoking special method.
@@ -2793,20 +3295,101 @@ class Gas_janitor {
 
 	);
 
+	public static $datatypes = array(
+
+		'numeric' => array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'BIGINT', 'DECIMAL', 'FLOAT', 'DOUBLE', 'REAL', 'BIT', 'BOOL', 'SERIAL'),
+
+		'datetime' => array('DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'YEAR'),
+
+		'string' => array('CHAR', 'VARCHAR', 'TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'BINARY', 'VARBINARY', 'TINYBLOB', 'MEDIUMBLOB', 'LONGBLOB', 'ENUM', 'SET'),
+
+		'spatial' => array('GEOMETRY', 'POINT', 'LINESTRING', 'POLYGON', 'MULTIPOINT', 'MULTILINESTRING', 'MULTIPOLYGON', 'GEOMETRYCOLLECTION'),
+
+	);
+
+	public static $default_datatypes = array('datetime' => 'DATETIME', 'string' => 'TEXT', 'spatial' => 'GEOMETRY', 'char' => 'VARCHAR', 'numeric' => 'TINYINT', 'auto' => 'INT', 'int' => 'INT', 'email' => 'VARCHAR');
+
 	public static $hidden_keys;
 
 	public static $num_keys;
+
+	/**
+	 * define_field
+	 *
+	 * @access  public
+	 * @param   object
+	 * @param   string
+	 * @return  array
+	 */
+	public static function define_field($meta_data, $type = 'gas_field')
+	{
+		$field_name = $meta_data->name;
+
+		$field_raw_type = strtoupper($meta_data->type);
+
+		$field_gas_type = '';
+
+		$is_key = (bool) $meta_data->primary_key;
+
+		foreach (self::$default_datatypes as $gas_type => $default)
+		{
+			if ($field_raw_type == $default)
+			{
+				$field_gas_type = $gas_type;
+
+				continue;
+			}
+		}
+
+		if ($field_gas_type == '')
+		{
+			$field_gas_type = self::diagnostic($field_raw_type, 'datatypes');
+		}
+
+		if ($is_key and $field_gas_type == 'int') $field_gas_type = 'auto';
+
+		if ( ! strpos($field_name, 'email') and $field_gas_type == 'email') $field_gas_type = 'char';
+		
+		if ($type == 'gas_field')
+		{
+			$field_type = $field_gas_type;
+
+			$field_length = is_null($meta_data->max_length) ? '' : '['.$meta_data->max_length.']';
+		}
+		elseif ($type == 'forge_field')
+		{
+			if (self::$default_datatypes[$field_gas_type] != $field_raw_type)
+			{
+				$field_type = $field_raw_type;
+			}
+			else
+			{
+				$field_type = '';
+			}
+
+			$field_length = $meta_data->max_length;
+		}
+		else
+		{
+			$field_type = '';
+
+			$field_length = 0;
+		}
+
+		return array($field_name, $field_type, $field_length, $is_key);
+	}
 
 	/**
 	 * diagnostic
 	 *
 	 * @access  public
 	 * @param   string
+	 * @param   string
 	 * @return  string
 	 */
-	public static function diagnostic($name)
+	public static function diagnostic($name, $source = 'dictionary')
 	{
-		foreach (self::$dictionary as $type => $nodes)
+		foreach (self::$$source as $type => $nodes)
 		{
 			if (in_array($name, $nodes)) return $type;
 		}
@@ -2923,6 +3506,38 @@ class Gas_janitor {
 		}
 
 		return array($through, $custom_table, $custom_key, $self);
+	}
+
+	/**
+	 * identify_annotation
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  array
+	 */
+	public static function identify_annotation($annotation)
+	{
+		$boolean = array('unsigned', 'null', 'auto_increment');
+
+		$new_annotation = array();
+
+		foreach ($annotation as $type)
+		{
+			if (in_array($type, $boolean))
+			{
+				$new_annotation[$type] = TRUE;
+			}
+			elseif (self::diagnostic($type, 'datatypes') != '')
+			{
+				$new_annotation['type'] = $type;
+			}
+			elseif (is_numeric($type))
+			{
+				$new_annotation['constraint'] = (int) $type;
+			}
+		}
+
+		return $new_annotation;
 	}
 
 	/**

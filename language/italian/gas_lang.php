@@ -14,3 +14,5 @@ $lang['empty_arguments']           = '%s non pu&ograve; essere invocato senza pa
 $lang['auto_check']                = 'Il campo %s non &egrave; un campo di tipo autoincrement valido.';
 
 $lang['char_check']                = 'Il campo %s non &egrave; un campo di tipo char valido.';
+
+$lang['date_check']                = 'Il campo %s non &egrave; un campo di tipo datetime valido.';

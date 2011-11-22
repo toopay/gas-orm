@@ -14,3 +14,5 @@ $lang['empty_arguments']           = 'Cannot continue executing %s without any p
 $lang['auto_check']                = 'The %s field was an invalid autoincrement field.';
 
 $lang['char_check']                = 'The %s field was an invalid char field.';
+
+$lang['date_check']                = 'The %s field was an invalid datetime field.';

@@ -89,24 +89,56 @@ $config['cache_request'] = TRUE;
 
 /*
 | -------------------------------------------------------------------
-|  Auto-create models
+|  Auto-create models and migration files
 | -------------------------------------------------------------------
+| Instruction:
+|
+| Before you enable this configuration option, make sure you already
+| have some exists tables within your database.
+| If you enable this option, Gas ORM will create a basic Gas model
+| based by your database schema, and its sibling Migration files.
+|
+| Auto-create models are disabled by default for security reasons.
+| You should enable this only whenever you intend to do a schema migration
+| from database to your Gas model, and disable it back when you're done.
+|
+| NOTE : 
+|
+| 1. If you already have some Gas model files, back-up first.
+| 2. To avoid unexpected results, your migrations folder should be empty.
+|
 | Prototype:
 |
 |  $config['auto_create_models'] = TRUE;
 |
 */
 
-$config['auto_create_models'] = TRUE;
+$config['auto_create_models'] = FALSE;
 
 /*
 | -------------------------------------------------------------------
-|  Auto-create tables
+|  Auto-create tables and migration files
 | -------------------------------------------------------------------
+| Instruction:
+|
+| Before you enable this configuration option, make sure you already
+| have some exists Gas model within your model directories.
+| If you enable this option, Gas ORM will create sibling Migration files
+| for based by each of your models and then run it via Migration mechanism. 
+|
+| Auto-create tables are disabled by default for security reasons.
+| You should enable this only whenever you intend to do a schema migration
+| from your Gas model to database, and disable it back when you're done.
+|
+| NOTE : 
+|
+| 1. To avoid unexpected results, your migrations folder should be empty.
+| 2. Gas ORM will ignore this option, if your migration version not '0'.
+|
 | Prototype:
 |
 |  config['auto_create_tables'] = TRUE;
 |
 */
 
-$config['auto_create_tables'] = TRUE;
+$config['auto_create_tables'] = FALSE;
