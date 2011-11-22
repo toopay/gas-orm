@@ -8,6 +8,7 @@ Read the upgrade notes corresponding to the version you are upgrading from.
 .. toctree::
 	:titlesonly:
 	
+	upgrade_140
 	upgrade_133
 	upgrade_132
 	upgrade_131

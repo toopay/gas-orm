@@ -1,7 +1,7 @@
 .. Gas ORM documentation [index]
    Index page.
 
-Gas ORM version 1.3 Documentation
+Gas ORM version 1.4 Documentation
 ===================================
 
 .. toctree::

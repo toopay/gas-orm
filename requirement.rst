@@ -8,6 +8,8 @@ To start using Gas ORM in your application, you will need
 - PHP v.5.2.x
 - CodeIgniter v.2.x.x
 
+.. note:: If you want to use auto-create models and/or auto-create tables features, you should install CI version 2.1.0 or above, because this features is utilize Migration class.
+
 Installation
 ++++++++++++
 

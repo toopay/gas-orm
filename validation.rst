@@ -1,9 +1,9 @@
 .. Gas ORM documentation [validation]
 
-Validation
-==========
+Data Types and Validation
+=========================
 
-Every Gas model could have **_init()** function. It primarily used for set up a table's fields validation but it can be used as a replacement for constructor method. ::
+Every Gas model could have **_init()** function. It primarily used for set up a table's fields definition and validation but it can be used as a replacement for constructor method. ::
 
  	class User extends Gas {
 
@@ -46,11 +46,42 @@ Lets throw an example scenario. Suppose we are about inserting new record into o
 This is one-time set-up, unless in the future, we need to change our table schema. So basicly, we have set several fields rules, which is :
 
 - **auto** : for autoincrement datatype
-- **char** : for CHAR or VARCHAR datatype
+- **char** : for VARCHAR datatype
 - **email** : for email data (a shorthand for native **valid_email** rule in CI validation)
-- **int** : for INT, TINYINT or other integer number
+- **int** : for INT datatype
 
-It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]** or specify both min length and max length using **[n,n]**.
+It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]** or specify both min length and max length using **[n,n]**, and this will usefull to define your field length since this will represent your field constrain (auto-create tables mechanism will use this value as your field constraint).
+
+Annotation
+++++++++++
+
+Each of your field is represent actual field within your tables. The purpose of annotation was to clear this up. This property values also usefull when you use Gas ORM auto-create tables feature. So each time you set a field value within **_fields** properties, you actually already define some basic information about your table's fields. 
+
+The most common datatype are :
+
+- **auto** : for autoincrement datatype
+- **char** : for VARCHAR datatype
+- **email** : for email data also represent VARCHAR datatype
+- **int** : for INT datatype
+
+But if your table fields is outside those list, you can use the general category of datatypes :
+
+- **string** : for any string datatpe, default to TEXT
+- **spatial** : for any spatial datatpe, default to GEOMETRY
+- **numeric** : for any numeric datatpe, default to TINYINT
+- **datetime** : for any datetime datatpe, default to DATETIME
+
+Above is also represent each datatype category. And most-likely your field datatype is defined in above list. But let say you have **TINYBLOB** datatype within some table, how you must define its field property? You can use the third parameter within **field()** method, so in this case, you can specify it like bellow ::
+
+	// ...
+
+	'project_file' => Gas::field('string', array('required'), 'TINYBLOB, null'),
+
+	// ...
+
+Notice that because **TINYBLOB** is within **string** datatype category, then you define it as string. But you also add more annotation as third parameter, which are **TINYBLOB** and **null** (mean each record can have null value of this field). This mean if you have **FLOAT** field, you can use **numeric** then add **FLOAT** in third parameter as well.
+
+This annotation will also included and used as a pointer, in your auto-created migration files, so if needed you can also add **auto_increment** or/and **unsigned** at third parameter separated by comma. 
 
 Additional Rules
 ++++++++++++++++

@@ -49,6 +49,16 @@ This also inherit from CI AR, so it should be straight forward. ::
 
 This often usefull while you debugging, benchmarking or profiling your application.
 
+reports()
++++++++++
+
+Sometime, you want to monitoring what changes has been done in a single HTTP request, you can do so by using this method. ::
+
+	// Place this in the very last of some controller method
+	var_dump(Gas::reports());
+
+That will give you information about all corresponding resources state in an array.
+
 Transaction
 +++++++++++
 

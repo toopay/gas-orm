@@ -30,10 +30,15 @@ All of your Gas model, is extending **Gas** class and therefore, **Gas_core** cl
 - connect()
 - recruit_bureau()
 - is_initialize()
+- is_migrated()
 - load_model()
 - load_extension()
+- reports()
+- flush_cache()
 - field()
+- check_migration()
 - db()
+- list_all_models()
 - list_models()
 - add_ar_record()
 - get_type()
@@ -116,6 +121,7 @@ All of your Gas model, is extending **Gas** class and therefore, **Gas_core** cl
 - $transaction_status
 - $transaction_executor
 - $_models
+- $_models_fields
 - $_extensions
 - $_rules
 - $_error_callbacks
