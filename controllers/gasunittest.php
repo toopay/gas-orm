@@ -611,7 +611,7 @@ class Gasunittest extends CI_Controller {
 
 			'comment' => array(
 
-				array('id' => 1, 'parent_id' => null, 'user_id' => 1, 'description' => 'Comment 1'),
+				array('id' => 1, 'parent_id' => 0, 'user_id' => 1, 'description' => 'Comment 1'),
 
 				array('id' => 2, 'parent_id' => 1, 'user_id' => 2, 'description' => 'Reply to comment 1'),
 

@@ -143,6 +143,8 @@ class Gas_core {
 			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
 			$init = TRUE;
+
+			log_message('debug', 'Gas ORM Core Class Initialized');
 		}
 
 		self::$bureau =& Gas_core::recruit_bureau(); 
@@ -175,8 +177,6 @@ class Gas_core {
 		}
 
 		if ($init) self::$init = TRUE;
-
-		log_message('debug', 'Gas ORM Core Class Initialized');
 	}
 
 	/**
@@ -973,9 +973,20 @@ class Gas_core {
 	 */
 	public static function tell($point, $parser_value = null)
 	{
-		self::$bureau->lang()->load('gas');
+		if (is_object(self::$bureau))
+		{
+			$speaker = self::$bureau->lang();
+		}
+		else
+		{
+			$CI =& get_instance();
 
-		if (FALSE === ($msg = self::$bureau->lang()->line($point)))
+			$speaker = $CI->lang;
+		}
+
+		$speaker->load('gas');
+
+		if (FALSE === ($msg = $speaker->line($point)))
 		{
 			$msg = '';
 		}
@@ -1853,9 +1864,15 @@ class Gas_bureau {
 
 	protected $_engine;
 
+	protected static $auto_models_success = FALSE;
+
+	protected static $auto_modelling = FALSE;
+
 	protected static $auto_migrate = FALSE;
 
 	protected static $execute_migrate = FALSE;
+
+	protected static $count_migrate = 0;
 
 	protected static $db;
 
@@ -1901,7 +1918,7 @@ class Gas_bureau {
 
 		$auto_create_tables = FALSE;
 
-		if (strpos(CI_VERSION, '2.1') === 0)
+		if (defined('CI_VERSION') and strpos(CI_VERSION, '2.1') === 0)
 		{
 			if (isset(Gas_core::$config['auto_create_models']))
 			{
@@ -1913,7 +1930,7 @@ class Gas_bureau {
 
 				if ($auto_create_models and $auto_create_tables)
 				{
-					show_error('Gas ORM cannot execute both auto-created tabels and models at once, disabled one of them.');
+					show_error(Gas_core::tell('both_auto_error'));
 				}
 			}
 
@@ -1924,6 +1941,8 @@ class Gas_bureau {
 				self::$auto_migrate = TRUE;
 
 				self::generate_models();
+
+				self::$auto_models_success = TRUE;
 			}
 
 			if ($auto_create_tables)
@@ -2595,6 +2614,10 @@ class Gas_bureau {
 				{
 					show_error($this->_CI->migration->error_string());
 				}
+				else
+				{
+					log_message('debug', 'Gas ORM Auto-generate tables succesfully migrate your Gas models schema into database and executing migrations to version '.self::$count_migrate);
+				}
 			}
 
 			return;
@@ -2824,11 +2847,11 @@ class Gas_bureau {
 		{
 			if ($migration_config['migration_enabled'] === FALSE)
 			{
-				show_error('Gas ORM auto-migrate stopped, because migration was disabled.');
+				show_error(Gas_core::tell('migration_disabled'));
 			}
 			elseif ($migration_config['migration_version'] !== 0)
 			{
-				show_error('Gas ORM auto-migrate stopped, because migration version is above \'0\'.');
+				show_error(Gas_core::tell('migration_no_initial'));
 			}
 			else
 			{
@@ -2838,14 +2861,14 @@ class Gas_bureau {
 				{
 					if ( ! mkdir($path)) 
 					{
-    					show_error('Gas ORM auto-migrate stopped, because no migrations directory found.');
+						show_error(Gas_core::tell('migration_no_dir'));
 					}
 				}
 			}
 		}
 		else
 		{
-			show_error('Gas ORM auto-migrate stopped, because no migration settings found.');
+			show_error(Gas_core::tell('migration_no_setting'));
 		}
 
 		foreach ($all_models as $model)
@@ -2870,13 +2893,36 @@ class Gas_bureau {
 	 */
 	public static function generate_migration($model, $path)
 	{
+		self::$count_migrate++;
+
+		$counter = self::$count_migrate;
+
+		$counter_prefix = '';
+
+		$key_state = '';
+
+		$forge_fields = array();
+
+		if ($counter < 10)
+		{
+			$counter_prefix = '00';
+		}
+		elseif ($counter >= 10 and $counter < 100)
+		{
+			$counter_prefix = '0';
+		}
+
 		$gas = Gas::factory($model);
 
 		$primary_key = $gas->primary_key;
 
-		$forge_fields = array();
+		$model_fields = Gas::list_all_models($model);
 
-		foreach (Gas::list_all_models($model) as $field => $properties)
+		$has_primary_key = (bool) in_array($primary_key, array_keys($model_fields));
+
+		if ($has_primary_key) $key_state = "\t\t".'$this->dbforge->add_key(\''.$primary_key.'\', TRUE);'."\n\n";
+
+		foreach ($model_fields as $field => $properties)
 		{
 			$forge_fields[$field] = Gas_janitor::identify_annotation($properties['annotations']);
 		}
@@ -2902,7 +2948,7 @@ class Gas_bureau {
 		$create_table = "\t\t".'$this->dbforge->add_field(array('."\n\n"
 						.implode("\n", $fields)
 						."\t\t".'));'."\n\n"
-						."\t\t".'$this->dbforge->add_key(\''.$primary_key.'\', TRUE);'."\n\n"
+						.$key_state
 						."\t\t".'$this->dbforge->create_table(\''.$model.'\');'."\n";
 
 		$migration_convention = array(
@@ -2935,11 +2981,18 @@ class Gas_bureau {
 
 		);
 		
-		$migration_file = '001_'.$model.'.php';
+		$migration_file = $counter_prefix.self::$count_migrate.'_'.$model.'.php';
 
 		$created = self::create_file($path, $migration_file, $migration_convention);
 
-		if ($created !== TRUE) show_error('Gas ORM cannot create migration of '.$model.' at '.$path);
+		if ($created !== TRUE)
+		{
+			show_error(Gas_core::tell('cannot_create_migration', $path.$migration_file));
+		}
+		else
+		{
+			log_message('debug', 'Gas ORM auto-create migration executed: '.$path.$migration_file);
+		}
 
 		return;
 	}
@@ -2954,6 +3007,8 @@ class Gas_bureau {
 	 */
 	public static function generate_models()
 	{
+		if (Gas_bureau::$auto_modelling == TRUE) return;
+
 		$tables = array();
 
 		$tables = self::$db->list_tables();
@@ -2965,8 +3020,11 @@ class Gas_bureau {
 			if ($table !== 'migrations') self::generate_model($table, $fields);
 		}
 
+		Gas_bureau::$auto_modelling = TRUE;
+
+		log_message('debug', 'Gas ORM Auto-generate models succesfully migrate your database schema into Gas models.');
+
 		return;
-		
 	}
 
 	/**
@@ -3064,7 +3122,14 @@ class Gas_bureau {
 
 		$created = self::create_file($model_dir, $model_file, $model_convention);
 
-		if ($created !== TRUE) show_error('Gas ORM cannot create '.$model.' at '.$model_dir);
+		if ($created !== TRUE)
+		{
+			show_error(Gas_core::tell('cannot_create_model', $model_dir.DIRECTORY_SEPARATOR.$model_file));
+		}
+		else
+		{
+			log_message('debug', 'Gas ORM auto-create model executed: '.$model_dir.DIRECTORY_SEPARATOR.$model_file);
+		}
 
 		return;
 	}

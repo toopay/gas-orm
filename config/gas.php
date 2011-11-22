@@ -105,7 +105,8 @@ $config['cache_request'] = TRUE;
 | NOTE : 
 |
 | 1. If you already have some Gas model files, back-up first.
-| 2. To avoid unexpected results, your migrations folder should be empty.
+| 2. You have to enable migration library.
+| 3. To avoid unexpected results, backup any exists migration files.
 |
 | Prototype:
 |
@@ -132,8 +133,9 @@ $config['auto_create_models'] = FALSE;
 |
 | NOTE : 
 |
-| 1. To avoid unexpected results, your migrations folder should be empty.
-| 2. Gas ORM will ignore this option, if your migration version not '0'.
+| 1. You have to enable migration library.
+| 2. To avoid unexpected results, backup any exists migration files.
+| 3. Gas ORM will ignore this option, if your migration version not '0'.
 |
 | Prototype:
 |
