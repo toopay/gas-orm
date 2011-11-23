@@ -58,20 +58,20 @@ p, li, dd, dt, pre{ line-height: 1.5; }
 .line-block div.line-block {padding:0px; font-family:monospace;margin:0px;}
 
 table{ 
-background-color: #F5FBFF;
-border: 1px solid #C8DEF0;
+background-color: #F2FFE8;
+border: 1px solid #CCC;
 border-collapse: collapse;
 margin-bottom: 3px;
 }
 
 th, td{ 
 border: 0; 
-border-bottom: 1px solid #C8DEF0;
+border-bottom: 1px solid #CCC;
 padding: 8px; 
 }
 
 th{ 
-background-color: #326B95; 
+background-color: #E0941B; 
 color: #FFFFFF;
 text-align: left; 
 }

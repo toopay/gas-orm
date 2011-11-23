@@ -5,12 +5,21 @@ Hooks a.k.a Callbacks
 
 You can define hooks/callbacks for some of the model's explicit lifecycle events:
 
-- **_before_check** : hook point before validation process
-- **_after_check** : hook point after validation process
-- **_before_save** : hook point before save process
-- **_after_save** : hook point after save process
-- **_before_delete** : hook point before deletion process
-- **_after_delete** : hook point after deletion process
++---------------------+----------------------------------------------+
+| Callback method     | Description                                  |
++=====================+==============================================+
+| **_before_check**   | hook point before validation process         |
++---------------------+----------------------------------------------+
+| **_after_check**    | hook point before after validation process   |
++---------------------+----------------------------------------------+
+| **_before_save**    | hook point before save process               |
++---------------------+----------------------------------------------+
+| **_after_save**     | hook point before after save process         |
++---------------------+----------------------------------------------+
+| **_before_delete**  | hook point before before deletion process    |
++---------------------+----------------------------------------------+
+| **_after_delete**   | hook point before after deletion process     |
++---------------------+----------------------------------------------+
 
 This is a convinient way to hook into the life cycle of a Gas object. You can control the state of your object by declaring certain methods to be called before or after methods are invoked on your object within Gas mechanism.
 
