@@ -1421,8 +1421,15 @@ class Gas_core {
 	 */
 	private function _scan_extensions()
 	{
-		$extension_path = APPPATH.'libraries';
-
+		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
+		{
+			$extension_path = FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'.DIRECTORY_SEPARATOR.Gas_core::version().DIRECTORY_SEPARATOR.'libraries';
+		}
+		else
+		{
+			$extension_path = APPPATH.'libraries';
+		}
+		
 		$extension_type = 'extensions';
 
 		$extension_identifier = 'Gas_extension_';

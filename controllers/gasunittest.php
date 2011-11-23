@@ -22,6 +22,11 @@ class Gasunittest extends CI_Controller {
 	{
 		parent::__construct();
 
+		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
+		{
+			$this->load->spark('Gas-ORM/1.4.0');
+		}
+
 		$gas = new Gas;
 
 		$this->db = $gas->db();
@@ -282,6 +287,8 @@ class Gasunittest extends CI_Controller {
 	public function extension()
 	{
 		$user = new User;
+
+		Gas::load_extension('dummy');
 
 		$user->truncate();
 
