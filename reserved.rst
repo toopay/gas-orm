@@ -42,8 +42,6 @@ All of your Gas model, is extending **Gas** class and therefore, **Gas_core** cl
 +------------------------+
 |Reserved method name    |
 +========================+
-|Gas_extension_dummy     |
-+------------------------+
 |version()               |
 +------------------------+
 |factory()               |

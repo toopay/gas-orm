@@ -71,13 +71,13 @@ But if your table fields is outside those list, you can use the general category
 +---------------------+-------------------------------------------------------------------------------+
 | Available option    | Description                                                                   |
 +=====================+===============================================================================+
-| **string**          | for any string datatpe, default to TEXT                                       |
+| **string**          | for any string datatypes, default to TEXT                                     |
 +---------------------+-------------------------------------------------------------------------------+
-| **spatial**         | for any spatial datatpe, default to GEOMETRY                                  |
+| **spatial**         | for any spatial datatypes, default to GEOMETRY                                |
 +---------------------+-------------------------------------------------------------------------------+
-| **numeric**         | for any numeric datatpe, default to TINYINT                                   |
+| **numeric**         | for any numeric datatypes, default to TINYINT                                 |
 +---------------------+-------------------------------------------------------------------------------+
-| **datetime**        | for any datetime datatpe, default to DATETIME                                 |
+| **datetime**        | for any datetime datatypes, default to DATETIME                               |
 +---------------------+-------------------------------------------------------------------------------+
 
 Above is also represent each datatype category. And most-likely your field datatype is defined in above list. But let say you have **TINYBLOB** datatype within some table, how you must define its field property? You can use the third parameter within **field()** method, so in this case, you can specify it like bellow ::
