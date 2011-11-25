@@ -2,11 +2,13 @@
 
 /**
  * Gas Extension Dummy.
- * 
- * An extension should have __init($gas) method, 
- * which will be called by Gas_core class.
  *
  * @package     Gas Library
+ * @subpackage	Gas Extension
+ * @category    Libraries
+ * @author      Taufan Aditya A.K.A Toopay
+ * @link        http://gasorm-doc.taufanaditya.com/
+ * @license     BSD(http://gasorm-doc.taufanaditya.com/what_is_gas_orm.html#bsd)
  */
 
 class Gas_extension_dummy implements Gas_extension { 
@@ -14,7 +16,7 @@ class Gas_extension_dummy implements Gas_extension {
 	// This is a properties, which will be used to transport Gas Instance
 	public $gas;
 
-	protected $CI;
+	public $explanation;
 
 	/**
 	 * __init
@@ -29,12 +31,6 @@ class Gas_extension_dummy implements Gas_extension {
 	{
 		// Here, Gas will transport your instance
 		$this->gas = $gas;
-
-		$this->CI =& get_instance();
-
-		if ( ! class_exists('CI_Typography')) $this->CI->load->library('typography');
-
-		if ( ! class_exists('CI_Table')) $this->CI->load->library('table');
 	}
 
 	/**
@@ -48,7 +44,13 @@ class Gas_extension_dummy implements Gas_extension {
 	 */
 	public function explain($args = null)
 	{
-		$arguments = var_export($args, TRUE);
+		$CI =& get_instance();
+
+		if ( ! class_exists('CI_Typography')) $CI->load->library('typography');
+
+		if ( ! class_exists('CI_Table')) $CI->load->library('table');
+
+		$arguments = ! is_null($this->explanation) ? var_export($this->explanation, TRUE) : var_export($args, TRUE);
 
 		$nickname = key($this->gas->extensions);
 
@@ -64,18 +66,18 @@ class Gas_extension_dummy implements Gas_extension {
 
 		$records = $this->gas->get_raw_record();
 
-		$this->CI->table->set_heading($structure);
+		$CI->table->set_heading($structure);
 
 		foreach ($records as $record)
 		{
 
-			$this->CI->table->add_row(array_values($record));
+			$CI->table->add_row(array_values($record));
 
 		}
 
-		$table = $this->CI->table->generate();
+		$table = $CI->table->generate();
 
-		$this->CI->table->clear();
+		$CI->table->clear();
 
 
 		$explanation = 'Hello, i am an extension. ';
@@ -114,9 +116,8 @@ class Gas_extension_dummy implements Gas_extension {
 
 		$explanation .= 'This is all I can say.'."\n";
 
-		$formatted_explanation = $this->CI->typography->auto_typography($explanation);
+		$formatted_explanation = $CI->typography->auto_typography($explanation);
 
 		return '<pre>'.$formatted_explanation.'</pre>';
 	}
-
 }

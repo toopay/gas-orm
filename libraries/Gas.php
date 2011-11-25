@@ -11,10 +11,10 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
- * @license     BSD
+ * @license     BSD(http://gasorm-doc.taufanaditya.com/what_is_gas_orm.html#bsd)
  */
 
  /* ------------------------------------------------------------------------------------------------- */
@@ -26,12 +26,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.4.0';
+	const GAS_VERSION = '1.4.1';
 
 	public $table = '';
 
@@ -51,6 +51,12 @@ class Gas_core {
 
 
 	protected $_fields = array();
+
+	protected $_unique_fields = array();
+
+	protected $_ts_fields = array();
+
+	protected $_unix_ts_fields = array();
 
 	protected $_set_fields = array();
 
@@ -96,6 +102,10 @@ class Gas_core {
 	public static $transaction_status = FALSE;
 
 	public static $transaction_executor = FALSE;
+
+	public static $timestamps = array();
+
+	public static $old_input = array();
 	
 
 	protected static $_models;
@@ -144,6 +154,8 @@ class Gas_core {
 
 			$init = TRUE;
 
+			Gas_core::$old_input = (isset($_POST) and count($_POST) > 0) ? $CI->input->post() : $CI->input->get();
+
 			log_message('debug', 'Gas ORM Core Class Initialized');
 		}
 
@@ -155,9 +167,9 @@ class Gas_core {
 
 		self::$bureau->_config = Gas_core::$config;
 
-		if (Gas_core::$config['autoload_models']) self::$bureau->load_item('*', 'models');
+		if (Gas_core::config('autoload_models')) self::$bureau->load_item('*', 'models');
 
-		if (Gas_core::$config['autoload_extensions']) self::$bureau->load_item(Gas_core::$config['extensions'], 'extensions');
+		if (Gas_core::config('autoload_extensions')) self::$bureau->load_item(Gas_core::config('extensions'), 'extensions');
 
 		if (self::is_migrated() == FALSE and self::is_initialize() == FALSE)
 		{
@@ -217,11 +229,23 @@ class Gas_core {
 
 				self::$loaded_models[$name] = TRUE;
 
-				self::$_models_fields[$name] = $gas->_fields;
+				self::$_models_fields[$name]['fields'] = $gas->_fields;
+
+				self::$_models_fields[$name]['unique_fields'] = $gas->_unique_fields;
+
+				self::$_models_fields[$name]['ts_fields'] = $gas->_ts_fields;
+
+				self::$_models_fields[$name]['unix_ts_fields'] = $gas->_unix_ts_fields;
 			}
 			else
 			{
-				$gas->_fields = self::$_models_fields[$name];
+				$gas->_fields = self::$_models_fields[$name]['fields'];
+
+				$gas->_unique_fields = self::$_models_fields[$name]['unique_fields'];
+
+				$gas->_ts_fields = self::$_models_fields[$name]['ts_fields'];
+
+				$gas->_unix_ts_fields = self::$_models_fields[$name]['unix_ts_fields'];
 			}
 		}
 
@@ -577,15 +601,23 @@ class Gas_core {
 	}
 
 	/**
-	 * get_config
+	 * config
 	 * 
 	 * Get Gas configuration
 	 * 
 	 * @access  public
+	 * @param   string
 	 * @return  array
 	 */
-	public function get_config()
+	public function config($key = '')
 	{
+		if ( ! empty($key))
+		{
+			if (isset(Gas_core::$config[$key])) return Gas_core::$config[$key];
+
+			return FALSE;
+		}
+
 		return self::$config;
 	}
 
@@ -844,6 +876,10 @@ class Gas_core {
 	 */
 	public function save($check = FALSE, $skip_affected_rows = FALSE)
 	{
+		$created_ts_fields = array();
+
+		$updated_ts_fields = array();
+
 		$bureau = self::$bureau;
 
 		$this->validate_table();
@@ -852,7 +888,7 @@ class Gas_core {
 		{
 			if (is_callable(array($this, '_init'), TRUE) and empty($this->_fields)) $this->_init();
 
-			$entries = is_array($this->_set_fields) ? array_merge($this->_get_fields, $this->_set_fields) : $this->_get_fields;
+			$entries = $this->entries();
 
 			if (is_callable(array($this, '_before_check'), TRUE)) $this->_before_check();
 
@@ -869,9 +905,48 @@ class Gas_core {
 
 		if (is_callable(array($this, '_before_save'), TRUE)) $this->_before_save();
 
+		if ( ! empty($this->_ts_fields) or ! empty($this->_unix_ts_fields))
+		{
+			$old_entries = $this->entries();
+
+			if ( ! empty($this->_ts_fields))
+			{
+				$created_ts_fields[] = Gas_janitor::arr_timestamp($this->_ts_fields, TRUE);
+
+				$updated_ts_fields[] = Gas_janitor::arr_timestamp($this->_ts_fields);
+			}
+
+			if ( ! empty($this->_unix_ts_fields))
+			{
+				$created_ts_fields[] = Gas_janitor::arr_unix_timestamp($this->_unix_ts_fields, TRUE);
+
+				$updated_ts_fields[] = Gas_janitor::arr_unix_timestamp($this->_unix_ts_fields);
+			}
+
+			array_walk_recursive($created_ts_fields, 'Gas_janitor::extract_timestamp', 'created_ts');
+
+			array_walk_recursive($updated_ts_fields, 'Gas_janitor::extract_timestamp', 'updated_ts');
+		}
+
 		if (empty($this->_get_fields))
 		{
-			$recorder = array('insert' => array($this->table, $this->_set_fields));
+			if ( ! empty($this->_unique_fields))
+			{
+				$unique = $bureau->validate_unique($this->model(), $this->entries(), $this->_unique_fields);
+
+				if ( ! $unique)
+				{
+					$this->errors = self::$_errors_validation;
+
+					self::$_errors_validation = array();
+
+					return FALSE;
+				}
+			}
+
+			$this->_add_timestamps(TRUE);
+
+			$recorder = array('insert' => array($this->table, $this->entries()));
 		}
 		else
 		{
@@ -883,9 +958,9 @@ class Gas_core {
 
 			Gas_janitor::tape_record($this->model(), $recorder);
 
-			$this->_set_fields = array_merge($this->_get_fields, $this->_set_fields);
+			$this->_add_timestamps();
 
-			$recorder = array('update' => array($this->table, $this->_set_fields));
+			$recorder = array('update' => array($this->table, $this->entries()));
 		}
 
 		Gas_janitor::tape_record($this->model(), $recorder);
@@ -995,6 +1070,19 @@ class Gas_core {
 	}
 
 	/**
+	 * entries
+	 * 
+	 * Return mixed entries for saving data
+	 *
+	 * @access  public
+	 * @return  array
+	 */
+	public function entries()
+	{
+		return is_array($this->_set_fields) ? array_merge($this->_get_fields, $this->_set_fields) : $this->_get_fields;
+	}
+
+	/**
 	 * set_message
 	 * 
 	 * Creates a message for custom callback function
@@ -1070,6 +1158,28 @@ class Gas_core {
 	}
 	
 	/**
+	 * unique_check (used by validate_unique method)
+	 *
+	 * @access  public
+	 * @param   string
+	 * @param   mixed
+	 * @return  bool
+	 */
+	public function unique_check($raw_fields, $val)
+	{
+		if (empty($val)) return TRUE;
+
+		$fields = Gas_janitor::arr_trim(explode(',', $raw_fields));
+
+		foreach ($fields as $field)
+		{
+			self::set_message('unique_check', 'The %s field should contain unique value(s).', $field);
+		}
+		
+		return FALSE;
+	}
+
+	/**
 	 * auto_check (custom callback function for checking auto field)
 	 *
 	 * @access  public
@@ -1113,7 +1223,7 @@ class Gas_core {
 	 */
 	public function date_check($field, $val)
 	{
-		if (is_string($val) or $val === '') return TRUE;
+		if (strtotime($val) !== FALSE) return TRUE;
 		
 		self::set_message('date_check', 'The %s field was an invalid datetime field.', $field);
 		
@@ -1373,6 +1483,34 @@ class Gas_core {
 		return $this;
 	}
 
+	/**
+	 * _add_timestamps
+	 * 
+	 * Adding timestamps
+	 *
+	 * @access  private
+	 * @param   bool
+	 * @return  array
+	 */
+	public function _add_timestamps($new = FALSE)
+	{
+		$entries = $this->entries();
+
+		$timestamps = array();
+
+		$type = $new ? 'created_ts' : 'updated_ts';
+
+		isset(Gas_core::$timestamps[$type]) and $timestamps = Gas_core::$timestamps[$type];
+
+		foreach ($timestamps as $timestamp)
+		{
+			$entries = array_merge($entries, $timestamp);
+		}
+
+		unset(Gas_core::$timestamps[$type]);
+		
+		return $this->set_fields($entries);
+	}
 
  	/**
 	 * _scan_model
@@ -1387,7 +1525,7 @@ class Gas_core {
 	{
 		$models = array();
 
-		$models_path = Gas_core::$config['models_path'];
+		$models_path = Gas_core::config('models_path');
 		
 		if (is_string($models_path))
 	 	{
@@ -1400,7 +1538,7 @@ class Gas_core {
 
 		$model_type = 'models';
 
-		$model_identifier = Gas_core::$config['models_suffix'].'.php';
+		$model_identifier = Gas_core::config('models_suffix').'.php';
 
 		foreach ($models as $model)
 		{
@@ -1856,7 +1994,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  */
 
 class Gas_bureau {
@@ -1927,13 +2065,13 @@ class Gas_bureau {
 
 		if (defined('CI_VERSION') and strpos(CI_VERSION, '2.1') === 0)
 		{
-			if (isset(Gas_core::$config['auto_create_models']))
+			if (Gas_core::config('auto_create_models'))
 			{
-				$auto_create_models = Gas_core::$config['auto_create_models'];
+				$auto_create_models = Gas_core::config('auto_create_models');
 			}
-			if (isset(Gas_core::$config['auto_create_tables']))
+			if (Gas_core::config('auto_create_tables'))
 			{
-				$auto_create_tables = Gas_core::$config['auto_create_tables'];
+				$auto_create_tables = Gas_core::config('auto_create_tables');
 
 				if ($auto_create_models and $auto_create_tables)
 				{
@@ -2162,7 +2300,38 @@ class Gas_bureau {
 			}
 			else
 			{
-				$res = Gas_janitor::force(self::$db, $action, $args);
+				$return = FALSE;
+
+				if ($action == 'query' and ($sample_args = $args))
+				{
+					$return = (strpos(strtolower(array_shift($sample_args)), 'select') === 0);
+				}
+
+				if ($return)
+				{
+					$result = Gas_janitor::force_and_get(self::$db, $action, $args);
+
+					if ($compiler['raw'] === TRUE) 
+					{
+						$res = $result->result_array();
+					}
+					else
+					{
+						$with = Gas::factory($compiler['gas'], array(), FALSE)->get_with();
+
+						$res = self::generator($compiler['gas'], $result->result(), __FUNCTION__, $compiler['limit'], $with);
+					}
+
+					self::$task_manager = array();
+
+					self::$thread_resource = $res;
+
+					return;
+				}
+				else
+				{
+					$res = Gas_janitor::force(self::$db, $action, $args);
+				}
 			}
 
 			self::$thread_resource = $res;
@@ -2173,7 +2342,6 @@ class Gas_bureau {
 		{
 			return Gas_janitor::force(self::$db, $action, $args);
 		}
-
 	}
 
 	/**
@@ -2797,6 +2965,60 @@ class Gas_bureau {
 	}
 
 	/**
+	 * validate_unique
+	 * 
+	 * Validate unique fields
+	 *
+	 * @access	public
+	 * @param	string
+	 * @param	array
+	 * @param	array
+	 * @return	object
+	 */
+	public function validate_unique($model, $entries, $unique_fields)
+	{
+		$unique_success = array();
+
+		$table = Gas::factory($model, array(), FALSE)->validate_table()->table;
+
+		foreach ($unique_fields as $unique)
+		{
+			$res = null;
+
+			$check_fields = Gas_janitor::arr_trim(explode(',', $unique));
+
+			$where = array();
+
+			foreach ($check_fields as $check_field)
+			{
+				if (isset($entries[$check_field])) $where[$check_field] = $entries[$check_field];
+			}
+
+			if ( ! empty($where))
+			{
+				$recorder = array(
+
+					array('where' => array($where)),
+
+					array('get' => array($table)),
+
+				);
+
+				$res = self::do_compile($model, $recorder, TRUE, TRUE);
+			}
+
+			if ( ! is_null($res))
+			{
+				$callback_unique = Gas::factory($model, array(), FALSE)->unique_check($unique, $res);
+				
+				if ( ! $callback_unique) $unique_success[] = $unique;
+			}
+		}
+
+		return (bool) empty($unique_success);
+	}
+
+	/**
 	 * validator
 	 * 
 	 * CI Form validation class object
@@ -2850,7 +3072,7 @@ class Gas_bureau {
 	{
 		$path = '';
 
-		if (isset(Gas_core::$config['migration_config']) and ($migration_config = Gas_core::$config['migration_config']))
+		if (FALSE !== ($migration_config = Gas_core::config('migration_config')))
 		{
 			if ($migration_config['migration_enabled'] === FALSE)
 			{
@@ -2923,7 +3145,9 @@ class Gas_bureau {
 
 		$primary_key = $gas->primary_key;
 
-		$model_fields = Gas::list_all_models($model);
+		$model = Gas::list_all_models($model);
+
+		$model_fields = $model['fields'];
 
 		$has_primary_key = (bool) in_array($primary_key, array_keys($model_fields));
 
@@ -3116,16 +3340,16 @@ class Gas_bureau {
 
 		);
 
-		if (is_string(Gas_core::$config['models_path']))
+		if (is_string(Gas_core::config('models_path')))
 		{
-			$model_dir = APPPATH.$config['models_path'];
+			$model_dir = APPPATH.Gas_core::config('models_path');
 		}
 		else
 		{
 			$model_dir = APPPATH.'models';
 		}
 
-		$model_file = $model.Gas_core::$config['models_suffix'].'.php';
+		$model_file = $model.Gas_core::config('models_suffix').'.php';
 
 		$created = self::create_file($model_dir, $model_file, $model_convention);
 
@@ -3285,9 +3509,7 @@ class Gas_bureau {
 	 */
 	private static function get_cache_schema()
 	{
-		if ( ! isset(Gas_core::$config['cache_request'])) return FALSE;
-
-		return Gas_core::$config['cache_request'];
+		return Gas_core::config('cache_request');
 	}
 
 	/**
@@ -3346,7 +3568,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  */
 
 class Gas_janitor {
@@ -3660,6 +3882,64 @@ class Gas_janitor {
 	}
 
 	/**
+	 * arr_timestamp
+	 *
+	 * @access  public
+	 * @param   array
+	 * @param   bool
+	 * @return  array
+	 */
+	public static function arr_timestamp($arrays, $new = FALSE)
+	{
+    	if ( ! is_array($arrays))
+    	{
+    		if ($new)
+    		{
+    			if (strpos($arrays, '[') === 0)
+    			{
+    				return str_replace(array('[',']'), '', $arrays).'%'.date('Y-m-d H:i:s');
+    			}
+
+    			return FALSE;
+    		}
+    		else
+    		{
+    			return (strpos($arrays, '[') === 0) ? FALSE : $arrays.'%'.date('Y-m-d H:i:s');
+    		}
+ 		}
+
+    	return array_map('Gas_janitor::arr_timestamp', $arrays, array($new));
+	}
+
+	/**
+	 * arr_unix_timestamp
+	 *
+	 * @access  public
+	 * @param   array
+	 * @param   bool
+	 * @return  array
+	 */
+	public static function arr_unix_timestamp($arrays, $new = FALSE)
+	{
+    	if ( ! is_array($arrays))
+    	{
+    		if ($new)
+    		{
+    			return (strpos($arrays, '[') === 0) ? str_replace(array('[',']'), '', $arrays).'%'.time() : FALSE;
+    		}
+    		else
+    		{
+    			return (strpos($arrays, '[') === 0) ? FALSE : $arrays.'%'.time();
+    		}
+	    	
+ 		}
+
+    	return array_map('Gas_janitor::arr_unix_timestamp', $arrays, array($new));
+	}
+
+
+
+	/**
 	 * arr_hide
 	 *
 	 * @access  public
@@ -3916,6 +4196,27 @@ class Gas_janitor {
 
 		return $input;
 	}
+
+	/**
+	 * extract_timestamp
+	 *
+	 * @access  public
+	 * @param   array
+	 * @return  array
+	 */
+	public static function extract_timestamp($timestamp, $index, $type)
+	{
+    	if (is_string($timestamp) and strpos($timestamp, '%') !== FALSE)
+    	{
+    		list($field, $ts) = explode('%', $timestamp);
+
+    		if (is_numeric($ts)) $ts = (int) $ts;
+
+    		$time = array($field => $ts);
+
+    		Gas_core::$timestamps[$type][] = $time;
+    	}
+	}
 	
 	/**
 	 * to_array
@@ -3994,7 +4295,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  */
 interface Gas_extension {
 	
@@ -4011,7 +4312,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.0
+ * @version     1.4.1
  */
 
 class Gas extends Gas_core {}

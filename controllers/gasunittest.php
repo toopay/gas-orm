@@ -24,7 +24,7 @@ class Gasunittest extends CI_Controller {
 
 		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
 		{
-			$this->load->spark('Gas-ORM/1.4.0');
+			$this->load->spark('Gas-ORM/1.4.1');
 		}
 
 		$gas = new Gas;
@@ -77,7 +77,7 @@ class Gasunittest extends CI_Controller {
 
 				'Welcome, all necessary model were already created, which is : '.implode(', ', $this->necessary_item).'.',
 
-				'Also all tables needed for this unit testing were created too, which is '.implode(', ', $this->necessary_item).' and job_user, here they structure looks like :',
+				'Also all tables needed for this unit testing were created too, which is '.implode(', ', $this->necessary_item).' and job_user, here their structure looks like :',
 
 				ul($all_tables_div, $attributes).'<br class="clear" /><br />',
 
@@ -89,7 +89,7 @@ class Gasunittest extends CI_Controller {
 
 				heading('Repositories', 3),
 
-				'If you have a request or found any issues, you can submit it : <a href="https://github.com/toopay/CI-GasORM-Library" target="_blank" class="link">Gas on GitHub</a>.',
+				'If you have a request or found any issues, or want to contibute, go to : <a href="https://github.com/toopay/CI-GasORM-Library" target="_blank" class="link">Gas on GitHub</a>.',
 
 				heading('Discussion', 3),
 
@@ -113,7 +113,7 @@ class Gasunittest extends CI_Controller {
 	{
 		$gas = new Gas;
 
-		$config = $gas->get_config();
+		$config = $gas->config();
 
 		$content = array(
 
@@ -866,7 +866,7 @@ class Gasunittest extends CI_Controller {
 
 		$gas = new Gas;
 
-		$config = $gas->get_config();
+		$config = $gas->config();
 
 		$info[] = '<b>Scanning models directories...</b>';
 
@@ -926,7 +926,7 @@ class Gasunittest extends CI_Controller {
 
 			if ( ! in_array($item, $list_models))
 			{
-				$this->_create_model($item, $gas->get_config());
+				$this->_create_model($item, $gas->config());
 			}
 		}
 		

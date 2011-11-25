@@ -57,11 +57,11 @@ $config['autoload_models'] = TRUE;
 | -------------------------------------------------------------------
 | Prototype:
 |
-|  $config['extensions'] = array('dummy');
+|  $config['extensions'] = array('dummy', 'html', 'jquery');
 |
 */
 
-$config['extensions'] = array('dummy');
+$config['extensions'] = array('dummy', 'html', 'jquery');
 
 /*
 | -------------------------------------------------------------------
