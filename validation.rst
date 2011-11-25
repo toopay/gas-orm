@@ -113,6 +113,58 @@ And for more custom validation, we also could do that, with slightly different c
 
 Then you would need to set up your callback function as bellow.
 
+Unique Fields
++++++++++++++
+
+We often want to make sure that some field should have unique values, when create a new record. **_unique_fields** properties within **_init** function will do this job ::
+
+	class User extends Gas {
+
+ 		function _init()
+ 		{
+ 			$this->_fields = array(
+
+ 				// ...
+
+			);
+
+			$this->_unique_fields = array('email', 'username');
+ 		}
+	}
+
+Unique fields is non-uniformal validation rule, and by doing this way, we doesnt pollute our above fields datatype definition.
+
+Timestamp Fields
+++++++++++++++++
+
+Anytime we save some record(s), we often need to record the insert or update time. Gas ORM help you to avoid those repeatable process. Just define your **datetime** field into **_ts_fields** properties within **_init** function ::
+
+	class User extends Gas {
+
+ 		function _init()
+ 		{
+ 			$this->_fields = array(
+
+ 				// ...
+
+			);
+
+			$this->_ts_fields = array('time_updated');
+ 		}
+	}
+
+Then everytime you perform update operation, those field will be automatically filled with current timestamp. If you prefer to have UNIX timestamp (integer) value in your field, use **_unix_ts_fields** instead.
+
+If you have some field to store the created timestamp, put those field within bracket ::
+
+	 // ...
+
+	$this->_unix_ts_fields = array('time_updated', '[time_created]');
+
+	// ...
+
+You could have both unix or normal datatime properties within your model's **_init** method.
+
 Custom Rules
 ++++++++++++
 

@@ -66,6 +66,12 @@ All of your Gas model, is extending **Gas** class and therefore, **Gas_core** cl
 +------------------------+
 |check_migration()       |
 +------------------------+
+|config()                |
++------------------------+
+|entries()               |
++------------------------+
+|add_timestamps()        |
++------------------------+
 |db()                    |
 +------------------------+
 |list_all_models()       |
@@ -79,8 +85,6 @@ All of your Gas model, is extending **Gas** class and therefore, **Gas_core** cl
 |get_with()              |
 +------------------------+
 |get_with_models()       |
-+------------------------+
-|get_config()            |
 +------------------------+
 |get_raw_record()        |
 +------------------------+
@@ -189,6 +193,12 @@ Based by Gas ORM model convention, a typical Gas model could have these properti
 +------------------------+
 |$_fields                |
 +------------------------+
+|$_ts_fields             |
++------------------------+
+|$_unix_ts_fields        |
++------------------------+
+|$_unique_fields         |
++------------------------+
 
 Other than above list, avoid to have this properties name in your Gas model, unless you really know what you are doing.
 
@@ -200,6 +210,10 @@ Other than above list, avoid to have this properties name in your Gas model, unl
 |$errors                 |
 +------------------------+
 |$locked                 |
++------------------------+
+|$timestamps             |
++------------------------+
+|$old_input              |
 +------------------------+
 |$single                 |
 +------------------------+

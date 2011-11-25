@@ -5,6 +5,14 @@ Extension
 
 The purpose of an **extension** is to become a standard interface which you can use, to share common function that utilize either CI Library or your own library, across your Gas models/instances.
 
+We use Interface instead Class, in extension implementation, because :
+
+- Interfaces allow you to define/create a common structure for your classes – to set a standard for objects.
+- Interfaces solves the problem of single inheritance – they allow you to inject 'qualities' from multiple sources.
+- Interfaces provide a flexible base/root structure that you don't get with classes.
+
+Here you can found some default extension which bundled within Gas ORM.
+
 Dummy Extension
 +++++++++++++++
 
@@ -110,6 +118,90 @@ If you put **dummy** on your extension list, and enable the **extension autoload
 
 This should be a simple way, to describe how **extension** works in Gas ORM.
 
+HTML Extension
+++++++++++++++
+
+If you did not autoload html extension, load it first ::
+
+	Gas::load_extension('html');
+
+Generate HTML table from Gas model records ::
+	
+	// execute some Gas finder
+	$users = Gas::factory('user')->html->all();
+	
+	// simple usage
+	echo $users->table();
+
+	// hide some collumn
+	$hidden = array('username', 'email');
+
+	echo $users->hide($hidden)->table();
+
+	// set table heading
+	$headings = array('collumn id', 'collumn name', 'collumn username', 'collumn email');
+
+	echo $users->heading($headings)->table();
+
+	// set table template
+	$template = array( 'table_open' => '<table border="1" cellpadding="4" cellspacing="0">');
+
+	echo $users->template($template)->table();
+
+	// hide some collumn, set table heading, set template
+	$hidden = array('email');
+
+	$headings = array('collumn id', 'collumn name', 'collumn username');
+
+	$template = array( 'table_open' => '<table border="1" cellpadding="4" cellspacing="0">');
+
+	echo $users->hide($hidden)->heading($headings)->template($template)->table();
+
+
+Generate HTML form from Gas model records ::
+	
+	// execute some Gas finder
+	$user = Gas::factory('user')->html->find(1);
+
+	// simple usage
+	echo $user->form('controller/function');
+
+	// define entity type
+	$entities = array();
+
+	$entities['email'] = array('hidden' => array('id' => 'email'));
+
+	echo $user->definition($entities)->form('controller/function');
+
+There are option for setting **submit**, **separator**, **entity** and **hide** as well.
+
+jQuery Extension
+++++++++++++++++
+
+If you did not autoload jquery extension, load it first ::
+
+	Gas::load_extension('jquery');
+
+This extension will be a good place to sharing common handler for any similar jQuery data processor plugin (eg : flot [#flot]_for outputing graph or chart).
+
+For now, it provide a method to handle and generate response for datatable. [#datatable]_ 
+
+Assume you have download and put it into your application directory, and set it properly, point it to some controller as ajax source, then within your controller (which receive the ajax request), you only need to put ::
+
+	if ($_POST)
+	{
+		echo Gas::factory('user')->jquery->datatable($_POST);
+	}
+	else
+	{
+		echo Gas::factory('user')->jquery->datatable($_GET);
+	}
+
+That will serve datatable for browsing **user** table.
+
+Write your own Gas ORM extension
+++++++++++++++++++++++++++++++++
+
 From above extension example, if you are ready to create your own, here litlle note you should remember :
 
 - Your extension, should prefixed with **Gas_extension_** , then you can adding your extension name after it. 
@@ -118,4 +210,7 @@ From above extension example, if you are ready to create your own, here litlle n
 - Your extension, should be under **application/libraries**.
 
 Thats all about extension.
+
+.. [#datatable] http://datatables.net/
+.. [#flot] http://code.google.com/p/flot
 
