@@ -1693,7 +1693,9 @@ class Gas_core {
  			$foreign_key = $child_key;
 
  			$identifier = ($custom_key !== '') ? $custom_key : $foreign_table.'_'.$foreign_key;
-			
+
+ 			$key = ($peer_relation == 'belongs_to') ? $identifier : $parent_key;
+
  			if($through !== '')
  			{
  				$tree = array(
@@ -1712,7 +1714,7 @@ class Gas_core {
  				if ($peer_relations = 'belongs_to') $identifier = $parent_key;
  			}
 
- 			return Gas_bureau::generate_child($this->model(), $name, $link, array($this->identifier()), $this->identifier($identifier));
+ 			return Gas_bureau::generate_child($this->model(), $name, $link, array($this->identifier($key)), $this->identifier($identifier));
 	 	}
 	 	elseif (isset(self::$bureau->_loaded_components['extensions']) and ($extensions = self::$bureau->_loaded_components['extensions']))
  		{
@@ -2545,6 +2547,8 @@ class Gas_bureau {
 		}
 		else
 		{
+			$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
+			
 			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $foreign_table);
 
 			$raw_records = self::do_compile($gas, $recorder, FALSE, TRUE);
@@ -2566,6 +2570,8 @@ class Gas_bureau {
 			{
 				if ($eager_load)
 				{
+					$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
+
 					$node[] = array('identifier' => $identifier, 'self' => $limitation, 'raw' => $records);
 				}
 				else
@@ -2617,10 +2623,10 @@ class Gas_bureau {
 
 		$fids = array();
 
+		$eager_load_results[] = $primary_key;
+
 		foreach ($resource as $single)
 		{
-			if (isset($single->$primary_key)) $ids[] = $single->$primary_key;
-
 			foreach ($childs as $child_model => $child)
 			{
 				$link = array();
@@ -2630,6 +2636,8 @@ class Gas_bureau {
 				list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($relations, $peer_relations, $child_model);
 
 				$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
+
+				$key = ($peer_relations == 'belongs_to') ? $foreign_key : $primary_key;
 				
 				if ($through !== '')
 	 			{
@@ -2646,19 +2654,15 @@ class Gas_bureau {
 
 	 				$link = Gas_janitor::identify_link($through, $foreign_key, $tree);
 		 			
-		 			if ($peer_relations == 'belongs_to')$foreign_key = $primary_key;
+		 			if ($peer_relations == 'belongs_to') $foreign_key = $primary_key;
 	 			}
 
 				if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
+
+				if (isset($single->$key)) $ids[] = $single->$key;
+
+				$eager_load_results[$child_model] = self:: generate_child($gas, $child_model, $link, $ids, array_unique($fids), TRUE);
 			}
-
-		}
-
-		$eager_load_results[] = $primary_key;
-
-		foreach ($eager_load_models as $model)
-		{
-			$eager_load_results[$model] = self:: generate_child($gas, $model, $link, $ids, array_unique($fids), TRUE);
 		}
 
 		return $eager_load_results;
