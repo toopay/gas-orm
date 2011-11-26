@@ -7,9 +7,9 @@ The purpose of an **extension** is to become a standard interface which you can 
 
 We use Interface instead Class, in extension implementation, because :
 
-- Interfaces allow you to define/create a common structure for your classes – to set a standard for objects.
-- Interfaces solves the problem of single inheritance – they allow you to inject 'qualities' from multiple sources.
-- Interfaces provide a flexible base/root structure that you don't get with classes.
+- Interfaces allow us to define/create a common structure for our classes – to set a standard for objects.
+- Interfaces solves the problem of single inheritance – they allow us to inject 'qualities' from multiple sources.
+- Interfaces provide a flexible base/root structure that we don't get with classes.
 
 Here you can found some default extension which bundled within Gas ORM.
 
@@ -125,7 +125,8 @@ If you did not autoload html extension, load it first ::
 
 	Gas::load_extension('html');
 
-Generate HTML table from Gas model records ::
+You can see the demo for table on my sandbox [#html1_sandbox]_ .
+Generate HTML table from Gas model records  ::
 	
 	// execute some Gas finder
 	$users = Gas::factory('user')->html->all();
@@ -173,7 +174,7 @@ Generate HTML form from Gas model records ::
 
 	echo $user->definition($entities)->form('controller/function');
 
-There are option for setting **submit**, **separator**, **entity** and **hide** as well.
+There are option for setting **submit**, **separator**, **entity** and **hide** as well. You can see the demo on my sandbox [#html2_sandbox]_
 
 jQuery Extension
 ++++++++++++++++
@@ -182,7 +183,7 @@ If you did not autoload jquery extension, load it first ::
 
 	Gas::load_extension('jquery');
 
-This extension will be a good place to sharing common handler for any similar jQuery data processor plugin (eg : flot [#flot]_for outputing graph or chart).
+This extension will be a good place to sharing common handler for any similar jQuery data processor plugin (eg : flot [#flot]_ for outputing graph or chart).
 
 For now, it provide a method to handle and generate response for datatable. [#datatable]_ 
 
@@ -197,7 +198,7 @@ Assume you have download and put it into your application directory, and set it 
 		echo Gas::factory('user')->jquery->datatable($_GET);
 	}
 
-That will serve datatable for browsing **user** table.
+That will serve datatable for browsing **user** table. You can see the demo on my sandbox [#jquery1_sandbox]_ .
 
 Write your own Gas ORM extension
 ++++++++++++++++++++++++++++++++
@@ -213,4 +214,6 @@ Thats all about extension.
 
 .. [#datatable] http://datatables.net/
 .. [#flot] http://code.google.com/p/flot
-
+.. [#html1_sandbox] http://taufanaditya.com/sandbox/to_table
+.. [#html2_sandbox] http://taufanaditya.com/sandbox/to_form
+.. [#jquery1_sandbox] http://taufanaditya.com/sandbox/datatable
