@@ -2220,7 +2220,16 @@ class Gas_bureau {
 				$resource_name = array_shift($read_arguments);
 
 				if (self::validate_cache() and self::changed_resource($resource_name) == FALSE)
-				{
+				{	
+					if (method_exists(self::$db, 'reset_query'))
+					{
+						self::$db->reset_query();
+					}
+					else
+					{
+						array_walk(Gas_janitor::$ar, 'Gas_bureau::reset_select');
+					}
+
 					$result = self::fetch_cache();
 				}
 				else
@@ -2344,6 +2353,25 @@ class Gas_bureau {
 		{
 			return Gas_janitor::force(self::$db, $action, $args);
 		}
+	}
+
+	/**
+	 * reset_select
+	 * 
+	 * Reset Select properties within query builder instance
+	 *
+	 * @access  public
+	 * @param   mixed
+	 * @param   string
+	 * @return  void
+	 */
+	public static function reset_select($default, $key)
+	{
+		$property = 'ar_'.$key;
+
+		self::$db->$property = $default;
+
+		return;
 	}
 
 	/**
@@ -2625,10 +2653,9 @@ class Gas_bureau {
 
 		$eager_load_results[] = $primary_key;
 
-		foreach ($resource as $single)
+		foreach ($childs as $child_model => $child)
 		{
-			foreach ($childs as $child_model => $child)
-			{
+			
 				$link = array();
 
 				$peer_relations = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($relations, $child_model), FALSE, '');
@@ -2657,12 +2684,14 @@ class Gas_bureau {
 		 			if ($peer_relations == 'belongs_to') $foreign_key = $primary_key;
 	 			}
 
-				if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
+	 			foreach ($resource as $single)
+				{
+					if (isset($single->$foreign_key)) $fids[] = $single->$foreign_key;
 
-				if (isset($single->$key)) $ids[] = $single->$key;
+					if (isset($single->$key)) $ids[] = $single->$key;
+				}
 
 				$eager_load_results[$child_model] = self:: generate_child($gas, $child_model, $link, $ids, array_unique($fids), TRUE);
-			}
 		}
 
 		return $eager_load_results;
@@ -3576,6 +3605,8 @@ class Gas_bureau {
  */
 
 class Gas_janitor {
+
+	public static $ar = array('select' => array(), 'from' => array(), 'join' => array(), 'where' => array(), 'like' => array(), 'groupby' => array(), 'having' => array(), 'orderby' => array(), 'wherein' => array(), 'aliased_tables' => array(), 'no_escape' => array(), 'distinct' => FALSE, 'limit' => FALSE, 'offset' => FALSE, 'order' => FALSE);
 
 	public static $dictionary = array(
 
