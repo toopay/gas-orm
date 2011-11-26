@@ -3149,9 +3149,9 @@ class Gas_bureau {
 
 		$primary_key = $gas->primary_key;
 
-		$model = Gas::list_all_models($model);
+		$model_meta = Gas::list_all_models($model);
 
-		$model_fields = $model['fields'];
+		$model_fields = $model_meta['fields'];
 
 		$has_primary_key = (bool) in_array($primary_key, array_keys($model_fields));
 
