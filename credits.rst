@@ -14,7 +14,9 @@ But author want to give a credits to this following peoples, to their ability to
 - groenewege_
 - ardinotow_
 - blueant_
+- pieter_
 - Loby
+- teiki
 
 Say Kudos
 +++++++++
@@ -27,3 +29,4 @@ At the end, i create this and sharing it to you, any Ignited developer around th
 .. _groenewege: https://github.com/groenewege
 .. _ardinotow: http://codeigniter.com/forums/member/62402/
 .. _blueant: http://codeigniter.com/forums/member/42027/
+.. _pieter: http://codeigniter.com/forums/member/167137/

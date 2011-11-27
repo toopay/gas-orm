@@ -19,25 +19,45 @@ Dummy Extension
 I include this **dummy** extension within the repo as well. Lets look how it works : ::
 
 	class Gas_extension_dummy implements Gas_extension { 
-
+	
+		// This is a properties, which will be used to transport Gas Instance
 		public $gas;
 
-		protected $CI;
+		public $explanation;
 
+		/**
+		 * __init
+		 * 
+		 * Initialize extension
+		 * 
+		 * @access public
+		 * @param  object
+		 * @return void
+		 */
 		public function __init($gas)
 		{
+			// Here, Gas will transport your instance
 			$this->gas = $gas;
-
-			$this->CI =& get_instance();
-
-			if ( ! class_exists('CI_Typography')) $this->CI->load->library('typography');
-
-			if ( ! class_exists('CI_Table')) $this->CI->load->library('table');
 		}
 
+		/**
+		 * explain
+		 * 
+		 * Explain about related Gas instance
+		 * 
+		 * @access public
+		 * @param  mixed
+		 * @return string
+		 */
 		public function explain($args = null)
 		{
-			$arguments = var_export($args, TRUE);
+			$CI =& get_instance();
+
+			if ( ! class_exists('CI_Typography')) $CI->load->library('typography');
+
+			if ( ! class_exists('CI_Table')) $CI->load->library('table');
+
+			$arguments = ! is_null($this->explanation) ? var_export($this->explanation, TRUE) : var_export($args, TRUE);
 
 			$nickname = key($this->gas->extensions);
 
@@ -53,18 +73,18 @@ I include this **dummy** extension within the repo as well. Lets look how it wor
 
 			$records = $this->gas->get_raw_record();
 
-			$this->CI->table->set_heading($structure);
+			$CI->table->set_heading($structure);
 
 			foreach ($records as $record)
 			{
 
-				$this->CI->table->add_row(array_values($record));
+				$CI->table->add_row(array_values($record));
 
 			}
 
-			$table = $this->CI->table->generate();
+			$table = $CI->table->generate();
 
-			$this->CI->table->clear();
+			$CI->table->clear();
 
 
 			$explanation = 'Hello, i am an extension. ';
@@ -103,11 +123,10 @@ I include this **dummy** extension within the repo as well. Lets look how it wor
 
 			$explanation .= 'This is all I can say.'."\n";
 
-			$formatted_explanation = $this->CI->typography->auto_typography($explanation);
+			$formatted_explanation = $CI->typography->auto_typography($explanation);
 
 			return '<pre>'.$formatted_explanation.'</pre>';
 		}
-
 	}
 
 If you put **dummy** on your extension list, and enable the **extension autoload** option, then from any of your Gas model, you can directly use it. ::
