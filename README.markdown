@@ -10,4 +10,4 @@ A console interface for Gas ORM
 
 ## Documentation and Examples
 
-Go to [home of Gas ORM](http://gasorm-doc.taufanaditya.com "home of Gas ORM") for screencast.
+Go to [home of Gas ORM](http://gasorm-doc.taufanaditya.com "home of Gas ORM") for documentation and screencast.

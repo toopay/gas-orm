@@ -1,0 +1,234 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * CodeIgniter Gas ORM Console package
+ *
+ * CLI package for Gas ORM.
+ *
+ * @package     Gas Library
+ * @author      Taufan Aditya A.K.A Toopay
+ * @link        http://gasorm-doc.taufanaditya.com/
+ * @license     BSD(http://gasorm-doc.taufanaditya.com/what_is_gas_orm.html#bsd)
+ */
+
+if ( ! defined('STDIN')) 
+{
+	define('STDIN', fopen('php://stdin','r'));
+}
+
+error_reporting(E_ALL | E_STRICT);
+
+
+define('VAR', 'gas');
+
+define('SELF', pathinfo(__FILE__, PATHINFO_BASENAME));
+
+define('SELFPATH', str_replace(SELF, '', __FILE__));
+
+
+if ( ! is_file(SELFPATH.'gas.conf.ini')) die('Gas CLI cannot find configuration file.');
+
+$config = parse_ini_file(SELFPATH.'gas.conf.ini', TRUE);
+
+$CI_APP = isset($config['PATH']['application_path']) ? realpath($config['PATH']['application_path']) : FALSE;
+
+$CI_SYS = isset($config['PATH']['system_path']) ? realpath($config['PATH']['system_path']) : FALSE;
+
+if ( ! is_dir($CI_APP) or ! is_dir($CI_SYS)) die('Gas CLI cannot find your CodeIgniter.');
+
+define('CI_APPPATH', $CI_APP);
+
+define('CI_SYSPATH', $CI_SYS);
+
+define('BASEPATH', str_replace("\\", "/", CI_SYSPATH.DIRECTORY_SEPARATOR));
+
+define('APPPATH', CI_APPPATH.DIRECTORY_SEPARATOR);
+
+define('FCPATH', SELFPATH);
+
+define('GAS_CLI_FILES', serialize($config['FILES']));
+
+if ( ! file_exists(SELFPATH.'lib/Gas_CLI.php')) die('Gas CLI cannot find Gas CLI class.');
+
+require SELFPATH.'lib/Gas_CLI.php';
+
+$Gas_CLI = new Gas_CLI;
+
+$Gas_CLI->register_console();
+ 
+$console = TRUE;
+
+Gas_CLI::welcome();
+
+while ($console == TRUE) 
+{
+	$command = Gas_CLI::console();
+
+	Gas_CLI::line();
+
+	switch ($command) 
+	{
+
+		case 'exit':
+
+		case 'logout':
+
+			if (is_object(Gas_CLI::$DB))
+			{
+				if (is_callable(array(Gas_CLI::$DB, 'close'), TRUE))
+				{
+					Gas_CLI::line("\t".'INFO: Closing connection.');
+
+					Gas_CLI::$DB->close();
+				}
+			}
+
+			Gas_CLI::goodbye();
+
+			break 2;
+
+		case 'help':
+
+			Gas_CLI::help();
+
+			break;
+
+		case 'connection_success':
+
+			Gas_CLI::out("\t".'INFO: Connection success.'."\n\n");
+
+			break;
+
+		case 'connection_fail':
+
+			Gas_CLI::line("\t".'ERROR: Connection failed.'."\n\n", TRUE);
+			
+			break;
+
+		case 'var_used':
+			
+			Gas_CLI::check_flash();
+
+			break;
+
+		case 'var_unused':
+			
+			Gas_CLI::check_flash();
+
+			break;
+
+		case 'syntax_error':
+
+			Gas_CLI::line("\t".'ERROR: Syntax error.'."\n\n", TRUE);
+			
+			break;
+
+		case 'method_not_allowed':
+
+			Gas_CLI::line("\t".'ERROR: Method is not allowed.'."\n\n", TRUE);
+			
+			break;
+
+		case 'method_empty_records':
+
+			Gas_CLI::out("\t".'INFO: No record(s) found.'."\n\n");
+
+			break;
+
+		case 'method_has_records':
+			
+			$records = Gas_CLI::$DB_RES['records'];
+
+			$collumns = Gas_CLI::$DB_RES['collumns'];
+
+			$table = new Gas_table();
+
+			$table->set_headers($collumns);
+
+			$table->set_rows($records);
+
+			$table->display();
+
+			Gas_CLI::check_flash();
+
+			Gas_CLI::out("\t".'INFO: '.count($records).' records found.'."\n");
+
+			Gas_CLI::out("\t".'INFO: '.Gas_CLI::$DB->query_count.' query(s) executed.'."\n");
+
+			Gas_CLI::out("\t".'INFO: '.Gas_CLI::$DB->benchmark.' s.'."\n\n");
+
+			if(is_callable(array(Gas_CLI::$DB, 'close'), TRUE))
+			{
+				Gas_CLI::$DB->close();
+
+				Gas_CLI::$DB = null;
+
+				Gas_CLI::$gas_bureau->connect();
+				
+				Gas_CLI::$DB = Gas_CLI::$gas_bureau->set_cli_engine();
+			}
+
+			break;
+
+		case 'method_has_child':
+
+			foreach (Gas_CLI::$childs['childs'] as $key => $rec)
+			{
+
+				Gas_CLI::line(Gas_CLI::$childs['parent_name'].'-'.$key.' '.Gas_CLI::$childs['child_name'].':');
+
+				if ( ! $rec['records'])
+				{
+					Gas_CLI::out('No record(s) found.'."\n\n");
+				}
+				else
+				{
+					$records = $rec['records'];
+
+					$collumns = $rec['collumns'];
+
+					$table = new Gas_table();
+
+					$table->set_headers($collumns);
+
+					$table->set_rows($records);
+
+					$table->display();
+
+					Gas_CLI::line("\n");
+				}
+			}
+
+			Gas_CLI::line('');
+
+			Gas_CLI::out("\t".'INFO: Displaying '.Gas_CLI::$childs['child_name'].' resource(s) from '.Gas_CLI::$childs['parent_name'].' instance.'."\n\n");
+
+			Gas_CLI::$childs = null;
+
+			break;
+			
+	}
+}
+
+function log_message($type, $msg) 
+{
+	if (strpos($msg, 'Gas ORM') === FALSE and strpos($msg, 'Database Driver Class') === FALSE)
+	{
+		Gas_CLI::out("\t".strtoupper($type).': '.$msg);	
+	} 
+}
+
+function show_error($err) 
+{
+	Gas_CLI::line("\t".'FATAL ERROR: '.$err, TRUE);
+	
+	exit;
+}
+
+function load_class()
+{
+	return new Gas_CLI;
+}
+
+
