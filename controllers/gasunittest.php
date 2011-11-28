@@ -24,7 +24,7 @@ class Gasunittest extends CI_Controller {
 
 		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
 		{
-			$this->load->spark('Gas-ORM/1.4.1');
+			$this->load->spark('Gas-ORM/1.4.2');
 		}
 
 		$gas = new Gas;
