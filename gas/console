@@ -27,7 +27,7 @@ define('SELF', pathinfo(__FILE__, PATHINFO_BASENAME));
 define('SELFPATH', str_replace(SELF, '', __FILE__));
 
 
-if ( ! is_file(SELFPATH.'gas.conf.ini')) die('Gas CLI cannot find configuration file.');
+if ( ! is_file(SELFPATH.'gas.conf.ini')) die('Gas CLI cannot find configuration file: '.SELFPATH.'gas.conf.ini');
 
 $config = parse_ini_file(SELFPATH.'gas.conf.ini', TRUE);
 
@@ -35,7 +35,7 @@ $CI_APP = isset($config['PATH']['application_path']) ? realpath($config['PATH'][
 
 $CI_SYS = isset($config['PATH']['system_path']) ? realpath($config['PATH']['system_path']) : FALSE;
 
-if ( ! is_dir($CI_APP) or ! is_dir($CI_SYS)) die('Gas CLI cannot find your CodeIgniter.');
+if ( ! is_dir($CI_APP) or ! is_dir($CI_SYS)) die('Gas CLI cannot find your CodeIgniter. Check and fix PATH section on configuration file: '.SELFPATH.'gas.conf.ini');
 
 define('CI_APPPATH', $CI_APP);
 
