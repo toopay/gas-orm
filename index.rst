@@ -21,13 +21,14 @@ Gas ORM version 1.4 Documentation
 	CRUD
 	utility
 	extension
+	cli
 	credits
 
 
 Download
 ++++++++++++
 
-Ready? Grab the latest version_ then.  
+Ready? Grab the latest version_ then. Optionaly you can download the console packages_, so you can run Gas ORM syntax via CLI.
 
 Repositories
 ++++++++++++
@@ -58,5 +59,6 @@ Join on-going discussion (and release history) on CodeIgniter forum_
 .. _request: http://help.github.com/pull-requests/
 .. _issues: https://github.com/toopay/CI-GasORM-Library/issues
 .. _version : http://gasorm-doc.taufanaditya.com/GasORM.zip
+.. _packages : http://gasorm-doc.taufanaditya.com/GasORM-CLI.zip
 
 

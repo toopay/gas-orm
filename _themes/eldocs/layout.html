@@ -118,6 +118,10 @@
 			{% if title|striptags|e == 'Credits' %}
 			<script type="text/javascript" src="http://www.ohloh.net/p/587254/widgets/project_users_logo.js"></script>
 			{% endif %}
+
+			{% if title|striptags|e == 'Command-line interface' %}
+			<div><iframe src="http://player.vimeo.com/video/32800050?title=0&amp;byline=0&amp;portrait=0" width="400" height="225" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></div>
+			{% endif %}
 		</div>
 	{%- endblock %}
 	
