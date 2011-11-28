@@ -11,10 +11,40 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
- * @license     BSD(http://gasorm-doc.taufanaditya.com/what_is_gas_orm.html#bsd)
+ * @license     BSD
+ *
+ * =================================================================================================
+ * =================================================================================================
+ * Copyright 2011 Taufan Aditya a.k.a toopay. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or other materials
+ * provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY Taufan Aditya a.k.a toopay ‘’AS IS’’ AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Taufan Aditya a.k.a toopay OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * The views and conclusions contained in the software and documentation are those of the
+ * authors and should not be interpreted as representing official policies, either expressed
+ * or implied, of Taufan Aditya a.k.a toopay.
+ * =================================================================================================
+ * =================================================================================================
  */
 
  /* ------------------------------------------------------------------------------------------------- */
@@ -26,12 +56,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.4.1';
+	const GAS_VERSION = '1.4.2';
 
 	public $table = '';
 
@@ -106,6 +136,8 @@ class Gas_core {
 	public static $timestamps = array();
 
 	public static $old_input = array();
+
+	public static $cli = FALSE;
 	
 
 	protected static $_models;
@@ -134,17 +166,32 @@ class Gas_core {
 
 		if (self::is_initialize() == FALSE)
 		{
-			$CI =& get_instance();
+			self::$cli = defined('STDIN');
 
-			$CI->config->load('gas', TRUE, TRUE);
+			if ( ! self::$cli)
+			{
+				$CI =& get_instance();
 
-			$CI->config->load('migration', TRUE, TRUE);
+				$CI->config->load('gas', TRUE, TRUE);
 
-			self::$config = $CI->config->item('gas');
+				$CI->config->load('migration', TRUE, TRUE);
 
-			self::$config['migration_config'] = $CI->config->item('migration');
+				self::$config = $CI->config->item('gas');
 
-			Gas_core::$bureau = new Gas_bureau($CI);
+				self::$config['migration_config'] = $CI->config->item('migration');
+
+				Gas_core::$bureau = new Gas_bureau($CI);
+			}
+			else
+			{
+				self::$config = Gas_CLI::load_config();
+
+				self::$config['migration_config'] = FALSE;
+
+				Gas_CLI::reflection_engine();
+
+				Gas_core::$bureau = new Gas_bureau;
+			}
 			
 			$this->_scan_models();
 
@@ -154,7 +201,11 @@ class Gas_core {
 
 			$init = TRUE;
 
-			Gas_core::$old_input = (isset($_POST) and count($_POST) > 0) ? $CI->input->post() : $CI->input->get();
+			if ( ! self::$cli)
+			{
+				Gas_core::$old_input = (isset($_POST) and count($_POST) > 0) ? $CI->input->post() : $CI->input->get();
+			}
+
 
 			log_message('debug', 'Gas ORM Core Class Initialized');
 		}
@@ -173,7 +224,7 @@ class Gas_core {
 
 		if (self::is_migrated() == FALSE and self::is_initialize() == FALSE)
 		{
-			$this->check_migration(self::$_models);
+			if ( ! self::$cli) $this->check_migration(self::$_models);
 		}
 
 		if (func_num_args() == 1)
@@ -609,7 +660,7 @@ class Gas_core {
 	 * @param   string
 	 * @return  array
 	 */
-	public function config($key = '')
+	public static function config($key = '')
 	{
 		if ( ! empty($key))
 		{
@@ -1048,19 +1099,27 @@ class Gas_core {
 	 */
 	public static function tell($point, $parser_value = null)
 	{
-		if (is_object(self::$bureau))
+		if (self::$cli)
 		{
-			$speaker = self::$bureau->lang();
+			$speaker = new Gas_linguist;
+			
 		}
 		else
 		{
-			$CI =& get_instance();
+			if (is_object(self::$bureau))
+			{
+				$speaker = self::$bureau->lang();
+			}
+			else
+			{
+				$CI =& get_instance();
 
-			$speaker = $CI->lang;
+				$speaker = $CI->lang;
+			}
+
+			$speaker->load('gas');
 		}
-
-		$speaker->load('gas');
-
+		
 		if (FALSE === ($msg = $speaker->line($point)))
 		{
 			$msg = '';
@@ -1996,7 +2055,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  */
 
 class Gas_bureau {
@@ -2042,63 +2101,74 @@ class Gas_bureau {
 	 */
 	function __construct()
 	{
-		$this->_CI = func_get_arg(0);
-
-		if ( ! isset($this->_CI->db))
+		if( ! Gas_core::$cli)
 		{
-			$this->_engine = $this->_CI->load->database('default', TRUE);
+			$this->_CI = func_get_arg(0);
+
+			if ( ! isset($this->_CI->db))
+			{
+				$this->_engine = $this->_CI->load->database('default', TRUE);
+			}
+			else
+			{
+				$this->_engine = $this->_CI->db;
+			}
 		}
 		else
 		{
-			$this->_engine = $this->_CI->db;
+			$this->_engine = Gas_CLI::$DB;
 		}
 
 		self::$db = $this->_engine;
 
-		$this->_CI->Gas_DB = self::$db;
-
-		if ( ! class_exists('CI_Form_validation')) $this->_CI->load->library('form_validation');
-
-		self::$validator = $this->_CI->form_validation;
-
-		$auto_create_models = FALSE;
-
-		$auto_create_tables = FALSE;
-
-		if (defined('CI_VERSION') and strpos(CI_VERSION, '2.1') === 0)
+		if( ! Gas_core::$cli)
 		{
-			if (Gas_core::config('auto_create_models'))
-			{
-				$auto_create_models = Gas_core::config('auto_create_models');
-			}
-			if (Gas_core::config('auto_create_tables'))
-			{
-				$auto_create_tables = Gas_core::config('auto_create_tables');
+			$this->_CI->Gas_DB = self::$db;
 
-				if ($auto_create_models and $auto_create_tables)
+			if ( ! class_exists('CI_Form_validation')) $this->_CI->load->library('form_validation');
+
+			self::$validator = $this->_CI->form_validation;
+
+			$auto_create_models = FALSE;
+
+			$auto_create_tables = FALSE;
+
+			if (defined('CI_VERSION') and strpos(CI_VERSION, '2.1') === 0)
+			{
+				if (Gas_core::config('auto_create_models'))
 				{
-					show_error(Gas_core::tell('both_auto_error'));
+					$auto_create_models = Gas_core::config('auto_create_models');
+				}
+				if (Gas_core::config('auto_create_tables'))
+				{
+					$auto_create_tables = Gas_core::config('auto_create_tables');
+
+					if ($auto_create_models and $auto_create_tables)
+					{
+						show_error(Gas_core::tell('both_auto_error'));
+					}
+				}
+
+				if ( ! function_exists('write_file')) $this->_CI->load->helper('file');
+
+				if ($auto_create_models)
+				{
+					self::$auto_migrate = TRUE;
+
+					self::generate_models();
+
+					self::$auto_models_success = TRUE;
+				}
+
+				if ($auto_create_tables)
+				{
+					self::$auto_migrate = TRUE;
+
+					self::$execute_migrate = TRUE;
 				}
 			}
-
-			if ( ! function_exists('write_file')) $this->_CI->load->helper('file');
-
-			if ($auto_create_models)
-			{
-				self::$auto_migrate = TRUE;
-
-				self::generate_models();
-
-				self::$auto_models_success = TRUE;
-			}
-
-			if ($auto_create_tables)
-			{
-				self::$auto_migrate = TRUE;
-
-				self::$execute_migrate = TRUE;
-			}
 		}
+		
 		
 		log_message('debug', 'Gas ORM Bureau Class Initialized');
 	}
@@ -2231,6 +2301,8 @@ class Gas_bureau {
 					}
 
 					$result = self::fetch_cache();
+
+					if (Gas_core::$cli) Gas_CLI::flash('info', 'Resource state not changed, fetch from cache.'."\n");
 				}
 				else
 				{
@@ -2750,13 +2822,21 @@ class Gas_bureau {
 	 */
 	public function connect($dsn = null)
 	{
-		$this->_engine = $this->_CI->load->database($dsn, TRUE);
-		
-		if ( ! is_resource($this->_engine->simple_query("SHOW TABLES")))
+		if (Gas_core::$cli)
 		{
-			show_error(Gas_core::tell('db_connection_error', $dsn));
+			Gas_CLI::reflection_engine();
 		}
-	
+		else
+		{
+			$this->_engine = $this->_CI->load->database($dsn, TRUE);
+			
+			if ( ! is_resource($this->_engine->simple_query("SHOW TABLES")))
+			{
+				show_error(Gas_core::tell('db_connection_error', $dsn));
+			}
+		
+		}
+
 		self::$db = $this->_engine;
 
 		return;
@@ -2832,6 +2912,36 @@ class Gas_bureau {
 		}
 
 		return;
+	}
+
+	/**
+	 * set_cli_engine
+	 * 
+	 * Return DB object for CLI
+	 *
+	 * @access	public
+	 * @return	object
+	 */
+	public function set_cli_engine()
+	{
+		return self::$db;
+	}
+
+	/**
+	 * get_cli_engine
+	 * 
+	 * Set DB object from CLI
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function get_cli_engine($engine)
+	{
+		$this->_engine = $engine;
+
+		self::$db = $this->_engine;
+
+		return ;
 	}
 
 	/**
@@ -3074,7 +3184,16 @@ class Gas_bureau {
 	 */
 	public function lang()
 	{
-		return $this->_CI->lang;
+		if (Gas_core::$cli)
+		{
+			$linguist = new Gas_linguist;
+		}
+		else
+		{
+			$linguist = $this->_CI->lang;
+		}
+
+		return $linguist;
 	}
 
 	/**
@@ -3601,7 +3720,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  */
 
 class Gas_janitor {
@@ -4330,7 +4449,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  */
 interface Gas_extension {
 	
@@ -4347,7 +4466,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.1
+ * @version     1.4.2
  */
 
 class Gas extends Gas_core {}
