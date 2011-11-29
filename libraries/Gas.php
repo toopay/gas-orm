@@ -2608,17 +2608,7 @@ class Gas_bureau {
 		{
 			if (empty($custom_table))
 			{
-				$guess_table = Gas_janitor::combine($table, $foreign_table);
-
-				foreach ($guess_table as $link_table)
-				{
-					if (self::$db->table_exists($link_table))
-					{
-						$pivot_table = $link_table;
-
-						continue;
-					}
-				}
+				$pivot_table = $foreign_table.'_'.$table;
 			}
 			else
 			{
@@ -2719,10 +2709,6 @@ class Gas_bureau {
 			);
 		}
 
-		$ids = array();
-
-		$fids = array();
-
 		$eager_load_results[] = $primary_key;
 
 		foreach ($childs as $child_model => $child)
@@ -2755,6 +2741,10 @@ class Gas_bureau {
 		 			
 		 			if ($peer_relations == 'belongs_to') $foreign_key = $primary_key;
 	 			}
+
+	 			$ids = array();
+
+				$fids = array();
 
 	 			foreach ($resource as $single)
 				{

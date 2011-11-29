@@ -45,7 +45,7 @@ class Gasunittest extends CI_Controller {
 
 		$this->new_state = FALSE;
 
-		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'user_role', 'comment');
+		$this->necessary_item = array('user', 'wife', 'kid', 'job', 'role', 'role_user', 'comment');
 
 		$this->title = 'Gas ORM Version '.Gas::version().' Unit Testing Package';
 
@@ -155,7 +155,7 @@ class Gasunittest extends CI_Controller {
 
 				'<pre><code>'.implode('<br />', $this->_create_model('role', $config, FALSE)).'</code></pre>',
 
-				'<p>Notice that both <b>user</b> model and <b>role</b> model were linked via intermediate table, which is <b>user_role</b>, so if you build this relation, make sure you set <b>through</b> in each relations properties. This is a different case, compared to <b>has_and_belongs_to</b>, because the intermediate table also have its model and other fields, despite both were a many-to-many relationship. Last thing you should notice, because both tables (user and role) have unstandard convention of foreign key (u_id and r_id), both model specify each own <b>foreign_key</b> in their relationship settings. If you follow <b>model_pk</b> convention, you didnt need to set this.</p>',
+				'<p>Notice that both <b>user</b> model and <b>role</b> model were linked via intermediate table, which is <b>role_user</b>, so if you build this relation, make sure you set <b>through</b> in each relations properties. This is a different case, compared to <b>has_and_belongs_to</b>, because the intermediate table also have its model and other fields, despite both were a many-to-many relationship. Last thing you should notice, because both tables (user and role) have unstandard convention of foreign key (u_id and r_id), both model specify each own <b>foreign_key</b> in their relationship settings. If you follow <b>model_pk</b> convention, you didnt need to set this.</p>',
 
 				'<p>and comment model have these structure : <p>',
 
@@ -652,7 +652,7 @@ class Gasunittest extends CI_Controller {
 
 			),
 
-			'user_role' => array(
+			'role_user' => array(
 
 				array('id' => null, 'r_id' => 1, 'u_id' => 1),
 
@@ -684,9 +684,9 @@ class Gasunittest extends CI_Controller {
 
 		$job->truncate();
 
-		$user_role = new User_role;
+		$role_user = new Role_user;
 
-		$user_role->truncate();
+		$role_user->truncate();
 
 		$this->db->truncate('job_user');
 
@@ -989,14 +989,14 @@ class Gasunittest extends CI_Controller {
 				."\t\t\t\t\t".'\'kid\' => array(),'."\n"
 				."\t\t\t\t\t".'\'comment\' => array(),'."\n"
 				."\t\t\t\t\t".'\'role\' => array('."\n"
-				."\t\t\t\t\t\t".'\'through\' => \'user_role\','."\n"
+				."\t\t\t\t\t\t".'\'through\' => \'role_user\','."\n"
 				."\t\t\t\t\t\t".'\'foreign_key\' => \'u_id\','."\n"
 				."\t\t\t\t\t".'),'."\n"
 				."\t\t\t\t".'),'."\n"
 				."\t\t\t\t".'\'has_and_belongs_to\' => array(\'job\' => array()),'."\n"
 				."\t".');';
 
-		$user_role = 'array('."\n"
+		$role_user = 'array('."\n"
 				."\t\t\t\t".'\'has_one\' => array('."\n"
 				."\t\t\t\t\t".'\'user\' => array('."\n"
 				."\t\t\t\t\t\t".'\'foreign_key\' => \'u_id\','."\n"
@@ -1010,7 +1010,7 @@ class Gasunittest extends CI_Controller {
 		$role = 'array('."\n"
 				."\t\t\t\t".'\'has_many\' => array('."\n"
 				."\t\t\t\t\t".'\'user\' => array('."\n"
-				."\t\t\t\t\t\t".'\'through\' => \'user_role\','."\n"
+				."\t\t\t\t\t\t".'\'through\' => \'role_user\','."\n"
 				."\t\t\t\t\t\t".'\'foreign_key\' => \'r_id\','."\n"
 				."\t\t\t\t\t".'),'."\n"
 				."\t\t\t\t".'),'."\n"
@@ -1350,7 +1350,7 @@ class Gasunittest extends CI_Controller {
                     ),
         );
 
-        $user_role = array(
+        $role_user = array(
 
         			'id' => array(
 
