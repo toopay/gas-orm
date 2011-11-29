@@ -806,7 +806,7 @@ class Gas_core {
 
 		if (is_int($limit))
 		{
-			if($limit == 1)  $this->single = TRUE;
+			if ($limit == 1)  $this->single = TRUE;
 
 			$recorder = array('limit' => array($limit, $offset));
 
@@ -1512,7 +1512,7 @@ class Gas_core {
 	{
 		$table = (is_null($table)) ? $this->table : $table;
 		
-		if(empty($table))
+		if (empty($table))
 		{
 			$table = strtolower($this->model());
 			
@@ -1649,7 +1649,7 @@ class Gas_core {
 	{
 		$dir = (is_null($path)) ? $root_path : $path;
 
-		if( ! is_dir($dir)) show_error(Gas_core::tell($type.'_not_found', $dir));
+		if ( ! is_dir($dir)) show_error(Gas_core::tell($type.'_not_found', $dir));
 		
 		$files = scandir($dir);
 
@@ -1661,7 +1661,7 @@ class Gas_core {
 
 		    if (is_dir($file))  $this->_scan_files($file, $root_path, $type, $identifier);
 
-		    if(strpos($file, $identifier) !== FALSE) 
+		    if (strpos($file, $identifier) !== FALSE) 
 			{
 				$item = explode(DIRECTORY_SEPARATOR, $file);
 
@@ -1723,7 +1723,7 @@ class Gas_core {
  				{
  					$type = Gas_janitor::identify_relations($this->relations, $child);
 
- 					if($type == 'has_one' or $type == 'belongs_to')
+ 					if ($type == 'has_one' or $type == 'belongs_to')
  					{
 		 				return $this->_get_child_nodes[$index][$child];
  					}
@@ -1755,7 +1755,7 @@ class Gas_core {
 
  			$key = ($peer_relation == 'belongs_to') ? $identifier : $parent_key;
 
- 			if($through !== '')
+ 			if ($through !== '')
  			{
  				$tree = array(
 
@@ -2029,7 +2029,7 @@ class Gas_core {
 				{
 					$ext = new $extension_class;
 
-					if($ext instanceof Gas_extension) 
+					if ($ext instanceof Gas_extension) 
 					{
 						$args = func_get_args();
 
@@ -2101,7 +2101,7 @@ class Gas_bureau {
 	 */
 	function __construct()
 	{
-		if( ! Gas_core::$cli)
+		if ( ! Gas_core::$cli)
 		{
 			$this->_CI = func_get_arg(0);
 
@@ -2121,7 +2121,7 @@ class Gas_bureau {
 
 		self::$db = $this->_engine;
 
-		if( ! Gas_core::$cli)
+		if ( ! Gas_core::$cli)
 		{
 			$this->_CI->Gas_DB = self::$db;
 
@@ -2664,7 +2664,7 @@ class Gas_bureau {
 				{
 					$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
 
-					if ($peer_relation == 'has_and_belongs_to')
+					if ($peer_relation == 'has_and_belongs_to' or $peer_relation == 'has_many_through')
 					{
 						$many_records = array();
 
@@ -2672,7 +2672,7 @@ class Gas_bureau {
 
 						foreach ($records as $record)
 						{
-							foreach($many_identifier as $many)
+							foreach ($many_identifier as $many)
 							{
 								if ($record[$foreign_key] == $many[$foreign_identifier])
 								{
@@ -4136,7 +4136,7 @@ class Gas_janitor {
 
 		foreach ($hidden_keys as $key)
 		{
-			if(isset($arrays[$key])) 
+			if (isset($arrays[$key])) 
 			{
 				unset($arrays[$key]);
 			}
@@ -4159,7 +4159,7 @@ class Gas_janitor {
 
 		foreach ($num_keys as $key)
 		{
-			if(isset($arrays[$key])) 
+			if (isset($arrays[$key])) 
 			{
 				$bool = (bool) ((int) $arrays[$key]);
 
