@@ -2621,6 +2621,8 @@ class Gas_bureau {
 			
 			$raw_ids = array();	
 
+			$many_identifier = $raw_intermediate_records;
+
 			foreach ($raw_intermediate_records as $intermediate_records)
 			{
 				$raw_ids[] = $intermediate_records[$foreign_identifier];
@@ -2661,6 +2663,33 @@ class Gas_bureau {
 				if ($eager_load)
 				{
 					$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
+
+					$identifier = ($peer_relation == 'has_and_belongs_to') ? $primary_key : $identifier;
+
+					if ($peer_relation == 'has_and_belongs_to')
+					{
+						$many_records = array();
+
+						$identifier = '';
+
+						foreach ($records as $record)
+						{
+							foreach($many_identifier as $many)
+							{
+								if ($record[$foreign_key] == $many[$foreign_identifier])
+								{
+									unset($many[$foreign_identifier]);
+
+									if (empty($identifier)) $identifier = key($many);
+
+									$many_records[] = array_merge($record, $many);	
+								}
+							}
+						}
+						
+						$records = $many_records;
+					}
+
 
 					$node[] = array('identifier' => $identifier, 'self' => $limitation, 'raw' => $records);
 				}
