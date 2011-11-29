@@ -2664,8 +2664,6 @@ class Gas_bureau {
 				{
 					$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
 
-					$identifier = ($peer_relation == 'has_and_belongs_to') ? $primary_key : $identifier;
-
 					if ($peer_relation == 'has_and_belongs_to')
 					{
 						$many_records = array();
