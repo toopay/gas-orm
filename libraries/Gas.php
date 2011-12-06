@@ -11,7 +11,7 @@
  *
  * @package     Gas Library
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -56,12 +56,12 @@
  * @package     Gas Library
  * @subpackage	Gas Core
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  */
 
 class Gas_core {
 
-	const GAS_VERSION = '1.4.2';
+	const GAS_VERSION = '1.4.3';
 
 	public $table = '';
 
@@ -168,30 +168,24 @@ class Gas_core {
 		{
 			self::$cli = defined('STDIN');
 
-			if ( ! self::$cli)
+			if (self::$cli)
+			{
+				Gas_CLI::reflection_engine();
+			}
+			else
 			{
 				$CI =& get_instance();
 
 				$CI->config->load('gas', TRUE, TRUE);
 
 				$CI->config->load('migration', TRUE, TRUE);
-
-				self::$config = $CI->config->item('gas');
-
-				self::$config['migration_config'] = $CI->config->item('migration');
-
-				Gas_core::$bureau = new Gas_bureau($CI);
 			}
-			else
-			{
-				self::$config = Gas_CLI::load_config();
 
-				self::$config['migration_config'] = FALSE;
+			self::$config = (self::$cli) ? Gas_CLI::load_config() : $CI->config->item('gas');
 
-				Gas_CLI::reflection_engine();
+			self::$config['migration_config'] = (self::$cli) ? FALSE : $CI->config->item('migration');
 
-				Gas_core::$bureau = new Gas_bureau;
-			}
+			Gas_core::$bureau = (self::$cli) ? new Gas_bureau : new Gas_bureau($CI);
 			
 			$this->_scan_models();
 
@@ -203,9 +197,29 @@ class Gas_core {
 
 			if ( ! self::$cli)
 			{
-				Gas_core::$old_input = (isset($_POST) and count($_POST) > 0) ? $CI->input->post() : $CI->input->get();
-			}
+				$http_method = $CI->input->server('REQUEST_METHOD');
 
+				switch ($http_method)
+				{
+					case 'GET':
+
+						Gas_core::$old_input = $CI->input->get();
+
+						break;
+
+					case 'POST':
+
+						Gas_core::$old_input = $CI->input->post();
+
+						break;
+
+					default:
+
+						parse_str(file_get_contents('php://input'), Gas_core::$old_input);
+
+						break;
+				}
+			}
 
 			log_message('debug', 'Gas ORM Core Class Initialized');
 		}
@@ -218,9 +232,9 @@ class Gas_core {
 
 		self::$bureau->_config = Gas_core::$config;
 
-		if (Gas_core::config('autoload_models')) self::$bureau->load_item('*', 'models');
+		Gas_core::config('autoload_models') AND self::$bureau->load_item('*', 'models');
 
-		if (Gas_core::config('autoload_extensions')) self::$bureau->load_item(Gas_core::config('extensions'), 'extensions');
+		Gas_core::config('autoload_extensions') AND self::$bureau->load_item(Gas_core::config('extensions'), 'extensions');
 
 		if (self::is_migrated() == FALSE and self::is_initialize() == FALSE)
 		{
@@ -277,7 +291,7 @@ class Gas_core {
 			if ( ! isset(self::$_models_fields[$name]))
 			{
 				$gas->_init();
-
+			
 				self::$loaded_models[$name] = TRUE;
 
 				self::$_models_fields[$name]['fields'] = $gas->_fields;
@@ -1102,7 +1116,6 @@ class Gas_core {
 		if (self::$cli)
 		{
 			$speaker = new Gas_linguist;
-			
 		}
 		else
 		{
@@ -1551,7 +1564,7 @@ class Gas_core {
 	 * @param   bool
 	 * @return  array
 	 */
-	public function _add_timestamps($new = FALSE)
+	private function _add_timestamps($new = FALSE)
 	{
 		$entries = $this->entries();
 
@@ -2055,7 +2068,7 @@ class Gas_core {
  * @package     Gas Library
  * @subpackage	Gas Bureau
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  */
 
 class Gas_bureau {
@@ -2081,6 +2094,8 @@ class Gas_bureau {
 	protected static $count_migrate = 0;
 
 	protected static $db;
+
+	protected static $db_driver;
 
 	protected static $validator;
 
@@ -2120,6 +2135,8 @@ class Gas_bureau {
 		}
 
 		self::$db = $this->_engine;
+
+		self::$db_driver = $this->_engine->dbdriver;
 
 		if ( ! Gas_core::$cli)
 		{
@@ -2457,6 +2474,19 @@ class Gas_bureau {
 	public static function engine()
 	{
 		return self::$db;
+	}
+
+	/**
+	 * engine_driver
+	 * 
+	 * return used driver
+	 *
+	 * @access	public
+	 * @return	string
+	 */
+	public static function engine_driver()
+	{
+		return self::$db_driver;
 	}
 
 	/**
@@ -2856,6 +2886,8 @@ class Gas_bureau {
 
 		self::$db = $this->_engine;
 
+		self::$db_driver = $this->_engine->dbdriver;
+
 		return;
 	}
 
@@ -2957,6 +2989,8 @@ class Gas_bureau {
 		$this->_engine = $engine;
 
 		self::$db = $this->_engine;
+
+		self::$db_driver = $this->_engine->dbdriver;
 
 		return ;
 	}
@@ -3737,7 +3771,7 @@ class Gas_bureau {
  * @package     Gas Library
  * @subpackage	Gas Janitor
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  */
 
 class Gas_janitor {
@@ -4466,7 +4500,7 @@ class Gas_janitor {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  */
 interface Gas_extension {
 	
@@ -4483,7 +4517,7 @@ interface Gas_extension {
  * @package     Gas Library
  * @subpackage	Gas
  * @category    Libraries
- * @version     1.4.2
+ * @version     1.4.3
  */
 
 class Gas extends Gas_core {}
