@@ -953,11 +953,9 @@ class Gas_core {
 		{
 			if (is_callable(array($this, '_init'), TRUE) and empty($this->_fields)) $this->_init();
 
-			$entries = $this->entries();
-
 			if (is_callable(array($this, '_before_check'), TRUE)) $this->_before_check();
 
-			$valid = $bureau->validate($this->model(), $entries, $this->_fields);
+			$valid = $bureau->validate($this->model(), $this->entries(), $this->_fields);
 
 			$this->errors = self::$_errors_validation;
 
@@ -2186,7 +2184,6 @@ class Gas_bureau {
 			}
 		}
 		
-		
 		log_message('debug', 'Gas ORM Bureau Class Initialized');
 	}
 
@@ -2648,7 +2645,7 @@ class Gas_bureau {
 			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $pivot_table);
 
 			$raw_intermediate_records = self::do_compile($gas, $recorder, FALSE, TRUE);
-			
+
 			$raw_ids = array();	
 
 			$many_identifier = $raw_intermediate_records;
@@ -2717,7 +2714,6 @@ class Gas_bureau {
 						
 						$records = $many_records;
 					}
-
 
 					$node[] = array('identifier' => $identifier, 'self' => $limitation, 'raw' => $records);
 				}
@@ -3080,11 +3076,18 @@ class Gas_bureau {
 
 		$callbacks = array();
 
+		$old_post = array();
+
 		$callback_success = array();
 
-		$is_post = (bool) count($_POST) > 0;
+		$is_post = (bool) (count($_POST) > 0 and count($_POST) == count($entries));
 
-		if ( ! $is_post) $_POST = $entries;
+		if ( ! $is_post)
+		{
+			$old_post = $_POST;
+
+			$_POST = $entries;
+		}
 
 		foreach ($rules as $field => $rule)
 		{
@@ -3105,7 +3108,6 @@ class Gas_bureau {
 			if ( ! empty($new_rule)) $validator->set_rules($field, Gas_janitor::set_label($field), $new_rule);
 		}
 		
-
 		if ($validator->run() == FALSE)
 		{
 			foreach ($entries as $field => $data)
@@ -3154,6 +3156,8 @@ class Gas_bureau {
 				}
 			}
 		}
+
+		if ( ! $is_post) $_POST = $old_post;
 
 		return $success;
 	}
@@ -3445,7 +3449,7 @@ class Gas_bureau {
 
 		$tables = array();
 
-		$tables = self::$db->list_tables();
+		$tables = self::$db->list_tables(TRUE);
 
 		foreach ($tables as $table)
 		{
@@ -3483,7 +3487,7 @@ class Gas_bureau {
 		{
 			list($field_name, $field_type, $field_length, $is_key) = Gas_janitor::define_field($meta_field);
 
-			list($forge_name, $forge_type, $forge_length, $forge_key) = Gas_janitor::define_field($meta_field, 'forge_field');
+			list($forge_name, $forge_type, $forge_length, $forge_key) = Gas_janitor::define_field($meta_field, 'forge_field', self::engine_driver());
 
 			$field_annotation = '';
 
@@ -3796,11 +3800,11 @@ class Gas_janitor {
 
 	public static $datatypes = array(
 
-		'numeric' => array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'BIGINT', 'DECIMAL', 'FLOAT', 'DOUBLE', 'REAL', 'BIT', 'BOOL', 'SERIAL'),
+		'numeric' => array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INT2', 'INT4', 'INT8', 'INTEGER', 'BIGINT', 'DECIMAL', 'FLOAT', 'FLOAT4', 'FLOAT8', 'DOUBLE', 'REAL', 'BIT', 'BOOL', 'SERIAL', 'SERIAL8', 'BIGSERIAL', 'DOUBLE PRECISION', 'NUMERIC'),
 
-		'datetime' => array('DATE', 'DATETIME', 'TIMESTAMP', 'TIME', 'YEAR'),
+		'datetime' => array('DATE', 'DATETIME', 'TIMESTAMP', 'TIMESTAMPTZ', 'TIME', 'TIMETZ', 'YEAR', 'INTERVAL'),
 
-		'string' => array('CHAR', 'VARCHAR', 'TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'BINARY', 'VARBINARY', 'TINYBLOB', 'MEDIUMBLOB', 'LONGBLOB', 'ENUM', 'SET'),
+		'string' => array('CHAR', 'BPCHAR', 'CHARACTER', 'VARCHAR', 'TINYTEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'BINARY', 'VARBINARY', 'TINYBLOB', 'MEDIUMBLOB', 'LONGBLOB', 'ENUM', 'SET'),
 
 		'spatial' => array('GEOMETRY', 'POINT', 'LINESTRING', 'POLYGON', 'MULTIPOINT', 'MULTILINESTRING', 'MULTIPOLYGON', 'GEOMETRYCOLLECTION'),
 
@@ -3818,9 +3822,10 @@ class Gas_janitor {
 	 * @access  public
 	 * @param   object
 	 * @param   string
+	 * @param   string
 	 * @return  array
 	 */
-	public static function define_field($meta_data, $type = 'gas_field')
+	public static function define_field($meta_data, $type = 'gas_field', $driver = '')
 	{
 		$field_name = $meta_data->name;
 
@@ -3853,7 +3858,7 @@ class Gas_janitor {
 		{
 			$field_type = $field_gas_type;
 
-			$field_length = is_null($meta_data->max_length) ? '' : '['.$meta_data->max_length.']';
+			$field_length = ($meta_data->max_length > 0) ? '['.$meta_data->max_length.']' : '';
 		}
 		elseif ($type == 'forge_field')
 		{
@@ -3866,7 +3871,7 @@ class Gas_janitor {
 				$field_type = '';
 			}
 
-			$field_length = $meta_data->max_length;
+			$field_length = ($meta_data->max_length > 0) ? $meta_data->max_length : 0;
 		}
 		else
 		{

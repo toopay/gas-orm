@@ -24,7 +24,7 @@ class Gasunittest extends CI_Controller {
 
 		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
 		{
-			$this->load->spark('Gas-ORM/1.4.2');
+			$this->load->spark('Gas-ORM/1.4.3');
 		}
 
 		$gas = new Gas;
@@ -1154,6 +1154,7 @@ class Gasunittest extends CI_Controller {
 
                     ),
                     'email' => array(
+                    	
                     	'type' => 'VARCHAR',
 
                     	'constraint' => '40',
@@ -1273,8 +1274,6 @@ class Gasunittest extends CI_Controller {
 
                     	'type' => 'TEXT',
 
-                    	'constraint' => 40,
-
                     	'default' => '',
                     ),
         );
@@ -1312,8 +1311,6 @@ class Gasunittest extends CI_Controller {
 
                     	'type' => 'TEXT',
 
-                    	'constraint' => 100,
-
                     	'default' => '',
                     ),
         );
@@ -1343,8 +1340,6 @@ class Gasunittest extends CI_Controller {
                     'description' => array(
 
                     	'type' => 'TEXT',
-
-                    	'constraint' => 40,
 
                     	'default' => '',
                     ),
