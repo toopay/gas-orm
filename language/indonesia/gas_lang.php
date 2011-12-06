@@ -1,6 +1,6 @@
 <?php
 
-$lang['db_connection_error']       = 'Tidak dapat menghubungi database dengan koneksi group atau dsn berikut : %s'
+$lang['db_connection_error']       = 'Tidak dapat menghubungi database dengan koneksi group atau dsn berikut : %s';
 
 $lang['models_not_found']          = 'Tidak bisa mendapatkan path model yang dicari: %s';
 
