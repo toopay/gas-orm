@@ -61,97 +61,222 @@
 
 class Gas_core {
 
+	/**
+	 * @var  string  Global version value 
+	 */
 	const GAS_VERSION = '1.4.3';
 
+	/**
+	 * @var  string  Hold table name
+	 */
 	public $table = '';
 
+	/**
+	 * @var  string  Hold primary key collumn name
+	 */
 	public $primary_key = 'id';
 
+	/**
+	 * @var  array   Hold relationship definition
+	 */
 	public $relations = array();
 
+	/**
+	 * @var  bool    Pointer to determine wheter an instance hold a record or not
+	 */
 	public $empty = TRUE;
 
+	/**
+	 * @var  array   Raw errors from validation procedure
+	 */
 	public $errors = array();
 
+	/**
+	 * @var  bool    Pointer to determine whether there are running operation or not
+	 */
 	public $locked = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether some finder should return an object or an array
+	 */
 	public $single = FALSE;
 
+	/**
+	 * @var  array   Used extension(s) flag
+	 */
 	public $extensions = array();
 
 
+	/**
+	 * @var  array   Hold field definitions
+	 */
 	protected $_fields = array();
 
+	/**
+	 * @var  array   Hold unique field(s)
+	 */
 	protected $_unique_fields = array();
 
+	/**
+	 * @var  array   Hold timestamp field(s)
+	 */
 	protected $_ts_fields = array();
 
+	/**
+	 * @var  array   Hold unix timestamp field(s)
+	 */
 	protected $_unix_ts_fields = array();
 
+	/**
+	 * @var  array   Hold setter field(s)
+	 */
 	protected $_set_fields = array();
 
+	/**
+	 * @var  array   Hold getter field(s)
+	 */
 	protected $_get_fields = array();
 
+	/**
+	 * @var  array   Hold child relations field(s)
+	 */
 	protected $_get_child_fields = array();
 
+	/**
+	 * @var  array   Hold child relations tree
+	 */
 	protected $_get_child_nodes = array();
 
+	/**
+	 * @var  array   Hold raw records
+	 */
 	protected $_get_reflection_fields = array();
 
 
-	public static $loaded_models = array();
-
-	public static $childs = array();
-
-	public static $childs_resource = array();
-
+	/**
+	 * @var  bool    Initialization flag of Core class
+	 */
 	public static $init = FALSE;
 
-	public static $bureau;
-
-	public static $ar_recorder = array();
-
-	public static $post = FALSE;
-
-	public static $join = FALSE;
-
-	public static $with = FALSE;
-
-	public static $with_models = array();
-
+	/**
+	 * @var  mixed   Global configuration value(s)
+	 */
 	public static $config;
 
+	/**
+	 * @var  array   List of loaded models
+	 */
+	public static $loaded_models = array();
+
+	/**
+	 * @var  object  Hold primary Gas_bureau singleton
+	 */
+	public static $bureau;
+
+	/**
+	 * @var  array   Hold activerecord for any gas instance(s)
+	 */
+	public static $ar_recorder = array();
+
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance receive $_POST data or not
+	 */
+	public static $post = FALSE;
+
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance using JOIN statement or not
+	 */
+	public static $join = FALSE;
+
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform eager loading or not
+	 */
+	public static $with = FALSE;
+
+	/**
+	 * @var  array   Hold eager loaded model(s)
+	 */
+	public static $with_models = array();
+
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of transactional method or not
+	 */
 	public static $transaction_pointer = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of selector method or not
+	 */
 	public static $selector = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of conditional method or not
+	 */
 	public static $condition = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of executor method or not
+	 */
 	public static $executor = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of transactional method or not
+	 */
 	public static $transaction_status = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine whether a gas instance perform some of transactional method or not
+	 */
 	public static $transaction_executor = FALSE;
 
+	/**
+	 * @var  array   Hold auto timestamps fields
+	 */
 	public static $timestamps = array();
 
+	/**
+	 * @var  array   Hold all received input
+	 */
 	public static $old_input = array();
 
+	/**
+	 * @var  bool    Pointer to determine whether a method running via CLI or not
+	 */
 	public static $cli = FALSE;
 	
 
+	/**
+	 * @var  array   Holds model(s) name and path
+	 */
 	protected static $_models;
 
+	/**
+	 * @var  mixed   Holds model(s) collections
+	 */
 	protected static $_models_fields;
 
+	/**
+	 * @var  array   Holds extension(s) name and path
+	 */
 	protected static $_extensions;
 
+	/**
+	 * @var  array   Holds model's rule(s)
+	 */
 	protected static $_rules = array();
 
+	/**
+	 * @var  array   Holds default custom rule callback validation error(s) 
+	 */
 	protected static $_error_callbacks = array();
 
+	/**
+	 * @var  array   Holds CI rule validation error(s) 
+	 */
 	protected static $_errors_validation = array();
 
+	/**
+	 * @var  bool    Pointer to determine whether auto-migrate should be executed
+	 */
 	protected static $_migrated = FALSE;
 
 	
@@ -160,45 +285,62 @@ class Gas_core {
 	 */
 	function __construct()
 	{
+		// Initialization flag
 		$init = FALSE;
 
+		// Get the gas instance name
 		$gas = $this->model();
 
+		// Core class should only instantiated once time
 		if (self::is_initialize() == FALSE)
 		{
+			// Get the CLI pointer
 			self::$cli = defined('STDIN');
 
 			if (self::$cli)
 			{
+				// Run an initial preparation method on CLI environment
 				Gas_CLI::reflection_engine();
 			}
 			else
 			{
+				// Load CI singleton
 				$CI =& get_instance();
 
+				// Get Gas configuration
 				$CI->config->load('gas', TRUE, TRUE);
 
+				// Get Migration configuration, for auto-migrate stuff
 				$CI->config->load('migration', TRUE, TRUE);
 			}
 
+			// Load proper configuration based by environment
 			self::$config = (self::$cli) ? Gas_CLI::load_config() : $CI->config->item('gas');
 
+			// Auto-migrate (models and tables) cannot executed via CLI, for security reason
 			self::$config['migration_config'] = (self::$cli) ? FALSE : $CI->config->item('migration');
 
+			// Instantiated new Gas_bureau instance, and assign it into a global singleton
 			Gas_core::$bureau = (self::$cli) ? new Gas_bureau : new Gas_bureau($CI);
 			
+			// Scan all possible models file	
 			$this->_scan_models();
 
+			// Scan all possible extensions file	
 			$this->_scan_extensions();
 
+			// Run _init method if availabe. This will be usefull hooks point to overide Core behaviour
 			if (is_callable(array($this, '_init'), TRUE)) $this->_init();
 
+			// Tell that Core class already done with its business
 			$init = TRUE;
 
 			if ( ! self::$cli)
 			{
+				// Determine the request method
 				$http_method = $CI->input->server('REQUEST_METHOD');
 
+				// Save any http request into global variable
 				switch ($http_method)
 				{
 					case 'GET':
@@ -224,20 +366,27 @@ class Gas_core {
 			log_message('debug', 'Gas ORM Core Class Initialized');
 		}
 
+		// Any gas instance(s) will re-use Gas_bureau singleton holds by Core class
 		self::$bureau =& Gas_core::recruit_bureau(); 
 
+		// Set models
 		self::$bureau->_models = self::$_models;
 
+		// Set extensions
 		self::$bureau->_extensions = self::$_extensions;
 
+		// Set global configuration
 		self::$bureau->_config = Gas_core::$config;
 
+		// Auto-load models if we enable its configuration
 		Gas_core::config('autoload_models') AND self::$bureau->load_item('*', 'models');
 
+		// Auto-load extensions if we enable its configuration
 		Gas_core::config('autoload_extensions') AND self::$bureau->load_item(Gas_core::config('extensions'), 'extensions');
 
 		if (self::is_migrated() == FALSE and self::is_initialize() == FALSE)
 		{
+			// Only do this if we are not running under CLI environment
 			if ( ! self::$cli) $this->check_migration(self::$_models);
 		}
 
@@ -247,12 +396,15 @@ class Gas_core {
 
 			if (isset($args['record']))
 			{
+				// Is there are valid records passed, assign it respectively
 				$this->_get_fields = Gas_janitor::get_input(__METHOD__, $args['record'], FALSE, array());
 
+				// Set empty pointer
 				$this->empty = (bool) (count($this->_get_fields) == 0);
 			}
 		}
 
+		// Tell that we were really initialized
 		if ($init) self::$init = TRUE;
 	}
 
@@ -266,6 +418,7 @@ class Gas_core {
 	 */
 	public static function version()
 	{
+		// Get the global version
 		return Gas_core::GAS_VERSION;
 	}
 
@@ -282,10 +435,13 @@ class Gas_core {
 	{
 		$model = $name;
 
+		// Only valid class or quit
 		if ( ! class_exists($model)) show_error(Gas_core::tell('models_not_found', $model));
 
+		// Instantiate new gas instance and set the records if exists
 		$gas = new $model($records);
 
+		// Execute its _init method if necessary
 		if (is_callable(array($gas, '_init'), TRUE) and $init == TRUE)
 		{
 			if ( ! isset(self::$_models_fields[$name]))
@@ -304,6 +460,7 @@ class Gas_core {
 			}
 			else
 			{
+				// If its already executed elsewhere, just get each properties repectively
 				$gas->_fields = self::$_models_fields[$name]['fields'];
 
 				$gas->_unique_fields = self::$_models_fields[$name]['unique_fields'];
@@ -314,6 +471,7 @@ class Gas_core {
 			}
 		}
 
+		// Its ready
 		return $gas;
 	}
 
@@ -328,6 +486,7 @@ class Gas_core {
 	{
 		$dsn = Gas_janitor::get_input(__METHOD__, $dsn, TRUE);
 
+		// Connect via provided dsn string
 		return self::$bureau->connect($dsn);
 	}
 
@@ -341,6 +500,7 @@ class Gas_core {
 	 */
 	public static function &recruit_bureau()
 	{
+		// Return bureau singleton
 		return Gas_core::$bureau;
 	}
 
@@ -354,6 +514,7 @@ class Gas_core {
 	 */
 	public static function is_initialize()
 	{
+		// Return initialized state
 		return self::$init;
 	}
 
@@ -367,6 +528,7 @@ class Gas_core {
 	 */
 	public static function is_migrated()
 	{
+		// Return migration pointer state
 		return Gas_core::$_migrated;
 	}
 
@@ -379,6 +541,7 @@ class Gas_core {
 	 */
 	public static function load_model($model)
 	{
+		// Tell bureau class to load provided model(s)
 		return self::$bureau->load_item($model, 'models');
 	}
 
@@ -391,6 +554,7 @@ class Gas_core {
 	 */
 	public static function load_extension($extension)
 	{
+		// Tell bureau class to load provided extension(s)
 		return self::$bureau->load_item($extension, 'extensions');
 	}
 
@@ -402,6 +566,7 @@ class Gas_core {
 	 */
 	public static function reports()
 	{
+		// Tell bureau class to dump out the reports
 		return self::$bureau->log_resource();
 	}
 
@@ -413,6 +578,7 @@ class Gas_core {
 	 */
 	public static function flush_cache()
 	{
+		// Tell bureau class to reset all cached resource(s)
 		return self::$bureau->reset_cache();
 	}
 
@@ -431,14 +597,17 @@ class Gas_core {
 	{
 		$rules = array();
 
+		// arguments should be an array
 		$args = is_array($args) ? $args : (array) $args;
 
 		$annotations = array();
 
+		// Diagnose the type pattern
 		if (preg_match('/^([^)]+)\[(.*?)\]$/', $type, $m) AND count($m) == 3)
 		{
 			$type = $m[1];
 
+			// Parsing [n,n] 
 			$constraint = explode(',', $m[2]);
 
 			if (count($constraint) == 2)
@@ -457,6 +626,7 @@ class Gas_core {
 			}
 		}
 		
+		// Determine each type into its validation rule respectively
 		switch ($type) 
 		{
 			case 'auto':
@@ -528,8 +698,10 @@ class Gas_core {
 				break;
 		}
 
+		// Are there other annotation?
 		$other_annotations = explode(',', $schema);
 
+		// If yes, then merge it with above 
 		if ( ! empty($other_annotations))
 		{
 			$other_annotations = Gas_janitor::arr_trim($other_annotations);
@@ -537,6 +709,7 @@ class Gas_core {
 			$annotations = array_merge($annotations, $other_annotations);
 		}
 		
+		// We now have define all rules and annotations
 		return array('rules' => implode('|', array_merge($rules, $args)), 'annotations' => $annotations);
 	}
 
@@ -546,6 +719,7 @@ class Gas_core {
 		{
 			self::$_migrated = TRUE;
 
+			// Execute auto-migrate to flagged models
 			return self::$bureau->check_auto_migrate(self::$_models);
 		}
 
@@ -562,6 +736,7 @@ class Gas_core {
 	 */
 	public function db()
 	{
+		// Return bureau DB instance
 		return Gas_bureau::engine();
 	}
 
@@ -576,8 +751,10 @@ class Gas_core {
 	 */
 	public static function list_all_models($model = '')
 	{
+		// If key defined and exists, return it
 		if (isset(self::$_models_fields[$model])) return self::$_models_fields[$model];
 
+		// Otherwise, return the full collections
 		return self::$_models_fields;
 	}
 
@@ -660,6 +837,7 @@ class Gas_core {
 	 */
 	public function set_with_models($models = array())
 	{
+		// Set needed model(s) to eager load
 		self::$with_models = $models;
 
 		return; 
@@ -678,11 +856,13 @@ class Gas_core {
 	{
 		if ( ! empty($key))
 		{
+			// If key defined and exists, return it
 			if (isset(Gas_core::$config[$key])) return Gas_core::$config[$key];
 
 			return FALSE;
 		}
 
+		// Otherwise, return all configuration values
 		return self::$config;
 	}
 
@@ -700,6 +880,7 @@ class Gas_core {
 
 		$eager_load_models = Gas_janitor::get_input(__METHOD__, $args, FALSE, array());
 
+		// If there are valid arguments, record it
 		if ( ! empty($eager_load_models))
 		{
 			self::$with = TRUE;
@@ -722,10 +903,13 @@ class Gas_core {
 	{
 		$bureau = self::$bureau;
 
+		// Are there some active extensions?
 		$is_extension = (bool) ! empty($this->extensions);
 
+		// Bundle everyting
 		$args = array($this->model(), self::$ar_recorder, $this->single, $is_extension);
 
+		// Produce it
 		return Gas_janitor::force_and_get($bureau, 'compile', $args);
 	}
 
@@ -739,22 +923,31 @@ class Gas_core {
 	 */
 	public function all()
 	{
+		// Are there some active extensions?
 		$is_extension = (bool) ! empty($this->extensions);
 
+		// Get valid table name
 		$this->validate_table();
 		
+		// Prepare a recorder
 		$recorder = array('get' => array($this->table));
 
+		// Tape it
 		Gas_janitor::tape_record($this->model(), $recorder);
 
+		// Validate JOIN portion if necessary
 		$this->validate_join();
 
+		// Get the result
 		$res = $this->produce();
 
+		// If we run this via an extension pointer...
 		if ($is_extension)
 		{
+			// Set the raw records, so its fully uniformal on extension(s) method
 			$this->set_reflection_record($res);
 
+			// Make the original records empty
 			$this->set_record(array());
 
 			return $this;
@@ -778,6 +971,7 @@ class Gas_core {
 
 		$in = Gas_janitor::get_input(__METHOD__, $args, TRUE);
 
+		// Do we need to return an object?
 		$this->single = count($in) == 1;
 
 		return $this->find_where_in(array($this->primary_key, $in));
@@ -818,6 +1012,7 @@ class Gas_core {
 	{
 		$args = Gas_janitor::get_input(__METHOD__, $args, TRUE);
 
+		// Is there a limit pointer?
 		if (is_int($limit))
 		{
 			if ($limit == 1)  $this->single = TRUE;
@@ -827,6 +1022,7 @@ class Gas_core {
 			Gas_janitor::tape_record($this->model(), $recorder);
 		}
 
+		// just WHERE %s or WHERE %s OR %s
 		if ($type == 'or')
 		{
 			$this->or_where($args);
@@ -897,6 +1093,7 @@ class Gas_core {
 	{
 		$args = Gas_janitor::get_input(__METHOD__, $args, TRUE);
 
+		// Determine the WHERE IN clause type
 		switch ($type)
 		{
 			case 'or':
@@ -951,27 +1148,38 @@ class Gas_core {
 
 		if ($check)
 		{
+			// Is there _init method?
 			if (is_callable(array($this, '_init'), TRUE) and empty($this->_fields)) $this->_init();
 
+			// Is there _before_check callback?
 			if (is_callable(array($this, '_before_check'), TRUE)) $this->_before_check();
 
+			// Run internal validation procedure and get the result
 			$valid = $bureau->validate($this->model(), $this->entries(), $this->_fields);
 
+			// Collect all errors
 			$this->errors = self::$_errors_validation;
 
+			// Flush temporary error storage
 			self::$_errors_validation = array();
 
+			// Not valid? 
 			if ( ! $valid) return FALSE;
 		}
 
+		// Is there _after_check callback?
 		if (is_callable(array($this, '_after_check'), TRUE)) $this->_after_check();
 
+		// Is there _before_save callback?
 		if (is_callable(array($this, '_before_save'), TRUE)) $this->_before_save();
 
+		// Are there any auto-timestamp fields has been set?
 		if ( ! empty($this->_ts_fields) or ! empty($this->_unix_ts_fields))
 		{
+			// Save temporary entries
 			$old_entries = $this->entries();
 
+			// Create datetime timestamps
 			if ( ! empty($this->_ts_fields))
 			{
 				$created_ts_fields[] = Gas_janitor::arr_timestamp($this->_ts_fields, TRUE);
@@ -979,6 +1187,7 @@ class Gas_core {
 				$updated_ts_fields[] = Gas_janitor::arr_timestamp($this->_ts_fields);
 			}
 
+			// Create unix timestamps
 			if ( ! empty($this->_unix_ts_fields))
 			{
 				$created_ts_fields[] = Gas_janitor::arr_unix_timestamp($this->_unix_ts_fields, TRUE);
@@ -986,13 +1195,16 @@ class Gas_core {
 				$updated_ts_fields[] = Gas_janitor::arr_unix_timestamp($this->_unix_ts_fields);
 			}
 
+			// Sort all timestamps fields to match with Gas data structure
 			array_walk_recursive($created_ts_fields, 'Gas_janitor::extract_timestamp', 'created_ts');
 
 			array_walk_recursive($updated_ts_fields, 'Gas_janitor::extract_timestamp', 'updated_ts');
 		}
 
-		if (empty($this->_get_fields))
+		// Determine whether to perform INSERT or UPDATE operation
+		if ($this->empty)
 		{
+			// Do we have unique fields to validate?
 			if ( ! empty($this->_unique_fields))
 			{
 				$unique = $bureau->validate_unique($this->model(), $this->entries(), $this->_unique_fields);
@@ -1007,43 +1219,59 @@ class Gas_core {
 				}
 			}
 
+			// Adding timestamp
 			$this->_add_timestamps(TRUE);
 
+			// Prepare the recorder
 			$recorder = array('insert' => array($this->table, $this->entries()));
 		}
 		else
 		{
+			// Get the identifier value
 			$identifier = $this->identifier();
 
+			// Flush all available recorder
 			self::$ar_recorder = array();
 
+			// Prepare condition recorder for UPDATE
 			$recorder = array('where' => array($this->primary_key, $identifier));
 
+			// Tape it
 			Gas_janitor::tape_record($this->model(), $recorder);
 
+			// Adding timestamp
 			$this->_add_timestamps();
 
+			// Prepare the recorder
 			$recorder = array('update' => array($this->table, $this->entries()));
 		}
 
+		// Tape proper save operation recorder
 		Gas_janitor::tape_record($this->model(), $recorder);
 
+		// Compile the recorder and get the result
 		$res = $bureau->compile($this->model(), self::$ar_recorder, $skip_affected_rows);
 
+		// Is there _after_save callback?
 		if (is_callable(array($this, '_after_save'), TRUE)) $this->_after_save();
 
+		// Flush all post, if exists
 		Gas_janitor::flush_post();
 
+		// Flush all errors, if exists
 		$this->errors = array();
 
+		// Flush all validation errors, if exists
 		self::$_errors_validation = array();
 
+		// Flush all setter values, if exists
 		$this->_set_fields = array();
 
+		// Flush all temporary callbacks errors, if exists
 		self::$_error_callbacks = array();
 
+		// Return the operation results
 		return $res;
-		
 	}
 
 	/**
@@ -1065,6 +1293,7 @@ class Gas_core {
 
 		$in = Gas_janitor::get_input(__METHOD__, $args, FALSE, null);
 
+		// There are no identifier has been passed, there must be a records
 		if (is_null($in)) 
 		{
 			$identifier = Gas_janitor::get_input(__METHOD__, $this->identifier(), TRUE);
@@ -1077,8 +1306,10 @@ class Gas_core {
 		}
 		else
 		{
+			// If identifiers found, use it
 			$this->_set_fields = array($this->primary_key, $in);
 
+			// Is there _before_delete callback?
 			if (is_callable(array($this, '_before_delete'), TRUE)) $this->_before_delete();
 
 			$this->where_in($this->_set_fields);
@@ -1094,6 +1325,7 @@ class Gas_core {
 
 		$res = $bureau->compile($this->model(), self::$ar_recorder);
 
+		// Is there _after_delete callback?
 		if (is_callable(array($this, '_after_delete'), TRUE)) $this->_after_delete();
 
 		return $res;
@@ -1113,10 +1345,12 @@ class Gas_core {
 	{
 		if (self::$cli)
 		{
+			// If the request came from CLI, instantiate new Linguist class
 			$speaker = new Gas_linguist;
 		}
 		else
 		{
+			// Otherwise, use Lang class from CI singleton
 			if (is_object(self::$bureau))
 			{
 				$speaker = self::$bureau->lang();
@@ -1131,12 +1365,13 @@ class Gas_core {
 			$speaker->load('gas');
 		}
 		
+		// Is there something to parse?
 		if (FALSE === ($msg = $speaker->line($point)))
 		{
 			$msg = '';
 		}
 		
-		return (is_string($parser_value)) ? str_replace('%s', $parser_value, $msg) : $msg;
+		return (is_string($parser_value)) ? sprintf($msg, $parser_value) : $msg;
 	}
 
 	/**
@@ -1149,6 +1384,7 @@ class Gas_core {
 	 */
 	public function entries()
 	{
+		// Merge the records with setter values
 		return is_array($this->_set_fields) ? array_merge($this->_get_fields, $this->_set_fields) : $this->_get_fields;
 	}
 
@@ -1168,6 +1404,7 @@ class Gas_core {
 	{
 		$field = Gas_janitor::get_input(__METHOD__, $field, TRUE);
 		
+		// Load validation lang file
 		self::$bureau->lang()->load('form_validation');
 		
 		if (FALSE === ($line = self::$bureau->lang()->line($key)))
@@ -1175,10 +1412,13 @@ class Gas_core {
 			$line = $msg;
 		}
 
-		$str_error = str_replace('%s', Gas_janitor::set_label($field), $line);
+		// Replace label
+		$str_error = sprintf($line, Gas_janitor::set_label($field));
 
+		// Assign into temporary errors
 		self::$_error_callbacks[] = $str_error;
 
+		// Assign into errors stack
 		self::set_error($field, $str_error);
 	}
 
@@ -1213,6 +1453,7 @@ class Gas_core {
 	 */
 	public function errors($prefix = '', $suffix = '')
 	{
+		// Use passed prefix if exists, otherwise use paragraph tag
 		$prefix = ($prefix == '') ? '<p>' : $prefix;
 
 		$suffix = ($suffix == '') ? '</p>' : $suffix;
@@ -1425,6 +1666,7 @@ class Gas_core {
 	 */
 	public function add_ar_record($recorder)
 	{
+		// Merge passed recorder with exists recorder(s)
 		array_push(self::$ar_recorder, $recorder);
 
 		return $this;
@@ -1484,6 +1726,7 @@ class Gas_core {
 	 */
 	public function model($gas = null)
 	{
+		// If there is no model name passed, use recent class
 		return is_null($gas) ? strtolower(get_class($this)) : strtolower(get_class($gas));
 	}
 
@@ -1498,6 +1741,7 @@ class Gas_core {
 	 */
 	public function identifier($column = null)
 	{
+		// If there is no collumn passed, use primary key collumn
 		if (is_null($column)) $column = $this->primary_key;
 		
 		if (isset($this->_get_fields[$column]))
@@ -1521,6 +1765,7 @@ class Gas_core {
 	 */
 	public function validate_table($table = null)
 	{
+		// If there is no table name passed, use table name
 		$table = (is_null($table)) ? $this->table : $table;
 		
 		if (empty($table))
@@ -1543,8 +1788,10 @@ class Gas_core {
 	 */
 	protected function validate_join()
 	{
+		// Make sure the table was defined
 		$this->validate_table();
 
+		// If JOIN pointer used, replace all related condition to match with JOIN condition
 		if (self::$join == TRUE)
 		{
 			self::$ar_recorder = Gas_janitor::where_to_join(self::$ar_recorder, $this->table);
@@ -1564,10 +1811,12 @@ class Gas_core {
 	 */
 	private function _add_timestamps($new = FALSE)
 	{
+		// Get model entries
 		$entries = $this->entries();
 
 		$timestamps = array();
 
+		// Sort the timestamp mode, whether INSERT or UPDATE was choosed
 		$type = $new ? 'created_ts' : 'updated_ts';
 
 		isset(Gas_core::$timestamps[$type]) and $timestamps = Gas_core::$timestamps[$type];
@@ -1579,6 +1828,7 @@ class Gas_core {
 
 		unset(Gas_core::$timestamps[$type]);
 		
+		// Merge the timestamp with overall entries
 		return $this->set_fields($entries);
 	}
 
@@ -1595,8 +1845,10 @@ class Gas_core {
 	{
 		$models = array();
 
+		// Get the models path from config
 		$models_path = Gas_core::config('models_path');
 		
+		// For backward compatibility
 		if (is_string($models_path))
 	 	{
 	 		$models[] = APPPATH.$models_path;
@@ -1608,6 +1860,7 @@ class Gas_core {
 
 		$model_type = 'models';
 
+		// Define model identifier
 		$model_identifier = Gas_core::config('models_suffix').'.php';
 
 		foreach ($models as $model)
@@ -1629,6 +1882,7 @@ class Gas_core {
 	 */
 	private function _scan_extensions()
 	{
+		// Determine whether we run Gas as Sparks or not
 		if (defined('FCPATH') and is_dir(FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'))
 		{
 			$extension_path = FCPATH.'sparks'.DIRECTORY_SEPARATOR.'Gas-ORM'.DIRECTORY_SEPARATOR.Gas_core::version().DIRECTORY_SEPARATOR.'libraries';
@@ -1658,12 +1912,16 @@ class Gas_core {
 	 */
 	private function _scan_files($path = null, $root_path, $type, $identifier)
 	{
+		// If there is no path being passed, use root path
 		$dir = (is_null($path)) ? $root_path : $path;
 
+		// If the directory was not a valid one, tell right now
 		if ( ! is_dir($dir)) show_error(Gas_core::tell($type.'_not_found', $dir));
 		
+		// Scan all files
 		$files = scandir($dir);
 
+		// Sort all scanned files with specific identifier
 		foreach ($files as $file) 
 		{
 		    if ($file == '.' OR $file == '..' OR $file == '.svn') continue;
@@ -1702,6 +1960,7 @@ class Gas_core {
 	 */
 	function __set($name, $args)
 	{
+		// Set the setter value
 		$this->_set_fields[$name] = $args;
 
 		if (self::$post == TRUE)
@@ -1722,10 +1981,13 @@ class Gas_core {
 	 */
 	function __get($name) 
  	{
+ 		// Make sure table name was defined
 		$this->validate_table();
 
+		// Is there matched records collumn?
  		if (isset($this->_get_fields[$name])) return $this->_get_fields[$name];
 
+ 		// Are there matched eager loaded models?
  		if ( ! empty($this->_get_child_fields))
  		{
  			foreach ($this->_get_child_fields as $index => $child)
@@ -1746,16 +2008,21 @@ class Gas_core {
  			}
  		}
 
+ 		// Are there matched relationship models?
  		if (isset(self::$_models[$name]) and ! isset($this->_set_fields[$name]))
  		{
  			$link = array();
 
+ 			// Define table, key and relationship for parent model
  			list($parent_table, $parent_key, $parent_relations) = Gas_janitor::identify_meta($this->model());
 
+ 			// Define table, key and relationship for child model
  			list($child_table, $child_key, $child_relations) = Gas_janitor::identify_meta($name);
 
+ 			// Determine the relation between parent and child model(s)
  			$peer_relation = Gas_janitor::get_input('Gas_core::__get', Gas_janitor::identify_relations($parent_relations, $name), FALSE, '');
 
+ 			// Define any custom relationship setting
 			list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($parent_relations, $peer_relation, $name);
 
  			$foreign_table = $child_table;
@@ -1768,6 +2035,7 @@ class Gas_core {
 
  			if ($through !== '')
  			{
+ 				// Build the necessary identifiers
  				$tree = array(
 
  					'relations' => $child_relations,
@@ -1784,10 +2052,12 @@ class Gas_core {
  				if ($peer_relations = 'belongs_to') $identifier = $parent_key;
  			}
 
+ 			// Hydrate the child instances
  			return Gas_bureau::generate_child($this->model(), $name, $link, array($this->identifier($key)), $this->identifier($identifier));
 	 	}
 	 	elseif (isset(self::$bureau->_loaded_components['extensions']) and ($extensions = self::$bureau->_loaded_components['extensions']))
  		{
+ 			// If there is valid extension name choosed, mark it
  			if (in_array($name, $extensions))
  			{
  				$this->extensions[$name] = 'Gas_extension_'.$name;
@@ -1809,10 +2079,13 @@ class Gas_core {
 	 */
 	function __call($name, $args)
 	{
+ 		// Make sure table name was defined
 		$this->validate_table();
 
+		// Define the DB object
 		$engine = $this->db();
 		
+		// Get all marked extension(s)
 		$extensions = $this->get_extensions();
 
 		if (empty($this->table)) $this->table = $this->model();
@@ -1825,12 +2098,15 @@ class Gas_core {
 		{
 			$input = array();
 
+			// Get the passed input
 			$raw_input = array_shift($args);
 
+			// Get the second parameter
 			$post = array_shift($args);
 
 			if ($post)
 			{
+				// Treat all input as $_POST
 				self::$post = TRUE;
 
 				$_POST = $raw_input;
@@ -1839,6 +2115,7 @@ class Gas_core {
 			}
 			elseif (isset($_POST))
 			{
+				// If $_POST data passed, mark it
 				if ($_POST == $raw_input)
 				{
 					self::$post = TRUE;
@@ -1865,8 +2142,10 @@ class Gas_core {
 		{
 			$field = $m[1];
 
+			// Get the passed value for WHERE condition
 			$value = array_shift($args);
 
+			// Is there LIMIT clause passed?
 			$limit = array_shift($args);
 
 			$offset = array_shift($args);
@@ -1992,12 +2271,16 @@ class Gas_core {
 		}
 		elseif (method_exists($engine, $name))
 		{
+			// Get all possible executor method(s)
 			$executor = Gas_janitor::$dictionary['executor'];
 
+			// Separate the direct executor method(s)
 			$direct = array_splice($executor, -5);
 
+			// Separate the table executor method(s)
 			$tables = array_splice($executor, -3);
 
+			// Separate the operation executor method(s)
 			$writes = array_splice($executor, -4);
 
 			$argumental = $executor;
@@ -2015,18 +2298,22 @@ class Gas_core {
 
 			Gas_janitor::tape_record($this->model(), $recorder);
 
+			// Diagnostic the passed method
 			$medical_history = Gas_janitor::diagnostic($name);
 
+			// If it was one of executor method or transactional pointer, produce it now
 			if ($medical_history == 'executor' or $medical_history == 'transaction_status')
 			{
 				return $this->produce();
 			}
 			elseif (strpos($name, 'join') !== FALSE)
 			{
+				// If any `join` term found, mark it
 				self::$join = TRUE;
 			}
 			elseif ($name == 'limit')
 			{
+				// If LIMIT clause found, mark it
 				if (isset($args[0]) and $args[0] == 1) $this->single = TRUE;
 			}
 			
@@ -2034,8 +2321,10 @@ class Gas_core {
 		}
 		elseif ( ! empty($extensions))
 		{
+			// Search through marked extension(s)
 			foreach ($extensions as $extension => $extension_class)
 			{
+				// If the method was valid extension method, instantiate related extension
 				if (is_callable(array($extension_class, $name), TRUE))
 				{
 					$ext = new $extension_class;
@@ -2071,42 +2360,100 @@ class Gas_core {
 
 class Gas_bureau {
 
+	/**
+	 * @var  array   Hold models collection
+	 */
 	public $_models = array();
 
+	/**
+	 * @var  array   Hold extensions collection
+	 */
 	public $_extensions = array();
 
+	/**
+	 * @var  array   Hold components collection
+	 */
 	public $_loaded_components = array();
 	
+	/**
+	 * @var  mixed   Hold CI singleton
+	 */
 	protected $_CI;
 
+	/**
+	 * @var  mixed   Hold DB object
+	 */
 	protected $_engine;
 
+
+	/**
+	 * @var  bool    Pointer for auto-migrate models process
+	 */
 	protected static $auto_models_success = FALSE;
 
+	/**
+	 * @var  bool    Pointer for auto-migrate models configuration
+	 */
 	protected static $auto_modelling = FALSE;
 
+	/**
+	 * @var  bool    Pointer for auto-migrate tables configuration
+	 */
 	protected static $auto_migrate = FALSE;
 
+	/**
+	 * @var  bool    Pointer to determine wheter to execute migration or not
+	 */
 	protected static $execute_migrate = FALSE;
 
+	/**
+	 * @var  int     Migrate counter
+	 */
 	protected static $count_migrate = 0;
 
+	/**
+	 * @var  mixed   Hold DB object
+	 */
 	protected static $db;
 
+	/**
+	 * @var  string  Hold DB Driver name
+	 */
 	protected static $db_driver;
 
+	/**
+	 * @var  mixed   Hold Validator object
+	 */
 	protected static $validator;
 
+	/**
+	 * @var  mixed   Hold tasks tree detail for every compile process
+	 */
 	protected static $task_manager;
 
+	/**
+	 * @var  mixed   Hold compile result
+	 */
 	protected static $thread_resource;
 
+	/**
+	 * @var  array   Hold some special operation pointer
+	 */
 	protected static $empty_executor = array('writes' => FALSE, 'operation' => FALSE);
 
+	/**
+	 * @var  mixed   Hold cached compile result collection
+	 */
 	protected static $cache_resource;
 
+	/**
+	 * @var  array   Hold hashed recorder bundle 
+	 */
 	protected static $cache_key;
 
+	/**
+	 * @var  array   Hold monitored resorce stated
+	 */
 	protected static $resource_state;
 	
 	/**
@@ -2114,6 +2461,7 @@ class Gas_bureau {
 	 */
 	function __construct()
 	{
+		// Determine whether request came from CLI or not
 		if ( ! Gas_core::$cli)
 		{
 			$this->_CI = func_get_arg(0);
@@ -2132,14 +2480,18 @@ class Gas_bureau {
 			$this->_engine = Gas_CLI::$DB;
 		}
 
+		// Define the DB object
 		self::$db = $this->_engine;
 
+		// Define the DB Driver name
 		self::$db_driver = $this->_engine->dbdriver;
 
 		if ( ! Gas_core::$cli)
 		{
+			// Assign new properties into CI singleton, so profiler would monitor it
 			$this->_CI->Gas_DB = self::$db;
 
+			// Load validator class
 			if ( ! class_exists('CI_Form_validation')) $this->_CI->load->library('form_validation');
 
 			self::$validator = $this->_CI->form_validation;
@@ -2148,6 +2500,7 @@ class Gas_bureau {
 
 			$auto_create_tables = FALSE;
 
+			// Auto-migrate only works for for CI version 2.1 or above
 			if (defined('CI_VERSION') and strpos(CI_VERSION, '2.1') === 0)
 			{
 				if (Gas_core::config('auto_create_models'))
@@ -2201,12 +2554,16 @@ class Gas_bureau {
 	 */
 	public static function do_compile($gas, $recorder, $limit = FALSE, $raw = FALSE)
 	{
+		// Build the tasks tree
 		$tasks = Gas_janitor::play_record($recorder);
 
+		// Mark every compile process into our caching pool
 		self::cache_start($tasks);
 
+		// Ger DB object name
 		$motor = get_class(self::$db);
 
+		// Generate the task bundle
 		$bundle = array(
 
 			'engine' => $motor,
@@ -2225,6 +2582,7 @@ class Gas_bureau {
 
 		);
 
+		// Is there any executor method in task list?
 		if ( ! empty ($tasks['executor']))
 		{
 			$executor = Gas_janitor::$dictionary['executor'];
@@ -2233,6 +2591,7 @@ class Gas_bureau {
 
 			$writes = array_splice($executor, -4);
 
+			// Adding more details into it
 			$bundle['executor_list'] = array(
 
 				'operation' => $operations, 
@@ -2242,12 +2601,16 @@ class Gas_bureau {
 			);
 		}
 
+		// Assign the task to the right person
 		self::$task_manager = $bundle;
 
+		// Lets dance...
 		array_walk($tasks, 'Gas_bureau::sort_task');
 
+		// Get the result and immediately flush the temporary resource holder
 		$resource = self::$thread_resource and self::$thread_resource = null;
 		
+		// The compilation is done, send the song to listen
 		return $resource;
 	}
 
@@ -2263,6 +2626,7 @@ class Gas_bureau {
 	 */
 	public static function sort_task($tasks, $key)
 	{
+		// Only sort if there are valid task and the task manager hold its task list
 		if (empty($tasks) or empty(self::$task_manager)) return;
 
 		array_walk($tasks, 'Gas_bureau::do_task', $key);
@@ -2283,26 +2647,35 @@ class Gas_bureau {
 	 */
 	public static function do_task($arguments, $key, $task)
 	{
+		// Only do each task if the task manager hold its task list
 		if (empty(self::$task_manager)) return;
 
+		// Diagnose wheter to just execute the method or return the result
 		$flag = ! in_array($task, self::$task_manager['flag']);
 
+		// Get the method
 		$action = key($arguments);
 
+		// Get the arguments
 		$args = array_shift($arguments);
 
 		if ($flag)
 		{
+			// Get compiler collection
 			$compiler = self::$task_manager['compiler'];
 
+			// Determine whether the task is a part of transactional process or not
 			$is_transaction = Gas::factory($compiler['gas'], array(), FALSE)->get_type('transaction_pointer');
 
+			// Flush the recent recorder
 			Gas::factory($compiler['gas'], array(), FALSE)->set_ar_record(array());
 
 			if ($action == 'get' and ($read_arguments = $args))
 			{
+				// Get resource name
 				$resource_name = array_shift($read_arguments);
 
+				// If resource state unchanged and the task already executed elsewhere, fetch from cache
 				if (self::validate_cache() and self::changed_resource($resource_name) == FALSE)
 				{	
 					if (method_exists(self::$db, 'reset_query'))
@@ -2320,29 +2693,37 @@ class Gas_bureau {
 				}
 				else
 				{
+					// Execute the queries
 					$result = Gas_janitor::force_and_get(self::$db, $action, $args);
 
+					// Cache it
 					self::cache_end($result);
 				}
 				
 				if ($compiler['raw'] === TRUE) 
 				{
+					// If the `raw` flag found, dont cook it
 					$res = $result->result_array();
 				}
 				else
 				{
+					// Get the eager load marker
 					$with = Gas::factory($compiler['gas'], array(), FALSE)->get_with();
 
+					// Hydrate the gas instance
 					$res = self::generator($compiler['gas'], $result->result(), __FUNCTION__, $compiler['limit'], $with);
 				}
 
+				// Tell task manager to take a break
 				self::$task_manager = array();
 
+				// Fill the temporary resource holder
 				self::$thread_resource = $res;
 
 				return;
 			}
 			
+			// Do we have executor methods in task list?
 			if (isset(self::$task_manager['executor_list']))
 			{
 				$executor_list = self::$task_manager['executor_list'];
@@ -2352,8 +2733,10 @@ class Gas_bureau {
 				$executor_list = self::$empty_executor;
 			}
 
+			// Sort all write operations
 			$writes = Gas_janitor::get_input(__METHOD__, $executor_list['writes'], FALSE, '');
 
+			// Sort other executor operations
 			$operations = Gas_janitor::get_input(__METHOD__, $executor_list['operation'], FALSE, '');
 
 			if ($task == 'transaction_status')
@@ -2370,28 +2753,35 @@ class Gas_bureau {
 			}
 			elseif ( ! $is_transaction and in_array($action, $writes) and ($write_arguments = $args))
 			{
+				// Get resource name
 				$resource_name = array_shift($write_arguments);
 				
+				// Log into tracker pool
 				self::track_resource($resource_name, $action);
 
 				Gas_janitor::force(self::$db, $action, $args);
 				
+				// Do we need to return the affected row?
 				$res = ($compiler['limit']) ? TRUE : self::$db->affected_rows();
 
 				self::$task_manager = array();
 			}
 			elseif ( ! $is_transaction and in_array($action, $operations))
 			{
+				// Separate operations and get the explicit methods which need to return the result
 				array_splice($operations, 2);
 
+				// Hold the non-explicit operations
 				$non_explicit = $operations;
 
 				if (in_array($action, $non_explicit))
 				{
+					// If there is no explicit flag, just execute it
 					$res = Gas_janitor::force(self::$db, $action, $args);
 				}
 				else
 				{
+					// If there is explicit flag, execute and return the result
 					$res = Gas_janitor::force_and_get(self::$db, $action, $args);
 				}
 			}
@@ -2401,9 +2791,11 @@ class Gas_bureau {
 
 				if ($action == 'query' and ($sample_args = $args))
 				{
+					// Inspect whether queries contain SELECT clause
 					$return = (strpos(strtolower(array_shift($sample_args)), 'select') === 0);
 				}
 
+				// If SELECT clause found, either return raw records or hydrate related object
 				if ($return)
 				{
 					$result = Gas_janitor::force_and_get(self::$db, $action, $args);
@@ -2419,8 +2811,10 @@ class Gas_bureau {
 						$res = self::generator($compiler['gas'], $result->result(), __FUNCTION__, $compiler['limit'], $with);
 					}
 
+					// Tell task manager to take a break
 					self::$task_manager = array();
 
+					// Fill the temporary resource holder
 					self::$thread_resource = $res;
 
 					return;
@@ -2431,12 +2825,14 @@ class Gas_bureau {
 				}
 			}
 
+			// Fill the temporary resource holder
 			self::$thread_resource = $res;
 
 			return;
 		}
 		else
 		{
+			// Execute it without returning the result
 			return Gas_janitor::force(self::$db, $action, $args);
 		}
 	}
@@ -2455,6 +2851,7 @@ class Gas_bureau {
 	{
 		$property = 'ar_'.$key;
 
+		// Set AR property to default value
 		self::$db->$property = $default;
 
 		return;
@@ -2508,6 +2905,7 @@ class Gas_bureau {
 
 		$eager_load_results = array();
 
+		// If the method returning empty resource, we are done
 		if (empty($resource)) 
 		{
 			if ($limit == TRUE)
@@ -2520,35 +2918,49 @@ class Gas_bureau {
 			}
 		}
 
+		// Do we have eager load queue?
 		if ($with)
 		{
+			// Get the child result
 			$eager_load_results = self::prepare_with($gas, $resource);
 			
+			// Get primary key
 			$primary_key = array_shift($eager_load_results);
 		}
 
+		// Do we need to return an instance or an array of instance?
 		$self = (bool) count($resource) == 1;
 
+		// Iterate resource item
 		foreach ($resource as $record)
 		{
+			// Hydrate new gas instance and assign each record
 			$instance = Gas::factory($gas, array('record' => (array) $record));
 
+			// If eager load mark found, assign each child instance respectively
 			if ($with)
 			{
+				// Iterate the child instance
 				foreach ($eager_load_results as $child => $results)
 				{
+					// Get the child records
 					$childs = self::populate_with($child, $results, $record, $primary_key);
 
+					// Hydrate new gas instance and assign each record
 					$instance->set_child($child, $childs);
 				}
 
+				// Flush the eager load marker
 				Gas::factory($gas, array(), FALSE)->set_with();
 
+				// Flush the eager load models queue
 				Gas::factory($gas, array(), FALSE)->set_with_models();
 			}
 
+			// If limit marker found then we done
 			if ($limit) return $instance;
 
+			// Assign the generates instance into an array
 			$instances[] = $instance;
 		}
 
@@ -2571,6 +2983,7 @@ class Gas_bureau {
 	 */
 	public static function generate_child($gas, $child, $link = array(), $identifiers = array(), $foreign_value = null, $eager_load = FALSE)
 	{
+		// Set each relations type's limit
 		$relationship_limitation = array(
 
 			'has_one' => TRUE,
@@ -2585,6 +2998,7 @@ class Gas_bureau {
 		
 		);
 
+		// Define many-to-many relationship
 		$many_to_many = array(
 
 			'has_and_belongs_to',
@@ -2595,8 +3009,10 @@ class Gas_bureau {
 
 		$raw_records = array();
 
+		// Define table, key and relationship for parent model
 		list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
 
+		// Define table, key and relationship for child model
 		list($foreign_table, $foreign_key, $foreign_relations) = Gas_janitor::identify_meta($child);
 
 		if (empty($relations) or ! is_array($relations))
@@ -2606,6 +3022,7 @@ class Gas_bureau {
 
 		$parent_relation = Gas_janitor::identify_relations($relations, $child);
 
+		// Determine the relation between parent and child model(s)
 		$peer_relation = Gas_janitor::get_input(__METHOD__, $parent_relation, FALSE, '');
 
 		$child_relation = Gas_janitor::identify_relations($foreign_relations, $gas);
@@ -2617,10 +3034,12 @@ class Gas_bureau {
 			show_error(Gas_core::tell('models_found_no_relations', $gas));
 		}
 
+		// Get parent custom setting
 		$parent_identity = Gas_janitor::identify_custom_setting($relations, $peer_relation, $child);
 
 		list($through, $custom_table, $custom_key, $self_ref) = $parent_identity;
 
+		// Get child custom setting
 		$child_identity = Gas_janitor::identify_custom_setting($foreign_relations, $foreign_peer_relation, $gas);
 
 		list($foreign_through, $foreign_custom_table, $foreign_custom_key, $foreign_self_ref) = $child_identity;
@@ -2629,10 +3048,12 @@ class Gas_bureau {
 
 		$foreign_identifier = ($foreign_custom_key !== '') ? $foreign_custom_key : $foreign_table.'_'.$foreign_key;
 
+		// Do we have `through` option on?
 		if ( ! empty($through) and $peer_relation == 'has_many') $peer_relation = 'has_many_through';
 
 		if (in_array($peer_relation, $many_to_many))
 		{
+			// Set the pivot table
 			if (empty($custom_table))
 			{
 				$pivot_table = $foreign_table.'_'.$table;
@@ -2644,6 +3065,7 @@ class Gas_bureau {
 
 			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $pivot_table);
 
+			// Get intermediate records
 			$raw_intermediate_records = self::do_compile($gas, $recorder, FALSE, TRUE);
 
 			$raw_ids = array();	
@@ -2661,6 +3083,7 @@ class Gas_bureau {
 			{
 				$recorder = Gas_janitor::tape_track($foreign_key, $raw_ids, $foreign_table);
 
+				// If we have intermediate records, get the childs records
 				$raw_records = self::do_compile($gas, $recorder, FALSE, TRUE);
 			}
 		}
@@ -2670,13 +3093,17 @@ class Gas_bureau {
 			
 			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $foreign_table);
 
+			// Get the childs records
 			$raw_records = self::do_compile($gas, $recorder, FALSE, TRUE);
 		}
 
+		// Define limitation
 		$limitation = $relationship_limitation[$peer_relation];
 
+		// Get the records
 		$records = ($limitation and ! $eager_load) ? array_shift($raw_records) : $raw_records;
 
+		// For one-to-one relationship
 		if ($limitation and ! $eager_load)
 		{
 			$node = empty($records) ? FALSE : Gas::factory($child, array('record' => $records));
@@ -2685,8 +3112,10 @@ class Gas_bureau {
 		{
 			$node = array();
 
+			// Do we have some records to process in many-to-many relationship?
 			if ( ! empty($records))
 			{
+				// Do we need to return an eager load collection?
 				if ($eager_load)
 				{
 					$identifier = ($peer_relation == 'belongs_to') ? $foreign_key : $identifier;
@@ -2715,12 +3144,13 @@ class Gas_bureau {
 						$records = $many_records;
 					}
 
-					$node[] = array('identifier' => $identifier, 'self' => $limitation, 'raw' => $records);
+					$node[] = array('identifier' => $identifier, 'foreign_identifier' => $foreign_identifier, 'self' => $limitation, 'raw' => $records);
 				}
 				else
 				{
 					foreach ($records as $record)
 					{
+						// Hydrate new child instance and assign each record respectively
 						$node[] = Gas::factory($child, array('record' => $record));
 					}
 				}
@@ -2742,14 +3172,17 @@ class Gas_bureau {
 	 */
 	public static function prepare_with($gas, $resource)
 	{
+		// Define table, key and relationship for parent model
 		list($table, $primary_key, $relations) = Gas_janitor::identify_meta($gas);
 
 		$childs = array();
 
+		// Get all eager load models queue
 		$eager_load_models = Gas::factory($gas, array(), FALSE)->get_with_models();
 
 		foreach ($eager_load_models as $child)
 		{
+			// Define table, key and relationship for child model
 			list($t, $pk, $r) = Gas_janitor::identify_meta($child);
 
 			$childs[$child] = array(
@@ -2771,6 +3204,7 @@ class Gas_bureau {
 
 				$peer_relations = Gas_janitor::get_input(__METHOD__, Gas_janitor::identify_relations($relations, $child_model), FALSE, '');
 
+				// Get custom relationship setting
 				list($through, $custom_table, $custom_key, $self_ref) = Gas_janitor::identify_custom_setting($relations, $peer_relations, $child_model);
 
 				$foreign_key = ($custom_key !== '') ? $custom_key : $child['foreign_table'].'_'.$child['foreign_key'];
@@ -2779,6 +3213,7 @@ class Gas_bureau {
 				
 				if ($through !== '')
 	 			{
+	 				// Build the necessary identifiers
 	 				$tree = array(
 
 	 					'relations' => $child['foreign_relations'],
@@ -2806,7 +3241,8 @@ class Gas_bureau {
 					if (isset($single->$key)) $ids[] = $single->$key;
 				}
 
-				$eager_load_results[$child_model] = self:: generate_child($gas, $child_model, $link, $ids, array_unique($fids), TRUE);
+				// Hydrate each child instance respectively
+				$eager_load_results[$child_model] = self:: generate_child($gas, $child_model, $link, array_unique($ids), array_unique($fids), TRUE);
 		}
 
 		return $eager_load_results;
@@ -2828,14 +3264,47 @@ class Gas_bureau {
 	{
 		$childs = array();
 
-		foreach ($results as $result)
-		{
-			$identifier = $result['identifier'];
+		$belongs = NULL;
+		
+		$result = array_shift($results);
+		
+		// Get the original identifier
+		$identifier = $result['identifier'];
 
-			$many = ! $result['self'];
-			
-			foreach ($result['raw'] as $raw_child)
+		// Get the remote identifier
+		$foreign_identifier = $result['foreign_identifier'];
+
+		// Determine the relationship limitation
+		$many = ! $result['self'];
+
+		// Belongs to is speacial case, we need to revert the identifier
+		if (is_null($belongs)) $belongs = isset($record->$foreign_identifier);
+
+		foreach ($result['raw'] as $raw_child)
+		{
+			if ($belongs)
 			{
+				// Do the child record identifier match with original identifier?
+				if ($raw_child[$identifier] == $record->$foreign_identifier)
+				{
+					$child_node = Gas::factory($child, array('record' => $raw_child));
+
+					if ($many)
+					{
+						$childs[] = $child_node;
+					}
+					else
+					{
+						$childs = $child_node;
+
+						continue;
+					}
+				}
+				
+			}
+			else
+			{
+				// Do the child record identifier match with original identifier?
 				if (isset($raw_child[$identifier]) and $raw_child[$identifier] == $record->$primary_key)
 				{
 					$child_node = Gas::factory($child, array('record' => $raw_child));
@@ -2867,21 +3336,26 @@ class Gas_bureau {
 	{
 		if (Gas_core::$cli)
 		{
+			// If the request came from CLI, get the engine from there
 			Gas_CLI::reflection_engine();
 		}
 		else
 		{
+			// Otherwise, use CI loader to create new DB object
 			$this->_engine = $this->_CI->load->database($dsn, TRUE);
 			
 			if ( ! is_resource($this->_engine->simple_query("SHOW TABLES")))
 			{
+				// If debug is on and connection resource was invalid, quit
 				show_error(Gas_core::tell('db_connection_error', $dsn));
 			}
 		
 		}
 
+		// Assign the DB object
 		self::$db = $this->_engine;
 
+		// Assign the DB Driver name
 		self::$db_driver = $this->_engine->dbdriver;
 
 		return;
@@ -2901,6 +3375,7 @@ class Gas_bureau {
 	 */
 	public function compile($gas, $recorder, $limit = FALSE, $raw = FALSE)
 	{
+		// Execute compile process
 		$result = self::do_compile($gas, $recorder, $limit, $raw);
 		
 		return $result;
@@ -2916,6 +3391,7 @@ class Gas_bureau {
 	 */
 	public function log_resource()
 	{
+		// Return all monitoring resource status
 		return self::$resource_state;
 	}
 
@@ -2929,20 +3405,28 @@ class Gas_bureau {
 	 */
 	public function check_auto_migrate($models)
 	{
+		// Only run if auto-migrate flag found
 		if (self::$auto_migrate == TRUE)
 		{
+			// Extract all models
 			$all_models = array_keys($models);
 			
+			// Load necessary models
 			$this->load_item($all_models, 'models');
 
+			// Synchronize all models with its migration siblings
 			self::sync_migrate($all_models);
 
+			// Assign DB object into CI singleton, so both Migration and Forge class didnt get lost
 			$this->_CI->db = self::$db;
 
+			// Load migration class if not loaded yet
 			if ( ! class_exists('CI_Migration')) $this->_CI->load->library('migration');
 
+			// If we found migration executor marker, run the migration process
 			if (self::$execute_migrate)
 			{
+				// Do migration fails?
 				if ( ! $this->_CI->migration->latest())
 				{
 					show_error($this->_CI->migration->error_string());
@@ -3004,6 +3488,7 @@ class Gas_bureau {
 	{
 		$items = array();
 
+		// Determine the type of item
 		switch ($type)
 		{
 			case 'models':
@@ -3019,6 +3504,7 @@ class Gas_bureau {
 				break;
 		}
 
+		// `*` always mean : all
 		if ($identifier == '*')
 		{
 			if (empty($items)) return $this;
@@ -3032,6 +3518,7 @@ class Gas_bureau {
 		}
 		elseif (is_array($identifier))
 		{
+			// Iterate the array and load each item
 			foreach ($identifier as $item)
 			{
 				if ( ! array_key_exists($item, $items)) show_error(Gas_core::tell($type.'_not_found', $item));
@@ -3043,6 +3530,7 @@ class Gas_bureau {
 		}
 		elseif (is_string($identifier))
 		{
+			// Make sure the assigned string is a valid one
 			if ( ! array_key_exists($identifier, $items)) show_error(Gas_core::tell($type.'_not_found', $identifier));
 			
 			$this->_loaded_components[$type][] = $identifier;
@@ -3072,6 +3560,7 @@ class Gas_bureau {
 
 		$rules = Gas_janitor::get_input(__METHOD__, $rules, TRUE);
 
+		// Get validator object
 		$validator = self::$validator;
 
 		$callbacks = array();
@@ -3080,15 +3569,19 @@ class Gas_bureau {
 
 		$callback_success = array();
 
+		// Do we have synchronized $_POST data?
 		$is_post = (bool) (count($_POST) > 0 and count($_POST) == count($entries));
 
 		if ( ! $is_post)
 		{
+			// Save the $_POST data into temporary data
 			$old_post = $_POST;
 
+			// If $_POST data was not set or not synchrone with models entries, sync it
 			$_POST = $entries;
 		}
 
+		// Iterate each rules and build the validation rules collection
 		foreach ($rules as $field => $rule)
 		{
 			$old_rule = explode('|', $rule['rules']);
@@ -3108,6 +3601,7 @@ class Gas_bureau {
 			if ( ! empty($new_rule)) $validator->set_rules($field, Gas_janitor::set_label($field), $new_rule);
 		}
 		
+		// Execute the CI validator
 		if ($validator->run() == FALSE)
 		{
 			foreach ($entries as $field => $data)
@@ -3127,8 +3621,10 @@ class Gas_bureau {
 			$success = TRUE;
 		}
 
+		// Flush the $_POST data
 		if ( ! $is_post) Gas_janitor::flush_post();
 		
+		// Run the custom rule callbacks
 		foreach ($callbacks as $field => $callback_rules)
 		{
 			foreach ($callback_rules as $callback_rule)
@@ -3144,12 +3640,14 @@ class Gas_bureau {
 			}
 		}
 
+		// Inspect the custom rule callbacks process
 		if ( ! empty($callback_success) and $success == TRUE)
 		{
 			foreach ($callback_success as $single_result)
 			{
 				if ($single_result == FALSE )
 				{
+					// If any rule fails, all fails
 					$success = FALSE;
 
 					continue;
@@ -3157,6 +3655,7 @@ class Gas_bureau {
 			}
 		}
 
+		// Build the original $_POST data
 		if ( ! $is_post) $_POST = $old_post;
 
 		return $success;
@@ -3177,8 +3676,10 @@ class Gas_bureau {
 	{
 		$unique_success = array();
 
+		// Get table name
 		$table = Gas::factory($model, array(), FALSE)->validate_table()->table;
 
+		// Iterate all unique fields and validate
 		foreach ($unique_fields as $unique)
 		{
 			$res = null;
@@ -3241,10 +3742,12 @@ class Gas_bureau {
 	{
 		if (Gas_core::$cli)
 		{
+			// If the request came from CLI, instantiate new Linguist class
 			$linguist = new Gas_linguist;
 		}
 		else
 		{
+			// Otherwise, use Lang class from CI singleton
 			$linguist = $this->_CI->lang;
 		}
 
@@ -3261,6 +3764,7 @@ class Gas_bureau {
 	 */
 	public function reset_cache()
 	{
+		// Flush the cached resources
 		self::$cache_resource = null;
 
 		return;
@@ -3279,20 +3783,24 @@ class Gas_bureau {
 	{
 		$path = '';
 
+		// Make sure migration configuration is the right one
 		if (FALSE !== ($migration_config = Gas_core::config('migration_config')))
 		{
 			if ($migration_config['migration_enabled'] === FALSE)
 			{
+				// Migration config is off
 				show_error(Gas_core::tell('migration_disabled'));
 			}
 			elseif ($migration_config['migration_version'] !== 0)
 			{
+				// Migration config already have some version
 				show_error(Gas_core::tell('migration_no_initial'));
 			}
 			else
 			{
 				$path = $migration_config['migration_path'];
 
+				// If there is no migration folder, create one
 				if ( ! is_dir($path))
 				{
 					if ( ! mkdir($path)) 
@@ -3304,14 +3812,17 @@ class Gas_bureau {
 		}
 		else
 		{
+			// Migration config not found
 			show_error(Gas_core::tell('migration_no_setting'));
 		}
 
 		foreach ($all_models as $model)
 		{
+			// Generate all model's sibling
 			self::generate_migration($model, $path);
 		}
 
+		// Turn off auto-migrate marker
 		self::$auto_migrate = FALSE;
 
 		return;
@@ -3329,6 +3840,7 @@ class Gas_bureau {
 	 */
 	public static function generate_migration($model, $path)
 	{
+		// Count each migration file
 		self::$count_migrate++;
 
 		$counter = self::$count_migrate;
@@ -3339,6 +3851,7 @@ class Gas_bureau {
 
 		$forge_fields = array();
 
+		// Build the numeric prefix
 		if ($counter < 10)
 		{
 			$counter_prefix = '00';
@@ -3350,25 +3863,33 @@ class Gas_bureau {
 
 		$gas = Gas::factory($model);
 
+		// Get the primary key
 		$primary_key = $gas->primary_key;
 
+		// Get fields meta data
 		$model_meta = Gas::list_all_models($model);
 
 		$model_fields = $model_meta['fields'];
 
+		// Do we have a primary key?
 		$has_primary_key = (bool) in_array($primary_key, array_keys($model_fields));
 
+		// If primary key found, add it
 		if ($has_primary_key) $key_state = "\t\t".'$this->dbforge->add_key(\''.$primary_key.'\', TRUE);'."\n\n";
 
+		// Iterate each model fields
 		foreach ($model_fields as $field => $properties)
 		{
+			// Get all defined annotation and assign it into Forge fields collection
 			$forge_fields[$field] = Gas_janitor::identify_annotation($properties['annotations']);
 		}
 
 		$fields = array();
 
+		// Iterate the Forge collection
 		foreach ($forge_fields as $forge_field => $forge_conf)
 		{
+			// Build the Forge spec
 			$forge_item = "\t\t\t".'\''.$forge_field.'\' => array('."\n\n";
 
 			foreach ($forge_conf as $forge_key => $forge_val)
@@ -3381,14 +3902,17 @@ class Gas_bureau {
 			$fields[] = $forge_item;
 		}
 
+		// Generate the header portion
 		$header = self::generate_file_header('Migration class');
 
+		// Generate the forge spec
 		$create_table = "\t\t".'$this->dbforge->add_field(array('."\n\n"
 						.implode("\n", $fields)
 						."\t\t".'));'."\n\n"
 						.$key_state
 						."\t\t".'$this->dbforge->create_table(\''.$model.'\');'."\n";
 
+		// Generate the migration file spec
 		$migration_convention = array(
 
 				$header,
@@ -3419,10 +3943,13 @@ class Gas_bureau {
 
 		);
 		
+		// Build the migration file name
 		$migration_file = $counter_prefix.self::$count_migrate.'_'.$model.'.php';
 
+		// Create the migration file
 		$created = self::create_file($path, $migration_file, $migration_convention);
 
+		// Log the process result
 		if ($created !== TRUE)
 		{
 			show_error(Gas_core::tell('cannot_create_migration', $path.$migration_file));
@@ -3449,12 +3976,15 @@ class Gas_bureau {
 
 		$tables = array();
 
+		// Get the tables
 		$tables = self::$db->list_tables(TRUE);
 
+		// Iterate the tables
 		foreach ($tables as $table)
 		{
 			$fields = self::$db->field_data($table);
 
+			// Generate each model respectively
 			if ($table !== 'migrations') self::generate_model($table, $fields);
 		}
 
@@ -3477,39 +4007,50 @@ class Gas_bureau {
 	 */
 	public static function generate_model($model, $meta_fields)
 	{
+		// Get tables meta data
 		$meta_fields = Gas_janitor::get_input(__METHOD__, $meta_fields, TRUE);
 
 		$fields = array();
 
 		$key = 'id';
 
+		// Iterate the tables meta data
 		foreach ($meta_fields as $meta_field)
 		{
+			// Define field based by Gas spec
 			list($field_name, $field_type, $field_length, $is_key) = Gas_janitor::define_field($meta_field);
 
+			// Define field based by Forge spec
 			list($forge_name, $forge_type, $forge_length, $forge_key) = Gas_janitor::define_field($meta_field, 'forge_field', self::engine_driver());
 
 			$field_annotation = '';
 
 			$field_annotation = $forge_type;
 
+			// Build the fields collection
 			$fields[] = "\t\t\t".'\''.$field_name.'\' => Gas::field(\''.$field_type.$field_length.'\','
 						.' array(), \''.$field_annotation.'\'),';
 		}
 
+		// Get model name
 		$model = Gas_janitor::get_input(__METHOD__, $model, TRUE) and $model = strtolower($model);
 
+		// Generate the header portion
 		$header = self::generate_file_header();
 
+		// Generate the table property portion
 		$table = "\n\t".'public $table = \''.$model.'\';'."\n";
 
+		// Generate the primary key portion
 		$primary_key = "\n\t".'public $primary_key = \''.$key.'\';'."\n";
 
+		// Generate the validation and field definition portion
 		$validation = "\t\t".'$this->_fields = array('."\n\n"
 				.implode("\n\n", $fields)
 				."\n\n"
 				."\t\t".');';
 
+		// Generate the initial callbacks
 		$callback = "\n\n"
 					."\t".'function _before_check() {}'."\n"
 					."\n\n"
@@ -3523,6 +4064,7 @@ class Gas_bureau {
 					."\n\n"
 					."\t".'function _after_delete() {}'."\n";
 
+		// Generate the gas model file spec
 		$model_convention = array(
 
 				$header,
@@ -3547,6 +4089,7 @@ class Gas_bureau {
 
 		);
 
+		// Determine models directory
 		if (is_string(Gas_core::config('models_path')))
 		{
 			$model_dir = APPPATH.Gas_core::config('models_path');
@@ -3556,10 +4099,13 @@ class Gas_bureau {
 			$model_dir = APPPATH.'models';
 		}
 
+		// Build the model file name
 		$model_file = $model.Gas_core::config('models_suffix').'.php';
 
+		// Create the model file
 		$created = self::create_file($model_dir, $model_file, $model_convention);
 
+		// Log the process result
 		if ($created !== TRUE)
 		{
 			show_error(Gas_core::tell('cannot_create_model', $model_dir.DIRECTORY_SEPARATOR.$model_file));
@@ -3583,6 +4129,7 @@ class Gas_bureau {
 	 */
 	public static function generate_file_header($type = 'Gas model')
 	{
+		// Generate the header portion for auto-created files
 		$header = '<?php if ( ! defined(\'BASEPATH\')) exit(\'No direct script access allowed\');';
 
 		$header .= "\n\n".'/*'
@@ -3606,14 +4153,17 @@ class Gas_bureau {
 	{
 		if ( ! isset(self::$resource_state[$resource])) self::$resource_state[$resource] = array();
 
+		// Set the action name
 		$action = strtoupper($action);
 
 		if ( ! isset(self::$resource_state[$resource][$action]))
 		{
+			// If the resource has not been monitored, create one
 			self::$resource_state[$resource][$action] = 1;
 		}
 		else
 		{
+			// Otherwise, increase the counter number
 			$action_count = self::$resource_state[$resource][$action];
 
 			$action_count++;
@@ -3635,6 +4185,7 @@ class Gas_bureau {
 	 */
 	protected static function changed_resource($resource)
 	{
+		// Return the resource state
 		return isset(self::$resource_state[$resource]);
 	}
 
@@ -3651,6 +4202,7 @@ class Gas_bureau {
 	{
 		if ( ! self::get_cache_schema()) return;
 
+		// Hash the task, and assign it into cache key collection
 		self::$cache_key = md5(serialize($task));
 
 		return;
@@ -3671,6 +4223,7 @@ class Gas_bureau {
 
 		$key = self::$cache_key;
 
+		// Assign it into cache resource collection
 		self::$cache_resource[$key] = $resource;
 
 		return;
@@ -3688,6 +4241,7 @@ class Gas_bureau {
 	{
 		if ( ! self::get_cache_schema()) return;
 
+		// Determine whether a resource is a valid cached 
 		return isset(self::$cache_resource[self::$cache_key]);
 	}
 
@@ -3703,6 +4257,7 @@ class Gas_bureau {
 	{
 		if ( ! self::get_cache_schema()) return;
 
+		// Return the cached resource
 		return self::$cache_resource[self::$cache_key];
 	}
 
@@ -3716,6 +4271,7 @@ class Gas_bureau {
 	 */
 	private static function get_cache_schema()
 	{
+		// Get the global caching schema configuration
 		return Gas_core::config('cache_request');
 	}
 
@@ -3780,8 +4336,14 @@ class Gas_bureau {
 
 class Gas_janitor {
 
+	/**
+	 * @var  array  Hold DB AR properties
+	 */
 	public static $ar = array('select' => array(), 'from' => array(), 'join' => array(), 'where' => array(), 'like' => array(), 'groupby' => array(), 'having' => array(), 'orderby' => array(), 'wherein' => array(), 'aliased_tables' => array(), 'no_escape' => array(), 'distinct' => FALSE, 'limit' => FALSE, 'offset' => FALSE, 'order' => FALSE);
 
+	/**
+	 * @var  array  Hold all defined action collections
+	 */
 	public static $dictionary = array(
 
 		'transaction_pointer' => array('trans_off', 'trans_start', 'trans_begin'),
@@ -3798,6 +4360,9 @@ class Gas_janitor {
 
 	);
 
+	/**
+	 * @var  array  Hold all defined datatypes collections
+	 */
 	public static $datatypes = array(
 
 		'numeric' => array('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INT2', 'INT4', 'INT8', 'INTEGER', 'BIGINT', 'DECIMAL', 'FLOAT', 'FLOAT4', 'FLOAT8', 'DOUBLE', 'REAL', 'BIT', 'BOOL', 'SERIAL', 'SERIAL8', 'BIGSERIAL', 'DOUBLE PRECISION', 'NUMERIC'),
@@ -3810,10 +4375,19 @@ class Gas_janitor {
 
 	);
 
+	/**
+	 * @var  array  Hold all default datatypes collections
+	 */
 	public static $default_datatypes = array('datetime' => 'DATETIME', 'string' => 'TEXT', 'spatial' => 'GEOMETRY', 'char' => 'VARCHAR', 'numeric' => 'TINYINT', 'auto' => 'INT', 'int' => 'INT', 'email' => 'VARCHAR');
 
+	/**
+	 * @var  array  Hold hidden keys
+	 */
 	public static $hidden_keys;
 
+	/**
+	 * @var  array  Hold numeric keys
+	 */
 	public static $num_keys;
 
 	/**
@@ -3827,14 +4401,18 @@ class Gas_janitor {
 	 */
 	public static function define_field($meta_data, $type = 'gas_field', $driver = '')
 	{
+		// Get field name
 		$field_name = $meta_data->name;
 
+		// Get field raw type
 		$field_raw_type = strtoupper($meta_data->type);
 
 		$field_gas_type = '';
 
+		// Determine whether this field is a primary key or not
 		$is_key = (bool) $meta_data->primary_key;
 
+		// Determine the global datatype
 		foreach (self::$default_datatypes as $gas_type => $default)
 		{
 			if ($field_raw_type == $default)
@@ -3847,23 +4425,29 @@ class Gas_janitor {
 
 		if ($field_gas_type == '')
 		{
+			// Determine the gas spec datatype
 			$field_gas_type = self::diagnostic($field_raw_type, 'datatypes');
 		}
 
+		// Set the `auto` annotation
 		if ($is_key and $field_gas_type == 'int') $field_gas_type = 'auto';
 
+		// Set the `char` annotation
 		if ( ! strpos($field_name, 'email') and $field_gas_type == 'email') $field_gas_type = 'char';
 		
 		if ($type == 'gas_field')
 		{
+			// Set gas type spec
 			$field_type = $field_gas_type;
 
+			// Set gas constraint spec
 			$field_length = ($meta_data->max_length > 0) ? '['.$meta_data->max_length.']' : '';
 		}
 		elseif ($type == 'forge_field')
 		{
 			if (self::$default_datatypes[$field_gas_type] != $field_raw_type)
 			{
+				// Set Forge type spec
 				$field_type = $field_raw_type;
 			}
 			else
@@ -3871,6 +4455,7 @@ class Gas_janitor {
 				$field_type = '';
 			}
 
+			// Set Forge constraint spec
 			$field_length = ($meta_data->max_length > 0) ? $meta_data->max_length : 0;
 		}
 		else
@@ -3893,6 +4478,7 @@ class Gas_janitor {
 	 */
 	public static function diagnostic($name, $source = 'dictionary')
 	{
+		// Determine an item based by selected collection
 		foreach (self::$$source as $type => $nodes)
 		{
 			if (in_array($name, $nodes)) return $type;
@@ -3910,12 +4496,16 @@ class Gas_janitor {
 	 */
 	public static function identify_meta($gas)
 	{
+		// Instantiate new gas instance
 		$root = Gas::factory($gas, array(), FALSE);
 
+		// Get the table name
 		$table = self::get_input(__METHOD__, $root->validate_table()->table, TRUE);
 
+		// Get the primary key collumn name
 		$primary_key = self::get_input(__METHOD__, $root->primary_key, TRUE);
 
+		// Get the relationship setting
 		$relations = self::get_input(__METHOD__, $root->relations, FALSE, array());
 
 		return array($table, $primary_key, $relations);
@@ -3931,14 +4521,19 @@ class Gas_janitor {
 	 */
 	public static function identify_link($through, $identifier, $tree = array())
 	{
+		// Get `through` table name
 		$through_table = Gas::factory($through, array(), FALSE)->validate_table()->table;
 
+		// Determine the relationship
 		$peer_relation = self::get_input(__METHOD__, self::identify_relations($tree['relations'], $tree['child']), TRUE);
 
+		// Get table, primary key and relations for child model
 		list($child_through, $child_custom_table, $child_custom_key, $child_self_ref) = self::identify_custom_setting($tree['relations'], $peer_relation, $tree['child']);
 
+		// Get the identifier
 		$child_identifier = ($child_custom_key !== '') ? $child_custom_key : $tree['table'].'_'.$tree['key'];
 
+		// Return the necessary information
 		return array(
 
 			'intermediate' => $through_table,
@@ -3964,6 +4559,7 @@ class Gas_janitor {
 	{
 		$peer_relation = null;
 
+		// Iterate the relationships and return the matched one
 		foreach ($relations as $type => $relation)
 		{
 			foreach ($relation as $model => $config)
@@ -3998,6 +4594,7 @@ class Gas_janitor {
 
 		$self = FALSE;
 
+		// Determine the custom relationship setting
 		if ( ! empty ($relations[$type][$model]) and ($custom_setting = $relations[$type][$model]))
 		{
 			isset($custom_setting['through']) and $through = $custom_setting['through'];
@@ -4025,6 +4622,7 @@ class Gas_janitor {
 
 		$new_annotation = array();
 
+		// Iterate the annotation and diagnose it based by datatypes collection
 		foreach ($annotation as $type)
 		{
 			if (in_array($type, $boolean))
@@ -4042,18 +4640,6 @@ class Gas_janitor {
 		}
 
 		return $new_annotation;
-	}
-
-	/**
-	 * combine
-	 *
-	 * @access  public
-	 * @param   array
-	 * @return  array
-	 */
-	public static function combine($a, $b)
-	{
-		return array($a.'_'.$b, $b.'_'.$a);
 	}
 
 	/**
@@ -4101,6 +4687,7 @@ class Gas_janitor {
 	 */
 	public static function arr_timestamp($arrays, $new = FALSE)
 	{
+		// Build the timestamp spec
     	if ( ! is_array($arrays))
     	{
     		if ($new)
@@ -4131,6 +4718,7 @@ class Gas_janitor {
 	 */
 	public static function arr_unix_timestamp($arrays, $new = FALSE)
 	{
+		// Build the unix timestamp spec
     	if ( ! is_array($arrays))
     	{
     		if ($new)
@@ -4249,6 +4837,7 @@ class Gas_janitor {
 
 		$recorder = self::get_input(__METHOD__, $recorder, FALSE, array());
 
+		// Determine the recorder type based by action collection
 		foreach (self::$dictionary as $type => $nodes)
 		{
 			foreach ($nodes as $node)
@@ -4300,6 +4889,7 @@ class Gas_janitor {
 
 		$tasks = array_combine(array_keys(self::$dictionary), $blank_disc);
 
+		// Build the action list for compile process based by passed recorder
 		foreach ($recorder as $task)
 		{
 			foreach (self::$dictionary as $type => $nodes)
@@ -4464,6 +5054,7 @@ class Gas_janitor {
 	{
 		$condition = self::$dictionary['condition'];
 
+		// Iterate all condition record, and make it fit with JOIN portion
 		foreach ($condition as $node)
 		{
 			foreach ($recorder as $index => $statement)
