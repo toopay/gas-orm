@@ -31,7 +31,10 @@ And optionaly, there is several generic extensions available as default. If you 
 +========================+
 |Gas_extension_dummy     |
 +------------------------+
-
+|Gas_extension_html      |
++------------------------+
+|Gas_extension_jquery    |
++------------------------+
 If you disabled all of native extensions, then you can use them.
 
 Function Names
@@ -221,9 +224,7 @@ Other than above list, avoid to have this properties name in your Gas model, unl
 +------------------------+
 |$loaded_models          |
 +------------------------+
-|$childs                 |
-+------------------------+
-|$childs_resource        |
+|$cli                    |
 +------------------------+
 |$init                   |
 +------------------------+
@@ -274,6 +275,8 @@ Other than above list, avoid to have this properties name in your Gas model, unl
 |$_get_child_nodes       |
 +------------------------+
 |$_get_reflection_fields |
++------------------------+
+|$_migrated              |
 +------------------------+
 
 If somehow, you want to overide those properties in your model, you must know exactly how it should be used.

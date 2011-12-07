@@ -14,5 +14,7 @@ Replace old files with the new one. The main change is on **application/librarie
 
 - Fix issue on validation process. 
 - Fix issue on auto-migrate process at Postgre database.
+- Fix issue on eager load
+- Added proper comments
 
 .. [#143] https://github.com/toopay/CI-GasORM-Library/tree/1.4.3
