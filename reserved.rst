@@ -35,6 +35,7 @@ And optionaly, there is several generic extensions available as default. If you 
 +------------------------+
 |Gas_extension_jquery    |
 +------------------------+
+
 If you disabled all of native extensions, then you can use them.
 
 Function Names
