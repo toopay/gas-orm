@@ -57,7 +57,7 @@ Gas ORM is licensed under BSD. [#bsd]_
 
 
 
-.. [#light] The main libraries files size is just 80 Kb, and it uses small memory footprint.
+.. [#light] The main libraries files size is just 110 Kb, and it uses small memory footprint.
 .. [#easy] If you follow the convention, the setup is minimal.
 .. [#orm_wikipedia] http://en.wikipedia.org/wiki/Object-relational_mapping.
 .. [#ar_wikipedia] http://en.wikipedia.org/wiki/Active_record.
