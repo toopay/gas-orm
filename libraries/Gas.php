@@ -2049,7 +2049,7 @@ class Gas_core {
 
  				$link = Gas_janitor::identify_link($through, $identifier, $tree);
 
- 				if ($peer_relations = 'belongs_to') $identifier = $parent_key;
+ 				if ($peer_relation = 'belongs_to') $identifier = $parent_key;
  			}
 
  			// Hydrate the child instances
@@ -3054,14 +3054,9 @@ class Gas_bureau {
 		if (in_array($peer_relation, $many_to_many))
 		{
 			// Set the pivot table
-			if (empty($custom_table))
-			{
-				$pivot_table = $foreign_table.'_'.$table;
-			}
-			else
-			{
-				$pivot_table = $custom_table;
-			}
+			$intermediate_table = (empty($custom_table)) ? $foreign_table.'_'.$table : $custom_table;
+
+			$pivot_table = ( ! empty($through)) ? $through : $intermediate_table;
 
 			$recorder = Gas_janitor::tape_track($identifier, $identifiers, $pivot_table);
 
