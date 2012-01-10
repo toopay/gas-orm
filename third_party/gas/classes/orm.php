@@ -343,7 +343,7 @@ class ORM {
 		return Core::compile($gas, $name, $arguments);
 	}
 
-    /**
+	/**
 	 * Overloading, utilized for reading data from inaccessible properties.
 	 *
 	 * @param	string
