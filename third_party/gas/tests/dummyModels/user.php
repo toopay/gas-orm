@@ -10,7 +10,7 @@
  * dard DB utility packages also validation class.
  *
  * @package     Gas ORM
- * @subpackage  Gas ORM {2:Subname}
+ * @subpackage  Gas ORM Model
  * @category    ORM
  * @version     2.0.0
  * @author      Taufan Aditya A.K.A Toopay
@@ -87,13 +87,13 @@ class User extends ORM {
 		self::forge()->create_table($table);
 
 		// Then add some dummy data
-        $data = array(
-            array('id' => 1, 'name' => 'John Doe', 'email' => 'johndoe@john.com', 'username' => 'johndoe'),
-            array('id' => 2, 'name' => 'Derek Jones', 'email' => 'derekjones@world.com','username' => 'derek'),
-            array('id' => 3, 'name' => 'Frank Sinatra', 'email' => 'franks@world.com', 'username' => 'fsinatra'),
-            array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@coldplay.com', 'username' => 'cmartin'),
+		$data = array(
+		    array('id' => 1, 'name' => 'John Doe', 'email' => 'johndoe@john.com', 'username' => 'johndoe'),
+		    array('id' => 2, 'name' => 'Derek Jones', 'email' => 'derekjones@world.com','username' => 'derek'),
+		    array('id' => 3, 'name' => 'Frank Sinatra', 'email' => 'franks@world.com', 'username' => 'fsinatra'),
+		    array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@coldplay.com', 'username' => 'cmartin'),
 
-        );
+		);
 
 		self::insert_batch($data); 
 	}
