@@ -1,10 +1,10 @@
-# CodeIgniter Gas ORM Library
+# Gas ORM
 
 A lighweight and easy-to-use ORM for CodeIgniter
 
 ## Requirement
 
-* PHP v.5.2.x
+* PHP >= v.5.3
 * CodeIgniter v.2.x.x
 
 ## What is Gas ORM ?

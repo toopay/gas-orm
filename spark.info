@@ -1,4 +1,0 @@
-name: gas
-version: 1.4.3
-compatibility: 2.1.0
-tags: ["orm", "gas", "active record"]

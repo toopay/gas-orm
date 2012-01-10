@@ -14,66 +14,21 @@
 | -------------------------------------------------------------------
 | Prototype:
 |
-|  $config['models_path'] = array(APPPATH.'models', APPPATH.'modules', FCPATH.'modules');
+|  key for namespace, value for path
+|  eg, the default was :
+|   
+|  $config['models_path'] = array('Model' => APPPATH.'models');
+|
+|  Above mean, if within your script you requesting something like :
+|
+|  $user = Model\User::all();
+|
+|  Then Gas autoloader will find 'user.php' within APPPATH.'models'  
 |
 */
 
-$config['models_path'] = array(APPPATH.'models', APPPATH.'modules', FCPATH.'modules');
+$config['models_path'] = array('Model' => APPPATH.'models');
 
-/*
-| -------------------------------------------------------------------
-|  Models suffix
-| -------------------------------------------------------------------
-| Instruction:
-|
-| Each Gas model should have suffix, and its better to have suffix
-| other   than '_model',   because ussually that suffix is used by
-| CI native models. For example, if you have 'User' class then it
-| should named as 'user_gas.php'.
-|
-| Prototype:
-|
-|  $config['models_suffix'] = '_gas';
-|
-*/
-
-$config['models_suffix'] = '_gas';
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load models
-| -------------------------------------------------------------------
-| Prototype:
-|
-|  $config['autoload_models'] = TRUE;
-|
-*/
-
-$config['autoload_models'] = TRUE;
-
-/*
-| -------------------------------------------------------------------
-|  Extensions list
-| -------------------------------------------------------------------
-| Prototype:
-|
-|  $config['extensions'] = array('dummy', 'html', 'jquery');
-|
-*/
-
-$config['extensions'] = array('dummy', 'html', 'jquery');
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load extensions
-| -------------------------------------------------------------------
-| Prototype:
-|
-|  $config['autoload_extensions'] = TRUE;
-|
-*/
-
-$config['autoload_extensions'] = TRUE;
 
 /*
 | -------------------------------------------------------------------
