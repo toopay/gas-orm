@@ -139,9 +139,9 @@ class ORM {
 		$methods    = array('find');
 
 		if (in_array($name, $methods))
-    	{
-	    	$arguments = array($arguments);
-	    }
+		{
+			$arguments = array($arguments);
+		}
 
 		return $arguments;
 	}
@@ -323,7 +323,7 @@ class ORM {
 	{
 		$this->validate_namespace();
 		$this->validate_table();
-    	$arguments = self::validate_method($name, $arguments);
+		$arguments = self::validate_method($name, $arguments);
 
 		return Core::compile($this, $name, $arguments);
 	}
@@ -336,12 +336,12 @@ class ORM {
 	 * @return	mixed
 	 */
 	public static function __callStatic($name, $arguments)
-    {
-    	$gas       = new static();
-    	$arguments = self::validate_method($name, $arguments);
-    	
+	{
+		$gas       = new static();
+		$arguments = self::validate_method($name, $arguments);
+		
 		return Core::compile($gas, $name, $arguments);
-    }
+	}
 
     /**
 	 * Overloading, utilized for reading data from inaccessible properties.
@@ -350,7 +350,7 @@ class ORM {
 	 * @return	mixed
 	 */
 	public function __get($var)
-    {
-    	return $this->record->get('result.'.$var, NULL);
-    }
+	{
+		return $this->record->get('result.'.$var, NULL);
+	}
 }

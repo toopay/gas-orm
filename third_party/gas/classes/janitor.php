@@ -85,8 +85,8 @@ class Janitor {
 	 */
 	public static function arr_trim($arrays)
 	{
-    	if ( ! is_array($arrays)) return trim($arrays);
- 
-    	return array_map('\\Gas\\Janitor::arr_trim', $arrays);
+		if ( ! is_array($arrays)) return trim($arrays);
+
+		return array_map('\\Gas\\Janitor::arr_trim', $arrays);
 	}
 }

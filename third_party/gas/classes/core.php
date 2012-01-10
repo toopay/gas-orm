@@ -543,7 +543,7 @@ class Core {
 		// Iterate over the recorder and match against task dictionary
 		while ($recorder->valid())
 		{
-		    foreach (self::$dictionary as $type => $nodes)
+			foreach (self::$dictionary as $type => $nodes)
 			{
 				if (in_array($recorder->key(), $nodes))
 				{
@@ -568,22 +568,22 @@ class Core {
 	 */
 	public static function __callStatic($name, $args)
     {
-    	// Defined DBAL
-    	$dbal = array('forge', 'util');
+		// Defined DBAL
+		$dbal = array('forge', 'util');
 
-    	if (in_array($name, $dbal))
-    	{
-    		// Return corresponding component (DB Forge or DB Util)
-    		$dbal_component = 'db'.$name;
+		if (in_array($name, $dbal))
+		{
+			// Return corresponding component (DB Forge or DB Util)
+			$dbal_component = 'db'.$name;
 
-    		return static::$$dbal_component;
+			return static::$$dbal_component;
 
-    	}
-    	elseif (($method_type = self::diagnostic($name)) && ! empty($method_type))
-    	{
-    		// Give appropriate return, based by each task node needs
-    		if ($method_type == 'condition' or $method_type == 'selector')
-    		{
+		}
+		elseif (($method_type = self::diagnostic($name)) && ! empty($method_type))
+		{
+			// Give appropriate return, based by each task node needs
+			if ($method_type == 'condition' or $method_type == 'selector')
+			{
 				// Always, sanitize arguments
 				$args = Janitor::get_input($name, $args, TRUE);
 
@@ -598,29 +598,29 @@ class Core {
 				$gas::$recorder->set($name, $args);
 
 				return $gas;
-    		}
-    		elseif ($method_type == 'executor')
-    		{
-    			$executor  = static::$dictionary['executor'];
-    			$write     = array_slice($executor, 0, 6);
-    			$operation = array_slice($executor, 6, 4);
-    			$utility   = array_slice($executor, 10, 6);
-    			
-    			if (in_array($name, $utility))
-    			{
-    				// This not affected any row or any record
-    				return self::$db->$name();
-    			}
-    			else
-    			{
-    				// Always, sanitize arguments
+			}
+			elseif ($method_type == 'executor')
+			{
+				$executor  = static::$dictionary['executor'];
+				$write     = array_slice($executor, 0, 6);
+				$operation = array_slice($executor, 6, 4);
+				$utility   = array_slice($executor, 10, 6);
+				
+				if (in_array($name, $utility))
+				{
+					// This not affected any row or any record
+					return self::$db->$name();
+				}
+				else
+				{
+					// Always, sanitize arguments
 					$args = Janitor::get_input($name, $args, TRUE);
 
-    				// Ensure once, in case there are some deprecated method
-    				if ( ! is_callable(array(self::$db, $name)))
-    				{
-    					throw new \BadMethodCallException('['.$name.']Unknown method.');
-    				}
+					// Ensure once, in case there are some deprecated method
+					if ( ! is_callable(array(self::$db, $name)))
+					{
+						throw new \BadMethodCallException('['.$name.']Unknown method.');
+					}
 			    		
 					// Build the task onto the Gas instance
 					$gas = array_shift($args);
@@ -631,13 +631,13 @@ class Core {
 					$gas::$recorder->set($name, $args);
 
 					return self::_execute($gas);
-    			}
-    		}
-    	}
-    	else
-    	{
-    		// Good bye
+				}
+			}
+		}
+		else
+		{
+			// Good bye
 			throw new \BadMethodCallException('['.$name.']Unknown method.');
-    	}
+		}
     }
 }
