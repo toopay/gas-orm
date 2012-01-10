@@ -156,29 +156,29 @@ class Gas {
      */
     final public function exception(Exception $e)
     {
-    	// Access current instance singleton
+		// Access current instance singleton
 		$CI      =& get_instance();
-    	$speaker = $CI->lang;
+		$speaker = $CI->lang;
 		$speaker->load('gas');
-		
+
 		// Get the exception message
 		$parser    = NULL;
-    	$exception = explode(':', $e->getMessage());
+		$exception = explode(':', $e->getMessage());
 
-    	// Parse the point and the identifier
+		// Parse the point and the identifier
 		$point  = $exception[0];
 
-    	if (count($exception) == 2)
-    	{
-    		$parser = $exception[1];
-    	}
-		
+		if (count($exception) == 2)
+		{
+			$parser = $exception[1];
+		}
+
 		// Is there something to parse?
 		if (FALSE === ($msg = $speaker->line($point)))
 		{
 			$msg = $point;
 		}
-		
+
 		// Finalize the error message
 		$error = (is_string($parser)) ? sprintf($msg, $parser) : $msg;
 
