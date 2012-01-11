@@ -30,10 +30,13 @@ class FindTest extends PHPUnit_Framework_TestCase {
 
     public function testFindSingle()
     {
+        // Find user with id `1`
         $user1 = Model\User::find(1);
+
         // Consist
         $this->assertInstanceOf('Gas\ORM', $user1);
         $this->assertInstanceOf('Gas\Data', $user1->record);
+        
         // Check result
         $this->assertEquals($user1->id, '1');
         $this->assertEquals($user1->name, 'John Doe');
@@ -46,7 +49,7 @@ class FindTest extends PHPUnit_Framework_TestCase {
         $users = Model\User::find(2, 3, 4);
 
         // Should be an array, contain 3 user object
-        $this->assertArrayHasKey(2, $users);
+        $this->assertCount(3, $users);
 
         foreach ($users as $user)
         {

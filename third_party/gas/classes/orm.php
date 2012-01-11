@@ -218,7 +218,7 @@ class ORM {
 	 * @param  string 	 Field anotation
 	 * @return void
 	 */
-	public static function field($type = '', $args = array(), $schema = '')
+	final public static function field($type = '', $args = array(), $schema = '')
 	{
 		$rules       = array();
 		$args        = is_array($args) ? $args : (array) $args;

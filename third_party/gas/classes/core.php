@@ -348,7 +348,7 @@ class Core {
 			{
 				$field_gas_type = $gas_type;
 
-				continue;
+				break;
 			}
 		}
 
@@ -359,10 +359,10 @@ class Core {
 		}
 
 		// Set the `auto` annotation
-		if ($is_key and $field_gas_type == 'int') $field_gas_type = 'auto';
+		if ($is_key && $field_gas_type == 'int') $field_gas_type = 'auto';
 
 		// Set the `char` annotation
-		if ( ! strpos($field_name, 'email') and $field_gas_type == 'email') 
+		if ( ! strpos($field_name, 'email') && $field_gas_type == 'email') 
 		{
 			$field_gas_type = 'char';
 		}

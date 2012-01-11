@@ -27,7 +27,7 @@ class AllTest extends PHPUnit_Framework_TestCase {
         $allusers = Model\User::all();
 
         // Should be an array, contain 4 user object
-        $this->assertArrayHasKey(3, $allusers);
+        $this->assertCount(4, $allusers);
 
         foreach ($allusers as $user)
         {

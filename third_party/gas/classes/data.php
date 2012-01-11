@@ -59,8 +59,11 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @var array Data collection
      */
-	private $_collections = array();
+    private $_collections = array();
 
+    /**
+     * Constructor
+     */
     public function __construct($collections = array())
     {
         $this->_collections = $collections;
