@@ -217,7 +217,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
      * @param   mixed
      * @return  int
      */
-    public function get($path = null, $default = FALSE) 
+    public function get($path = NULL, $default = FALSE) 
     {
         // Create new array for processing
         $array = $this->_collections;
@@ -312,7 +312,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
     public function set($key, $value) 
     {
         // If the key are arrays build associative array, otherwise build one level array
-        if (is_array($key)) 
+        if ($key = explode('.', $key)) 
         {
             switch(count($key)) 
             {

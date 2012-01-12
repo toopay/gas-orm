@@ -116,12 +116,26 @@ class Gas {
 				Gas::exception($e);
 			});
 
-			$DB = $CI->load->database('default', TRUE, TRUE);
+			if ( ! class_exists('CI_DB'))
+			{
+				// No autoloading-database
+				$DB = $CI->load->database('default', TRUE, TRUE);
+			}
+			else
+			{
+				// The database already loaded somewhere
+				$DB = $CI->db;
+			}
 
+			// Consist DB integrity
 			if ( ! $DB instanceof CI_DB_Driver)
 			{
 				throw new InvalidArgumentException('db_connection_error:default');
 			}
+
+			// Register the DB instance over CI super object, 
+			// so it could be monitored via profiler
+			$CI->db = $DB;
 
 			// Define DB path
 			define('DBPATH', BASEPATH.'database'.DIRECTORY_SEPARATOR);
@@ -132,10 +146,6 @@ class Gas {
 			require_once(DBPATH.'DB_utility.php');
 			require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_utility.php');
 			require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_forge.php');
-
-			// Register the DB instance over CI super object, 
-			// so it could be monitored via profiler
-			$CI->db = $DB;
 
 			// Initialize core of Gas ORM
 			Gas\Core::make($DB)->init();
@@ -154,7 +164,7 @@ class Gas {
      * @param  Exception  
      * @return response   CI show_error method  
      */
-    final public function exception(Exception $e)
+    public function exception(Exception $e)
     {
 		// Access current instance singleton
 		$CI      =& get_instance();
@@ -185,6 +195,12 @@ class Gas {
 		// Check whether we need to generate tracer
 		if (preg_match('/^\[(.*?)\]([^\n]+)$/', $error, $m) && count($m) == 3)
 		{
+			// Initial values
+			$function = '';
+			$file     = '';
+			$line     = '';
+			$snap     = '';
+
 			// Capture the method which trigerring an exception
 			$trigger = $m[1];
 			$error   = $m[2];
@@ -197,14 +213,19 @@ class Gas {
 			{
 				if ($trace['function'] == $trigger)
 				{
-					// Get as needed
-					$errFile = $trace['file'];
-					$errLine = (int) $trace['line'];
-					// Build the trace
-					$file    = '  '.str_pad('File', 10).': '.$errFile."\n";
-					$line    = '  '.str_pad('Line', 10).': '.$errLine."\n";
+					$function = '  '.str_pad('Function', 10).': '.$trigger."\n";
 
-					continue;
+					if (array_key_exists('file', $trace))
+					{
+						// Get as needed
+						$errFile = $trace['file'];
+						$errLine = (int) $trace['line'];
+						// Build the trace
+						$file    = '  '.str_pad('File', 10).': '.$errFile."\n";
+						$line    = '  '.str_pad('Line', 10).': '.$errLine."\n";
+					}
+
+					break;
 				}
 			}
 
@@ -235,13 +256,17 @@ class Gas {
 				$snap .= '<small>'.($errLine-0).'</small>'.$lines[$errLine-0];
 				$snap .= '<small>'.($errLine+1).'</small>'.$lines[$errLine+1];
 				$snap .= '</code>';
-
-				$trace = '<pre class="exception">'."\n\n".$file.$line.$snap.'</pre>';
-				$error .= $trace;
 			}
+
+			$trace = '<pre class="exception">'."\n\n".$function.$file.$line.$snap.'</pre>';
+		}
+		else
+		{
+			$trace = '';
 		}
 
 		// Output it with CI `show_error`
+		$error .= $trace;
 		show_error($error);
     }
 
@@ -267,7 +292,7 @@ class Gas {
 					if ( file_exists($dir.DIRECTORY_SEPARATOR.$path.$filename.'.php'))
 					{
 						include_once($dir.DIRECTORY_SEPARATOR.$path.$filename.'.php');
-						continue;
+						break;
 					}
 				}
     		}

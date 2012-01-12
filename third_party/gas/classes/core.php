@@ -57,6 +57,11 @@
 use Gas\Janitor;
 
 class Core {
+
+	/**
+	 * @var  string  Global version value 
+	 */
+	const GAS_VERSION = '2.0.0';
 	
 	/**
 	 * @var  object  Hold DB Instance
@@ -213,7 +218,27 @@ class Core {
 	public static $thread_resource;
 
 	/**
-	 * @var  bool  Core class initialization flag
+	 * @var  array   Hold monitored resorce stated
+	 */
+	public static $resource_state;
+
+	/**
+	 * @var  bool    Per-request cache flag
+	 */
+	private static $cache = TRUE;
+
+	/**
+	 * @var  mixed   Hold cached compile result collection
+	 */
+	private static $cached_resource;
+
+	/**
+	 * @var  array   Hold hashed recorder bundle 
+	 */
+	private static $cache_key;
+
+	/**
+	 * @var  bool    Core class initialization flag
 	 */
 	private static $init = FALSE;
 
@@ -284,6 +309,68 @@ class Core {
 		$gas::$recorder->set('get', array($gas->validate_table()->table));
 
 		return self::_execute($gas);
+	}
+
+	/**
+	 * Save (INSERT or UPDATE) the record
+	 *
+	 * @param   object Gas Instance
+	 * @param   bool   Whether to perform validation or not
+	 * @return  bool
+	 */
+	final public static function save($gas, $check = FALSE)
+	{
+		// If `check` set to TRUE, do a validation
+		if ($check)
+		{
+			// Run _before_check and set initial valid mark
+			$gas   = call_user_func(array($gas, '_before_check'));
+			$valid = TRUE;
+
+			// Do the validation rules, if run from CI environment
+			if (function_exists('get_instance') && defined('CI_VERSION'))
+			{
+				$valid = self::_check($gas);
+
+				if ( ! $valid) return FALSE;
+			}
+			
+			// Run _after_check
+			$gas = call_user_func(array($gas, '_after_check'));
+		}
+
+		// Run _before_save hook
+		$gas = call_user_func(array($gas, '_before_save'));
+
+		// Get the table and entries
+		$table   = $gas->validate_table()->table;
+		$pk      = $gas->primary_key;
+		$entries = $gas->record->get('data');
+
+		// Determine whether to perform INSERT or UPDATE operation
+		// by checking `empty` property
+		if ($gas->empty)
+		{
+			// INSERT
+			$gas::$recorder->set('insert', array($table, $entries));
+		}
+		else
+		{
+			// Extract the identifier
+			$identifier = array($pk => $entries[$pk]);
+			unset($entries[$pk]);
+
+			// UPDATE
+			$gas::$recorder->set('update', array($table, $entries, $identifier));
+		}
+
+		// Perform requested saving method
+		$save = self::_execute($gas);
+
+		// Run _after_save hook
+		$gas = call_user_func(array($gas, '_after_save'));
+
+		return $save;
 	}
 
 	/**
@@ -447,6 +534,165 @@ class Core {
 	}
 
 	/**
+	 * Stop caching
+	 *
+	 * @return	void
+	 */
+	public function cache_flush()
+	{
+		// Flush the cached resources
+		self::$cached_resource = NULL;
+
+		return;
+	}
+
+	/**
+	 * Writes cache pointer for each compile tasks
+	 *
+	 * @param   array
+	 * @return  void
+	 */
+	public static function cache_start($task)
+	{
+		if ( ! self::cache_status()) return;
+
+		// Hash the task, and assign it into cache key collection
+		self::$cache_key = md5(serialize($task));
+
+		return;
+	}
+	
+	/**
+	 * Writes sibling hash for each resource's records
+	 *
+	 * @param   mixed
+	 * @return  void
+	 */
+	public static function cache_end($resource)
+	{
+		if ( ! self::cache_status()) return;
+
+		// Assign it into cache resource collection
+		$key = self::$cache_key;
+		self::$cached_resource[$key] = $resource;
+
+		return;
+	}
+
+	/**
+	 * Validate cache state
+	 * 
+	 * @return  bool
+	 */
+	public static function validate_cache()
+	{
+		if ( ! self::cache_status()) return;
+
+		// Determine whether a resource is a valid cached 
+		return isset(self::$cached_resource[self::$cache_key]);
+	}
+
+	/**
+	 * Fetching cache collections
+	 * 
+	 * @return  mixed
+	 */
+	public static function fetch_cache()
+	{
+		if ( ! self::cache_status()) return;
+
+		// Return the cached resource
+		return self::$cached_resource[self::$cache_key];
+	}
+
+	/**
+	 * Get cache base configuration
+	 *
+	 * @access  public
+	 * @return  bool
+	 */
+	public static function cache_status()
+	{
+		// Get the global caching flag
+		return self::$cache;
+	}
+
+	/**
+	 * Tracking resource state
+	 *
+	 * @param   string
+	 * @param   string
+	 * @return  void
+	 */
+	public static function track_resource($resource, $action)
+	{
+		// If it not exists, create an empty ones
+		if ( ! isset(self::$resource_state[$resource]))
+		{
+			self::$resource_state[$resource] = array();
+		} 
+
+		// Set the action name
+		$action = strtoupper($action);
+
+		if ( ! isset(self::$resource_state[$resource][$action]))
+		{
+			// If the resource has not been monitored, create one
+			self::$resource_state[$resource][$action] = 1;
+		}
+		else
+		{
+			// Otherwise, increase the counter number
+			$action_count = self::$resource_state[$resource][$action];
+			$action_count++;
+			self::$resource_state[$resource][$action] = $action_count;
+		}
+
+		return;
+	}
+
+	/**
+	 * Monitoring resource state
+	 *
+	 * @param   string
+	 * @return  bool
+	 */
+	public static function changed_resource($resource)
+	{
+		// Return the resource state
+		return isset(self::$resource_state[$resource]);
+	}
+
+	/**
+	 * Reset Select properties within query builder instance
+	 *
+	 * @param   mixed
+	 * @param   string
+	 * @return  void
+	 */
+	public static function reset_query()
+	{
+		// Reset query and get the cached resource
+		if (method_exists(self::$db, 'reset_query'))
+		{
+			self::$db->reset_query();
+		}
+		else
+		{
+			// Get all corresponding AR properties
+			$ar = static::$ar;
+
+			array_walk($ar, function ($default, $prop) use(&$ar) { 
+				// Set AR property to default value
+				$property            = 'ar_'.$prop;
+				\Gas\Core::$db->$property = $default;
+			});
+		}
+
+		return;
+	}
+
+	/**
 	 * Execute the compilation command
 	 *
 	 * @param  object Gas instance
@@ -458,15 +704,18 @@ class Core {
 		$tasks = self::_play_record($gas::$recorder);
 
 		// Mark every compile process into our caching pool
-		//self::cache_start($tasks);
+		self::cache_start($tasks);
 
 		// Prepare tasks bundle
-		$engine   = get_class(self::$db);
-		$compiler = array('gas' => $gas);
-		$flag     = array('condition', 'selector');
-		$bundle   = array('engine'   => $engine,
-		                  'compiler' => $compiler,
-		                  'flag'     => $flag);
+		$engine    = get_class(self::$db);
+		$compiler  = array('gas' => $gas);
+		$executor  = static::$dictionary['executor'];
+		$write     = array_slice($executor, 0, 6);
+		$flag      = array('condition', 'selector');
+		$bundle    = array('engine'   => $engine,
+		                   'compiler' => $compiler,
+		                   'write'    => $write,
+		                   'flag'     => $flag);
 
 		// Assign the task to the right person
 		self::$task_manager = $bundle;
@@ -481,24 +730,48 @@ class Core {
 					if ( ! empty(\Gas\Core::$task_manager)) 
 					{
 						// Diagnose the task
-						$flag   = ! in_array($task, \Gas\Core::$task_manager['flag']);
 						$action = key($arguments);
 						$args   = array_shift($arguments);
+						$flag   = in_array($task, \Gas\Core::$task_manager['flag']);
+						$write  = in_array($action, \Gas\Core::$task_manager['write']);
+						$gas    = \Gas\Core::$task_manager['compiler']['gas'];
+						$table  = $gas->table;
 
-						if ($flag)
+						if ( ! $flag)
 						{
-							$res = call_user_func_array(array(\Gas\Core::$db, $action), $args);
-
-							if ($action == 'get')
+							// Find within cache resource collection
+							if ($action == 'get' 
+							    && \Gas\Core::validate_cache() 
+							    && ! \Gas\Core::changed_resource($table))
 							{
+								$res = \Gas\Core::fetch_cache();
+								\Gas\Core::reset_query();
+							}
+							else
+							{
+								$res = call_user_func_array(array(\Gas\Core::$db, $action), $args);
+								\Gas\Core::cache_end($res);
+							}
+
+							// Post-processing query
+							if ($write)
+							{
+								// Track the resource for any write operations
+								\Gas\Core::track_resource($table, $action);
+							}
+							elseif ($action == 'get')
+							{
+								// Hydrate the gas instance
 								$instances = array();
-								$gas       = \Gas\Core::$task_manager['compiler']['gas'];
 								$model     = $gas->model();
 
 								foreach ($res->result_array() as $result)
 								{
-									$instance = new $model();
-									$instance->set_record('result', $result);
+									// Passed the result as record
+									$instance = new $model($result);
+									$instance->empty = FALSE;
+
+									// Pool to instance holder
 									$instances[] = $instance;
 									unset($instance);
 								}
@@ -558,6 +831,124 @@ class Core {
 		return $tasks;
 	}
 
+	/**
+	 * Check for validation process
+	 *
+	 * @param  object  Gas Instance
+	 * @return bool 
+	 */
+	private static function _check($gas)
+	{
+		// Initial valid mark
+		$valid  = TRUE;
+		$errors = array();
+
+		// Grab CI super object and load form validation
+		$CI =& get_instance();
+		$CI->load->library('form_validation');
+
+		// Grab all necessary lang files
+		$CI->lang->load('gas');
+		$CI->lang->load('form_validation');
+
+		// Grab the instance records, and set the POST (since CI validator only invoked by it)
+		// if there are any POST data, save it temporarily
+		$entries  = $gas->record->get('data');
+		$old_post = $_POST;
+		$_POST    = $entries;
+		
+		// Extract the rules, and separate beetween,
+		// internal callback and CI validation rule
+		foreach ($entries as $field => $entry)
+		{
+			// Get all necessary property for perform validation
+			$label     = ucfirst(str_replace('_', ' ', $field));
+			$rules     = $gas::$fields[$field]['rules'];
+			$callbacks = $gas::$fields[$field]['callbacks'];
+
+			// Set each field's rule respectively	
+			$CI->form_validation->set_rules($field, $label, $rules);
+
+			// First we will perform internal callbacks
+			if ( ! empty($callbacks))
+			{
+				foreach ($callbacks as $callback)
+				{
+					// If defined callback not exists, show error
+					if ( ! is_callable(array($gas, $callback)))
+					{
+						throw new \InvalidArgumentException($callback.' was invalid callback method');
+					}
+
+					// Check the callback result
+					$success = call_user_func_array(array($gas, $callback), array($entry));
+					$method  = substr($callback, 1);
+
+					// If not success, grab the error message
+					if ( ! $success)
+					{
+						// Default callbacks
+						$datatype_errors = array('auto_check',
+						                         'char_check',
+						                         'date_check');
+
+						// If it was default internal error, grab
+						// corresponding Gas lang line
+						if (in_array($method, $datatype_errors))
+						{
+							$error = $CI->lang->line($method);
+						}
+						else
+						{
+							if (FALSE === ($error = $CI->lang->line($callback)))
+							{
+								if (FALSE === ($error = $CI->lang->line($method)))
+								{
+									$error = $callback.' method error with no explanation for %s';
+								}
+							}
+						}
+
+						// Set callback error
+						$errors[] = $callback;
+						$gas->errors[$field] = sprintf($error, $label);
+					}
+				}
+			}
+		}
+
+		// Perform CI validation
+		if ($CI->form_validation->run() == FALSE)
+		{
+			// Set an error boundary
+			$boundary = '<ERROR>';
+
+			// Get each error 
+			foreach ($entries as $field => $entry)
+			{
+				if (($error = $CI->form_validation->error($field, $boundary, $boundary)) and $error != '')
+				{
+					// Parse the error and put it into appropriate field
+					$error               = str_replace($boundary, '', $error);
+					$gas->errors[$field] = $error;
+				}
+			}
+
+			$valid = FALSE;
+		}
+
+		// Combine internal callback result with CI validation result
+		if (count($errors) > 0 or ! $valid)
+		{
+			$valid = FALSE;
+		}
+
+		// Validation has been done, set back the old post and return the validation result
+		$_POST = $old_post;
+
+		return $valid;
+	}
+
 	
 	/**
 	 * Overloading static method triggered when invoking special method.
@@ -568,8 +959,9 @@ class Core {
 	 */
 	public static function __callStatic($name, $args)
     {
-		// Defined DBAL
-		$dbal = array('forge', 'util');
+		// Defined DBAL and low-level query function
+		$dbal  = array('forge', 'util');
+		$query = array('query', 'simple_query');
 
 		if (in_array($name, $dbal))
 		{
@@ -578,6 +970,50 @@ class Core {
 
 			return static::$$dbal_component;
 
+		}
+		elseif (in_array($name, $query))
+		{
+			return call_user_func_array(array(static::$db, $name), array(array_pop($args)));
+			
+		}
+		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) AND count($m) == 2)
+		{
+			// Get the instance, passed field and value for WHERE condition
+			$gas   = array_shift($args);
+			$field = $m[1];
+			$value = array_shift($args);
+			
+			// Build the task onto the Gas instance
+			$gas::$recorder->set('where', array($field, $value));
+			
+			return self::all($gas);
+		}
+		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) AND count($m) == 2)
+		{
+			// Get the instance, passed arguments for SELECT condition
+			$gas   = array_shift($args);
+			$type  = $m[1];
+			$value = array_shift($args);
+			$value = (empty($value)) ? $gas->primary_key : $value;
+			
+			// Build the task onto the Gas instance
+			$gas::$recorder->set('select_'.$type, array($value));
+			
+			return self::all($gas);
+		}
+		elseif (preg_match('/^(first|last)$/', $name, $m) AND count($m) == 2)
+		{
+			// Get the instance, passed arguments for ORDER BY condition
+			$gas     = array_shift($args);
+			$order   = ($m[1] == 'first') ? 'asc' : 'desc';
+			$collumn = array_shift($args);
+			$collumn = is_null($collumn) ? $gas->primary_key : $collumn;
+
+			// Build the task onto the Gas instance
+			$gas::$recorder->set('order_by', array($collumn, $order));
+			$gas::$recorder->set('limit', array('1'));
+			
+			return self::all($gas);
 		}
 		elseif (($method_type = self::diagnostic($name)) && ! empty($method_type))
 		{

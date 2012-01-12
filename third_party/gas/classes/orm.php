@@ -75,6 +75,16 @@ class ORM {
 	public $primary_key = 'id';
 
 	/**
+	 * @var  bool    Determine whether an instance hold a record
+	 */
+	public $empty = TRUE;
+
+	/**
+	 * @var  array   Hold any errors occured
+	 */
+	public $errors = array();
+
+	/**
 	 * @var  object  Records holder
 	 */
 	public $record;
@@ -93,9 +103,10 @@ class ORM {
 	/**
 	 * Constructor
 	 * 
+	 * @param  array
 	 * @return void
 	 */
-	public function __construct()
+	function __construct($record = array())
 	{
 		// Validate namespace and table name
 		$this->validate_namespace();
@@ -105,6 +116,15 @@ class ORM {
 		$this->record   = new Data();
 		self::$recorder = new Data();
 
+		// Is there any data to record?
+		if ( ! empty($record))
+		{
+			foreach ($record as $key => $value)
+			{
+				self::set_record('data.'.$key, $value);
+			}
+		}
+
 		// Run _init method
 		$this->_init();
 	}
@@ -112,16 +132,98 @@ class ORM {
 	/**
 	 * Initial _init
 	 */
-	public function _init() {}
+	function _init() {}
+
+	/**
+	 * Initial _before_check
+	 */
+	function _before_check() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Initial _after_check
+	 */
+	function _after_check() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Initial _before_save
+	 */
+	function _before_save() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Initial _after_save
+	 */
+	function _after_save() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Initial _before_delete
+	 */
+	function _before_delete() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Initial _after_delete
+	 */
+	function _after_delete() 
+	{
+		return $this;
+	}
+
+	/**
+	 * Custom callback function for checking auto field
+	 *
+	 * @param   mixed
+	 * @return  bool
+	 */
+	function _auto_check($val)
+	{
+		return (bool) (empty($val) or is_integer($val) or is_numeric($val));
+	}
+	
+	/**
+	 * Custom callback function for checking string field
+	 *
+	 * @param   mixed
+	 * @return  bool
+	 */
+	function _char_check($val)
+	{
+		return (bool) (is_string($val) or $val === '');
+	}
+
+	/**
+	 * Custom callback function for checking datetime field
+	 *
+	 * @param   mixed
+	 * @return  bool
+	 */
+	function _date_check($val)
+	{
+		return (strtotime($val) !== FALSE);
+	}
 
 	/**
 	 * Serve static calls for ORM instantiation
 	 * 
+	 * @param  array  set the record
 	 * @return object
 	 */
-	final public static function make()
+	final public static function make($record = array())
 	{
-		return new static();
+		return new static($record);
 	}
 
 	/**
@@ -307,9 +409,25 @@ class ORM {
 			$other_annotations = Janitor::arr_trim($other_annotations);
 			$annotations       = array_merge($annotations, $other_annotations);
 		}
+
+		// Merge the rules and separate between internal callback
+		// And CI validation rules
+		$callbacks = array();
+		$rules     = array_merge($rules, $args);
+
+		foreach ($rules as $index => $rule)
+		{
+			if (strpos($rule, 'callback') === 0)
+			{
+				$callbacks[] = str_replace('callback', '', $rule);
+				unset($rules[$index]);
+			}
+		}
 		
-		// We now have define all rules and annotations
-		return array('rules' => implode('|', array_merge($rules, $args)), 'annotations' => $annotations);
+		// We now have define all rules, callbacks and annotations
+		return array('rules'       => implode('|', $rules), 
+		             'callbacks'   => $callbacks,
+		             'annotations' => $annotations);
 	}
 
 	/**
@@ -351,6 +469,17 @@ class ORM {
 	 */
 	public function __get($var)
 	{
-		return $this->record->get('result.'.$var, NULL);
+		return $this->record->get('data.'.$var, NULL);
+	}
+
+	/**
+	 * Overloading, utilized for reading data from inaccessible properties.
+	 *
+	 * @param	string
+	 * @return	mixed
+	 */
+	public function __set($var, $val)
+	{
+		return $this->record->set('data.'.$var, $val);
 	}
 }

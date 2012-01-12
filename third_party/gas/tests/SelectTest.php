@@ -41,20 +41,7 @@ class SelectTest extends PHPUnit_Framework_TestCase {
             $this->assertInternalType('string', $user->name);
             
             // Other than `id`, `username` and `name`, other field should be empty
-            $this->assertNull($user->email);
+            $this->assertEmpty($user->email);
         }
-    }
-
-    public function testSelectMax()
-    {
-        // Get user with the max of `id`
-        $user_max = Model\User::select_max('id')->all();
-
-        // Consist
-        $this->assertInstanceOf('Gas\ORM', $user_max);
-        $this->assertInstanceOf('Gas\Data', $user_max->record);
-
-        // The max id would be '4'
-        $this->assertEquals($user_max->id, '4');
     }
 }
