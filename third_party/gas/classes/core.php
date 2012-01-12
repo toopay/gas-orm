@@ -401,7 +401,7 @@ class Core {
 	public static function compile($gas, $method, $args)
 	{
 		// Interpret the method and merge argument, for internal method calls
-		$internal_method = array('Gas\Core', $method);
+		$internal_method = array('\\Gas\\Core', $method);
 		$arguments       = array_merge(array($gas), $args);
 		
 		if (is_callable($internal_method, TRUE))
@@ -693,6 +693,126 @@ class Core {
 	}
 
 	/**
+	 * Generate the child model/instance
+	 *
+	 * @param  object Gas instance
+	 * @param  mixed  Gas relationship spec
+	 * @param  mixed  Gas parent ids
+	 * @return object Child Gas 
+	 */
+	protected static function _generate_child($gas, $relationship, $ids = array())
+	{
+		// Define allowed options
+		$allowed = array('select', 'order_by', 'limit');
+
+		// Extract relationship properties
+		$type    = $relationship['type'];
+		$model   = $relationship['model'];
+		$key     = $relationship['key'];
+		$options = $relationship['options'];
+		$through = count($model) > 1;
+
+		// Parent information
+		$pk      = $gas->primary_key;
+		$table   = $gas->table;
+
+		// Child information
+		$foreign_model = $model[0]::make();
+		$fk            = $foreign_model->primary_key;
+		$foreign_table = $foreign_model->table;
+
+		// Unser the first tier model, since its now has been used
+		unset($relationship['model'][0]);
+
+		// Initial instances
+		$instances    = NULL;
+
+		// Hydrate child instance(s) based by relationship type
+		switch ($type)
+		{
+			case 'belongs_to' :
+				// check for key
+				if (empty($key))
+				{
+					$key = $foreign_table.'_'.$fk;
+				}
+
+				// check for ids
+				if (empty($ids))
+				{
+					$ids = array($gas->$key);
+				}
+
+				// If through not detected, changed back key to pk
+				if ( ! $through) $key = $pk;
+
+				break;
+
+			case 'has_one' :
+			case 'has_many':
+				// check for key
+				if (empty($key))
+				{
+					$key = $table.'_'.$pk;
+				}
+
+				// check for ids
+				if (empty($ids))
+				{
+					$ids = array($gas->$pk);
+				}
+
+				break;
+		}
+
+		
+
+		// Build the options if exists
+		if ( ! empty($options))
+		{
+			foreach ($options as $option)
+			{
+				// Parse option annotation
+				list($method, $args) = explode(':', $option);
+
+				if ( ! in_array($method, $allowed))
+				{
+					// No valid method found
+					continue;
+				}
+				else
+				{
+					// Casting the argument annotation
+					// Do the pre-process 
+					switch ($method)
+					{
+						case 'select':
+						case 'limit':
+							$foreign_model->$method($args);
+
+							break;
+						
+						case 'order_by':
+							if (preg_match('/^([^\n]+)\[(.*?)\]$/', $args, $m) AND count($m) == 3)
+							{
+								$foreign_model->$method($m[1], $m[2]);
+							}
+
+							break;
+					}
+				}
+			}
+		}
+
+		// Passed the ids and fetch the child instances
+		$foreign_model->where_in($key, $ids);
+		$instances = $foreign_model->get();
+
+		return $instances;
+	}
+
+
+	/**
 	 * Execute the compilation command
 	 *
 	 * @param  object Gas instance
@@ -976,7 +1096,7 @@ class Core {
 			return call_user_func_array(array(static::$db, $name), array(array_pop($args)));
 			
 		}
-		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) AND count($m) == 2)
+		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) && count($m) == 2)
 		{
 			// Get the instance, passed field and value for WHERE condition
 			$gas   = array_shift($args);
@@ -988,7 +1108,7 @@ class Core {
 			
 			return self::all($gas);
 		}
-		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) AND count($m) == 2)
+		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) && count($m) == 2)
 		{
 			// Get the instance, passed arguments for SELECT condition
 			$gas   = array_shift($args);
@@ -1001,7 +1121,7 @@ class Core {
 			
 			return self::all($gas);
 		}
-		elseif (preg_match('/^(first|last)$/', $name, $m) AND count($m) == 2)
+		elseif (preg_match('/^(first|last)$/', $name, $m) && count($m) == 2)
 		{
 			// Get the instance, passed arguments for ORDER BY condition
 			$gas     = array_shift($args);
@@ -1072,6 +1192,27 @@ class Core {
 		}
 		else
 		{
+			// Last try check relationships
+			$gas           = array_shift($args);
+			$relationships = $gas::$relationships;
+
+			// Iterate over relationship
+			foreach ($relationships as $patron => $props)
+			{
+				// Gotcha
+				if ($name == $patron && $gas->empty == FALSE)
+				{
+					// Check for any pre-process options
+					if ( ! empty($args))
+					{
+						$props['options'] = array_merge($args, $props['options']);
+					}
+
+					// Generate the child model
+					return self::_generate_child($gas, $props);
+				}
+			}
+
 			// Good bye
 			throw new \BadMethodCallException('['.$name.']Unknown method.');
 		}

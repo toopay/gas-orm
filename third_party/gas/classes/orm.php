@@ -90,6 +90,11 @@ class ORM {
 	public $record;
 
 	/**
+	 * @var  array   Relationship collections
+	 */
+	public static $relationships;
+
+	/**
 	 * @var  array   Field collections
 	 */
 	public static $fields;
@@ -244,6 +249,7 @@ class ORM {
 		{
 			$arguments = array($arguments);
 		}
+
 
 		return $arguments;
 	}
@@ -431,6 +437,33 @@ class ORM {
 	}
 
 	/**
+	 * Interpret relationships definition
+	 *
+	 * @param  string 	 Relationship Type (`has_one`, `has_many`, `belongs_to`, `self`)
+	 * @param  string 	 Relationship Model
+	 * @param  mixed 	 Relationship Identifier (foreign key)
+	 * @param  array 	 Relationship Options (pre-process queries)
+	 * @return void
+	 */
+	final public static function relationship($type, $model = '', $key = NULL, $options = array())
+	{
+		// Not found
+		if (empty($model))
+		{
+			throw new \InvalidArgumentException('models_found_no_relations:'.__CLASS__);
+		}
+
+		// Separate model(s) processing
+		$model = explode('=>', trim($model));
+		$model = Janitor::arr_trim($model);
+
+		return array('type'    => $type,
+		             'model'   => $model,
+		             'key'     => $key,
+		             'options' => empty($options) ? array() : $options);
+	}
+
+	/**
 	 * Overloading method triggered when invoking special method.
 	 *
 	 * @param	string
@@ -439,6 +472,15 @@ class ORM {
 	 */
 	public function __call($name, $arguments)
 	{
+		// If try to define relationship, immediately serve
+		if (preg_match('/^(has_one|has_many|belongs_to|self)$/', $name, $m) AND count($m) == 2)
+		{
+			// Merge passed arguments with relationship type
+			array_unshift($arguments, $m[1]);
+
+			return call_user_func_array(array('\\Gas\\ORM', 'relationship'), $arguments);
+		}
+
 		$this->validate_namespace();
 		$this->validate_table();
 		$arguments = self::validate_method($name, $arguments);
@@ -455,7 +497,7 @@ class ORM {
 	 */
 	public static function __callStatic($name, $arguments)
 	{
-		$gas       = new static();
+		$gas       = self::make();
 		$arguments = self::validate_method($name, $arguments);
 		
 		return Core::compile($gas, $name, $arguments);

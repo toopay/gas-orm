@@ -18,12 +18,14 @@ define('GASPATH', $gasdir.DIRECTORY_SEPARATOR);
 define('APPPATH', $basedir.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
 define('BASEPATH', $basedir.DIRECTORY_SEPARATOR.'system'.DIRECTORY_SEPARATOR);
 
-// Load everything
+// Load everything on base gas directory and everything under dummyModels
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'core.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'data.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'janitor.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'orm.php';
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'user.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'wife.php';
+// Load needed DB files
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_forge.php';
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_utility.php';

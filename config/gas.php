@@ -3,8 +3,7 @@
 | -------------------------------------------------------------------
 | Gas Configuration
 | -------------------------------------------------------------------
-| This file contains an array of Gas ORM configuration
-| used by the Gas ORM library.
+| This file contains an array of Gas ORM configuration.
 |
 */
 
