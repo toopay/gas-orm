@@ -103,6 +103,8 @@ class User extends ORM {
 		// Define relationships
 		self::$relationships = array(
 			'wife' => ORM::has_one('\\Model\\Wife', NULL, array('select:id,name')),
+			'kid'  => ORM::has_many('\\Model\\Kid', NULL, array('select:id,name')),
+			'job'  => ORM::has_many('\\Model\\Job_user => \\Model\\Job', NULL, array('select:id,name')),
 		);
 
 		// Define fields definition
@@ -113,5 +115,4 @@ class User extends ORM {
 			'username' => ORM::field('char[10]', array('required', 'callback_username_check')),
 		);
 	}
-	
 }

@@ -515,7 +515,7 @@ class ORM {
 	}
 
 	/**
-	 * Overloading, utilized for reading data from inaccessible properties.
+	 * Overloading, utilized for write data to inaccessible properties.
 	 *
 	 * @param	string
 	 * @return	mixed

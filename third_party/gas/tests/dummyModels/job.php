@@ -49,9 +49,9 @@
  */
 
 /**
- * Model\Wife Class.
+ * Model\Job Class.
  *
- * This dummy wife model, serve all test corresponding with Wife table and its relation
+ * This dummy job model, serve all test corresponding with Job table and its relation
  *
  * @package     Gas ORM
  * @version     2.0.0
@@ -60,7 +60,7 @@
 use \Gas\Core;
 use \Gas\ORM;
 
-class Wife extends ORM {
+class Job extends ORM {
 
 	/**
 	 * Set up method for unit testing
@@ -88,9 +88,11 @@ class Wife extends ORM {
 
 		// Then add some dummy data
 		$data = array(
-		    array('id' => 1, 'user_id' => 2, 'name' => 'Lourie Jones', 'hair_color' => 'black'),
-		    array('id' => 2, 'user_id' => 1, 'name' => 'Patricia Doe', 'hair_color' => 'black'),
-		    array('id' => 3, 'user_id' => 3, 'name' => 'Lily Sinatra', 'hair_color' => 'brunette'), 
+		    array('id' => 1, 'name' => 'Developer', 'description' => 'Awesome job, but sometimes makes you bored.'),
+		    array('id' => 2, 'name' => 'Politician', 'description' => 'This is not really a job.'),
+		    array('id' => 3, 'name' => 'Accountant', 'description' => 'Boring job, but you will get free snack at lunch.'),
+		    array('id' => 4, 'name' => 'Musician', 'description' => 'Only Coldplay can actually called Musician.'),
+
 		);
 
 		self::insert_batch($data); 
@@ -100,16 +102,14 @@ class Wife extends ORM {
 	{
 		// Define relationships
 		self::$relationships = array(
-			'user' => ORM::belongs_to('\\Model\\User'),
+			'user'  => ORM::has_many('\\Model\\Job_user => \\Model\\User', NULL, array('select:id,name,username')),
 		);
 
 		// Define fields definition
 		self::$fields = array(
-			'id'         => ORM::field('auto[3]'),
-			'user_id'    => ORM::field('int[3]'),
-			'name'       => ORM::field('char[40]'),
-			'hair_color' => ORM::field('email[20]'),
+			'id'          => ORM::field('auto[3]'),
+			'name'        => ORM::field('char[40]'),
+			'description' => ORM::field('string[100]'),
 		);
 	}
-	
 }

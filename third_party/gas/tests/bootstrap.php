@@ -25,6 +25,9 @@ require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'janitor.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'orm.php';
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'user.php';
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'wife.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'kid.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'job.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'job_user.php';
 // Load needed DB files
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_forge.php';

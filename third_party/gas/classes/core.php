@@ -248,7 +248,7 @@ class Core {
 	 * @param  object Database instance
 	 * @return void
 	 */
-	public function __construct($DB)
+	public function __construct(\CI_DB $DB)
 	{
 		if (self::init_status() == FALSE)
 		{
@@ -292,7 +292,7 @@ class Core {
 	 * @param  object Database instance
 	 * @return object
 	 */
-	public static function make($DB)
+	public static function make(\CI_DB $DB)
 	{
 		return new static($DB);
 	}
@@ -385,6 +385,12 @@ class Core {
 		// Get WHERE IN clause and execute `find_where_in` method,
 		// with appropriate arguments.
 		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
+
+		// Sort and remove duplicate id
+		// Sort the ids and remove same id
+		$in = array_unique($in);
+		sort($in);
+
 		$gas  = self::compile($gas, 'where_in', array($gas->primary_key, $in));
 
 		return self::all($gas);
@@ -712,22 +718,28 @@ class Core {
 		$options = $relationship['options'];
 		$through = count($model) > 1;
 
-		// Parent information
-		$pk      = $gas->primary_key;
-		$table   = $gas->table;
-
 		// Child information
 		$foreign_model = $model[0]::make();
 		$fk            = $foreign_model->primary_key;
 		$foreign_table = $foreign_model->table;
 
-		// Unser the first tier model, since its now has been used
-		unset($relationship['model'][0]);
+		// Parent information
+		if (is_array($gas))
+		{
+			// Get a sample instance
+			$sample   = $gas;
+			$instance = array_shift($sample);
 
-		// Initial instances
-		$instances    = NULL;
+			$pk       = $instance->primary_key;
+			$table    = $instance->table;
+		}
+		else
+		{
+			$pk      = $gas->primary_key;
+			$table   = $gas->table;
+		}
 
-		// Hydrate child instance(s) based by relationship type
+		// Generate key and identifier based by relationship type
 		switch ($type)
 		{
 			case 'belongs_to' :
@@ -737,14 +749,11 @@ class Core {
 					$key = $foreign_table.'_'.$fk;
 				}
 
-				// check for ids
-				if (empty($ids))
-				{
-					$ids = array($gas->$key);
-				}
+				// Generate the identifier
+				$identifier = $key;
 
 				// If through not detected, changed back key to pk
-				if ( ! $through) $key = $pk;
+				if ( ! $through or $relationship['revert']) $key = $pk;
 
 				break;
 
@@ -756,19 +765,39 @@ class Core {
 					$key = $table.'_'.$pk;
 				}
 
-				// check for ids
-				if (empty($ids))
-				{
-					$ids = array($gas->$pk);
-				}
+				// Generate the identifier
+				$identifier = $pk;
 
 				break;
 		}
 
-		
+
+		// Grab the ids with the identifier
+		if (empty($ids))
+		{
+			if (is_array($gas))
+			{
+				foreach ($gas as $entity)
+				{
+					$ids[] = $entity->$identifier;
+				}
+			}
+			else
+			{
+				$ids = array($gas->$identifier);
+			}
+			
+		}
+
+		// Unser the first tier model, since its now has been used
+		unset($relationship['model'][0]);
+		unset($model[0]);
+
+		// Initial instances
+		$instances    = NULL;
 
 		// Build the options if exists
-		if ( ! empty($options))
+		if ( ! empty($options) && ! $through)
 		{
 			foreach ($options as $option)
 			{
@@ -783,7 +812,7 @@ class Core {
 				else
 				{
 					// Casting the argument annotation
-					// Do the pre-process 
+					// and do the pre-process 
 					switch ($method)
 					{
 						case 'select':
@@ -804,13 +833,71 @@ class Core {
 			}
 		}
 
+		// Sort the ids and remove same id
+		$ids = array_unique($ids);
+		sort($ids);
+
 		// Passed the ids and fetch the child instances
 		$foreign_model->where_in($key, $ids);
 		$instances = $foreign_model->get();
 
+		// Recursive call for more than one tier model stack
+		if ($through)
+		{
+			// Build tier information from recent level
+			$tier_relation   = NULL;
+			$sample          = $instances;
+			$instance        = is_array($sample) ? array_shift($sample) : $sample;
+			$relationships   = $instance::$relationships;
+			$path            = array_values($model);
+
+			// Is there match model to run after this one?
+			foreach ($relationships as $index => $relation)
+			{
+				// Get the bottom and up path, as diff identifier
+				$rel    = $relation['model'];
+				$up     = (count($rel) > count($path)) ? count($rel) : count($path);
+				$bottom = (count($rel) < count($path)) ? count($rel) : count($path);
+
+				// Compare the relationship path
+				$diff = array_diff($path, $rel);
+				$intersection = array_intersect($path, $rel);
+
+				// Gotcha
+				if ($up > count($diff) and count($intersection) == count($bottom))
+				{
+					// Merge the passed options
+					if ( ! empty($options))
+					{
+						$relation['options'] = array_merge($options, $relation['options']);
+					}
+
+					// Include the diff onto the courier model
+					$relation['model']  = array_merge($rel, $diff);
+					$relation['revert'] = TRUE;
+
+					// Set tier index
+					$tier_relation = $relation;
+
+					break;
+				}
+			}
+
+			// Diagnose the next tier relation entity
+			if ( ! empty($tier_relation))
+			{
+				// Valid entity found, make a recursive call
+				return self::_generate_child($instances, $tier_relation);
+			}
+			else
+			{
+				// Non valid or broke path models relationships occurs
+				throw new \LogicException('models_found_no_relations:'.implode(' => ', $path));
+			}
+		}
+
 		return $instances;
 	}
-
 
 	/**
 	 * Execute the compilation command
@@ -1078,7 +1165,7 @@ class Core {
 	 * @return	mixed
 	 */
 	public static function __callStatic($name, $args)
-    {
+	{
 		// Defined DBAL and low-level query function
 		$dbal  = array('forge', 'util');
 		$query = array('query', 'simple_query');
@@ -1216,5 +1303,5 @@ class Core {
 			// Good bye
 			throw new \BadMethodCallException('['.$name.']Unknown method.');
 		}
-    }
+	}
 }

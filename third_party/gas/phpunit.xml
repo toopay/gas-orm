@@ -4,6 +4,7 @@
     <testsuites>
         <testsuite name="Gas ORM Test Suite">
             <directory>./tests/</directory>
+            <directory suffix="Test.php" phpVersion="5.3.0" phpVersionOperator=">=">./tests/</directory>
         </testsuite>
     </testsuites>
 </phpunit>
