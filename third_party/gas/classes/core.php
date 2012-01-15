@@ -80,11 +80,6 @@ class Core {
 	public static $dbforge;
 
 	/**
-	 * @var  object  Empty data collection
-	 */
-	public static $data;
-
-	/**
 	 * @var  array  Hold DB AR properties
 	 */
 	public static $ar = array(
@@ -273,7 +268,6 @@ class Core {
 			static::$dbforge = new $forge();
 
 			// Generate new collection of needed properties
-			static::$data              = new Data();
 			static::$entity_repository = new Data();
 
 			// Instantiate process has done now
@@ -310,16 +304,6 @@ class Core {
 	public static function make(\CI_DB $DB)
 	{
 		return new static($DB);
-	}
-
-	/**
-	 * Serve static calls for Data instantiation
-	 * 
-	 * @return object Empty data collection
-	 */
-	public static function data()
-	{
-		return static::$data;
 	}
 
 	/**

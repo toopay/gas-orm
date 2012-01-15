@@ -137,10 +137,10 @@ class ORM {
 		$this->validate_table();
 
 		// Instantiate data interface for `recorder`, `related`, `meta` and `record` properties
-		static::$recorder = Core::data();
-		$this->related    = Core::data();
-		$this->meta       = Core::data();
-		$this->record     = Core::data();
+		static::$recorder = new Data();
+		$this->related    = new Data();
+		$this->meta       = new Data();
+		$this->record     = new Data();
 
 		// Is there any data to record?
 		if ( ! empty($record))
