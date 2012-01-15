@@ -76,7 +76,7 @@ class Wife extends ORM {
 		self::forge()->drop_table($table);
 
 		//Build the new one now
-		foreach (self::$fields as $field => $rule) 
+		foreach ($reflection->meta->get('fields') as $field => $rule) 
 		{
 			$annotation     = $rule['annotations'];
 			$fields[$field] = Core::identify_annotation($annotation);

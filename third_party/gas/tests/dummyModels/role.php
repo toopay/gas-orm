@@ -49,9 +49,9 @@
  */
 
 /**
- * Model\Job_user Class.
+ * Model\Role Class.
  *
- * This dummy job_user model, serve all test corresponding with Job_user table and its relation
+ * This dummy role model, serve all test corresponding with Role table and its relation
  *
  * @package     Gas ORM
  * @version     2.0.0
@@ -60,7 +60,7 @@
 use \Gas\Core;
 use \Gas\ORM;
 
-class Job_user extends ORM {
+class Role extends ORM {
 
 	/**
 	 * Set up method for unit testing
@@ -88,11 +88,9 @@ class Job_user extends ORM {
 
 		// Then add some dummy data
 		$data = array(
-		    array('user_id' => 1, 'job_id' => 3),
-		    array('user_id' => 1, 'job_id' => 2),
-		    array('user_id' => 2, 'job_id' => 1),
-		    array('user_id' => 3, 'job_id' => 4),
-		    array('user_id' => 4, 'job_id' => 4),
+		    array('id' => 1, 'name' => 'Administrator', 'description' => 'Could do anything.'),
+		    array('id' => 2, 'name' => 'Moderator', 'description' => 'Could do administrative tasks.'),
+		    array('id' => 3, 'name' => 'Member', 'description' => 'Only higher level tasks.'),
 		);
 
 		self::insert_batch($data); 
@@ -102,15 +100,14 @@ class Job_user extends ORM {
 	{
 		// Define relationships
 		self::$relationships = array(
-			'user' => ORM::belongs_to('\\Model\\User'),
-			'job'  => ORM::belongs_to('\\Model\\Job'),
+			'user'  => ORM::has_many('\\Model\\Role_user => \\Model\\User', array('select:id,name,username')),
 		);
 
 		// Define fields definition
 		self::$fields = array(
-			'id'         => ORM::field('auto[3]'),
-			'user_id'    => ORM::field('int[3]'),
-			'job_id'     => ORM::field('int[3]'),
+			'id'          => ORM::field('auto[3]'),
+			'name'        => ORM::field('char[40]'),
+			'description' => ORM::field('string[100]'),
 		);
 	}
 }

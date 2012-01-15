@@ -28,6 +28,8 @@ require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARAT
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'kid.php';
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'job.php';
 require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'job_user.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'role.php';
+require_once GASPATH.'tests'.DIRECTORY_SEPARATOR.'dummyModels'.DIRECTORY_SEPARATOR.'role_user.php';
 // Load needed DB files
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_forge.php';

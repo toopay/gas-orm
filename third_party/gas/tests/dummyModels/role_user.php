@@ -49,9 +49,9 @@
  */
 
 /**
- * Model\Job_user Class.
+ * Model\Role_user Class.
  *
- * This dummy job_user model, serve all test corresponding with Job_user table and its relation
+ * This dummy role_user model, serve all test corresponding with Role_user table and its relation
  *
  * @package     Gas ORM
  * @version     2.0.0
@@ -60,7 +60,18 @@
 use \Gas\Core;
 use \Gas\ORM;
 
-class Job_user extends ORM {
+class Role_user extends ORM {
+
+	/**
+	 * @var  string Table name
+	 */
+	public $table = 'r_u';
+
+	/**
+	 * @var  array  Composite keys (Foreign Keys)
+	 */
+	public $foreign_key = array('\\Model\\User' => 'u_id',
+	                            '\\Model\\Role' => 'r_id');
 
 	/**
 	 * Set up method for unit testing
@@ -70,7 +81,7 @@ class Job_user extends ORM {
 		// Generate a reflection
 		$reflection  = self::make();
 		$table       = $reflection->validate_table()->table;
-		$primary_key = $reflection->primary_key;
+		$foreign_key = $reflection->foreign_key;
 
 		// Drop if table exists
 		self::forge()->drop_table($table);
@@ -83,16 +94,22 @@ class Job_user extends ORM {
 		}
 
 		self::forge()->add_field($fields);
-		self::forge()->add_key($primary_key, TRUE);
+
+		foreach ($foreign_key as $key)
+		{
+			self::forge()->add_key($key, TRUE);
+		}
+
 		self::forge()->create_table($table);
 
 		// Then add some dummy data
 		$data = array(
-		    array('user_id' => 1, 'job_id' => 3),
-		    array('user_id' => 1, 'job_id' => 2),
-		    array('user_id' => 2, 'job_id' => 1),
-		    array('user_id' => 3, 'job_id' => 4),
-		    array('user_id' => 4, 'job_id' => 4),
+		    array('u_id' => 1, 'r_id' => 2),
+		    array('u_id' => 1, 'r_id' => 3),
+		    array('u_id' => 2, 'r_id' => 1),
+		    array('u_id' => 2, 'r_id' => 2),
+		    array('u_id' => 3, 'r_id' => 2),
+		    array('u_id' => 4, 'r_id' => 3),
 		);
 
 		self::insert_batch($data); 
@@ -103,14 +120,13 @@ class Job_user extends ORM {
 		// Define relationships
 		self::$relationships = array(
 			'user' => ORM::belongs_to('\\Model\\User'),
-			'job'  => ORM::belongs_to('\\Model\\Job'),
+			'role' => ORM::belongs_to('\\Model\\Role'),
 		);
 
 		// Define fields definition
 		self::$fields = array(
-			'id'         => ORM::field('auto[3]'),
-			'user_id'    => ORM::field('int[3]'),
-			'job_id'     => ORM::field('int[3]'),
+			'u_id'     => ORM::field('int[3]'),
+			'r_id'     => ORM::field('int[3]'),
 		);
 	}
 }

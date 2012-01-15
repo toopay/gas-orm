@@ -14,10 +14,12 @@
 class HasManyTest extends PHPUnit_Framework_TestCase {
 
     /**
-     * @see Model\User     (./tests/dummyModels/user.php)
-     * @see Model\Kid      (./tests/dummyModels/kid.php)
-     * @see Model\Job      (./tests/dummyModels/job.php)
-     * @see Model\Job_user (./tests/dummyModels/job_user.php)
+     * @see Model\User      (./tests/dummyModels/user.php)
+     * @see Model\Kid       (./tests/dummyModels/kid.php)
+     * @see Model\Job       (./tests/dummyModels/job.php)
+     * @see Model\Job_user  (./tests/dummyModels/job_user.php)
+     * @see Model\Role      (./tests/dummyModels/role.php)
+     * @see Model\Role_user (./tests/dummyModels/role_user.php)
      */
     public function setUp()
     {
@@ -25,6 +27,8 @@ class HasManyTest extends PHPUnit_Framework_TestCase {
         Model\Kid::setUp();
         Model\Job::setUp();
         Model\Job_user::setUp();
+        Model\Role::setUp();
+        Model\Role_user::setUp();
     }
 
     public function testHasManySimple()
@@ -72,7 +76,7 @@ class HasManyTest extends PHPUnit_Framework_TestCase {
         }
     }
 
-    public function testHasManyThrough()
+    public function testHasManyThroughSimple()
     {
         // Find user with id `1`
         $user1 = Model\User::find(1);
@@ -110,6 +114,51 @@ class HasManyTest extends PHPUnit_Framework_TestCase {
 
                 case '3':
                     $this->assertEquals($job->name, 'Accountant');
+
+                    break;
+            }
+            
+        }
+    }
+
+    public function testHasManyThroughCustom()
+    {
+        // Find user with id `1`
+        $user1 = Model\User::find(1);
+
+        // Consist
+        $this->assertInstanceOf('Gas\ORM', $user1);
+        $this->assertInstanceOf('Gas\Data', $user1->record);
+        
+        // Check result
+        $this->assertEquals($user1->id, '1');
+        $this->assertEquals($user1->name, 'John Doe');
+        $this->assertEquals($user1->email, 'johndoe@john.com');
+        $this->assertEquals($user1->username, 'johndoe');
+
+        // Grab related role(s)
+        $user1_roles = $user1->role();
+
+        // Should contain 2 roles
+        $this->assertCount(2, $user1_roles);
+
+        foreach ($user1_roles as $role)
+        {
+            // Consist
+            $this->assertInstanceOf('Gas\ORM', $role);
+            $this->assertInstanceOf('Gas\Data', $role->record);
+
+            // Check results
+            // This should be role with id `2` and `3`
+            switch ($role->id)
+            {
+                case '2':
+                    $this->assertEquals($role->name, 'Moderator');
+
+                    break;
+
+                case '3':
+                    $this->assertEquals($role->name, 'Member');
 
                     break;
             }

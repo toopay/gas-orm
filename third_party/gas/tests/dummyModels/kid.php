@@ -76,7 +76,7 @@ class Kid extends ORM {
 		self::forge()->drop_table($table);
 
 		//Build the new one now
-		foreach (self::$fields as $field => $rule) 
+		foreach ($reflection->meta->get('fields') as $field => $rule) 
 		{
 			$annotation     = $rule['annotations'];
 			$fields[$field] = Core::identify_annotation($annotation);
@@ -103,7 +103,7 @@ class Kid extends ORM {
 	{
 		// Define relationships
 		self::$relationships = array(
-			'user'  => ORM::belongs_to('\\Model\\User', NULL, array('select:id,name,username')),
+			'user'  => ORM::belongs_to('\\Model\\User', array('select:id,name,username')),
 		);
 
 		// Define fields definition

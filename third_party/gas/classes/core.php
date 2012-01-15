@@ -54,6 +54,7 @@
  * @version     2.0.0
  */
 
+use Gas\Data;
 use Gas\Janitor;
 
 class Core {
@@ -77,6 +78,11 @@ class Core {
 	 * @var  object  Hold DB Forge Instance
 	 */
 	public static $dbforge;
+
+	/**
+	 * @var  object  Empty data collection
+	 */
+	public static $data;
 
 	/**
 	 * @var  array  Hold DB AR properties
@@ -208,6 +214,11 @@ class Core {
 	);
 
 	/**
+	 * @var  array   Entity meta data repositories
+	 */
+	public static $entity_repository;
+
+	/**
 	 * @var  mixed   Hold tasks tree detail for every compile process
 	 */
 	public static $task_manager;
@@ -230,7 +241,7 @@ class Core {
 	/**
 	 * @var  mixed   Hold cached compile result collection
 	 */
-	private static $cached_resource;
+	private static $cached_resource = array();
 
 	/**
 	 * @var  array   Hold hashed recorder bundle 
@@ -260,6 +271,10 @@ class Core {
 			static::$db      = $DB;
 			static::$dbutil  = new $util();
 			static::$dbforge = new $forge();
+
+			// Generate new collection of needed properties
+			static::$data              = new Data();
+			static::$entity_repository = new Data();
 
 			// Instantiate process has done now
 			self::init();
@@ -298,6 +313,16 @@ class Core {
 	}
 
 	/**
+	 * Serve static calls for Data instantiation
+	 * 
+	 * @return object Empty data collection
+	 */
+	public static function data()
+	{
+		return static::$data;
+	}
+
+	/**
 	 * Get all records based by default table name
 	 *
 	 * @param   object Gas Instance
@@ -309,6 +334,29 @@ class Core {
 		$gas::$recorder->set('get', array($gas->validate_table()->table));
 
 		return self::_execute($gas);
+	}
+
+	/**
+	 * Get record based by given primary key arguments
+	 *
+	 * @param   object Gas Instance
+	 * @param   mixed
+	 * @return  object Gas Instance
+	 */
+	final public static function find($gas, $args)
+	{
+		// Get WHERE IN clause and execute `find_where_in` method,
+		// with appropriate arguments.
+		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
+
+		// Sort and remove duplicate id
+		// Sort the ids and remove same id
+		$in = array_unique($in);
+		sort($in);
+
+		$gas  = self::compile($gas, 'where_in', array($gas->primary_key, $in));
+
+		return self::all($gas);
 	}
 
 	/**
@@ -374,26 +422,76 @@ class Core {
 	}
 
 	/**
-	 * Get record based by given primary key arguments
+	 * Serve `query` for ORM
 	 *
-	 * @param   object Gas Instance
-	 * @param   mixed
-	 * @return  object Gas Instance
+	 * @param  string SQL statement
+	 * @param  bool   Whether to do `query` or `simple_query` 
+	 * @return mixed
 	 */
-	final public static function find($gas, $args)
+	public static function query($sql, $simple = FALSE)
 	{
-		// Get WHERE IN clause and execute `find_where_in` method,
-		// with appropriate arguments.
-		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
+		if (preg_match('/^SELECT([^)]+)(.*?)$/', $sql, $m) and count($m) == 3)
+		{
+			// Initial properties
+			$result  = NULL;
+			$tables  = array();
+			$cached  = TRUE;
 
-		// Sort and remove duplicate id
-		// Sort the ids and remove same id
-		$in = array_unique($in);
-		sort($in);
+			// Split into each subquery
+			$queries = array_filter(explode('SELECT', $sql));
 
-		$gas  = self::compile($gas, 'where_in', array($gas->primary_key, $in));
+			// Find corresponding resource name(s)
+			foreach ($queries as $query)
+			{
+				if (preg_match('/FROM([^(]+)WHERE/', $query, $match) and count($match) == 2)
+				{
+					$tables[] = str_replace(array('`', ' '), '', $match[1]);
+					
+				}
+			}
 
-		return self::all($gas);
+			// Start cache process
+			$token = md5(serialize(array($sql)));
+			self::cache_start(array($sql), FALSE);
+
+			// Validate cache
+			if (self::validate_cache($token))
+			{
+				foreach ($tables as $table)
+				{
+					if (self::changed_resource($table))
+					{
+						// If any of corresponding table involve, has been modified
+						// Clear cached flag
+						$cached = FALSE;
+
+						break;
+					}
+				}
+			}
+			else
+			{
+				// No valid cache 
+				$cached = FALSE;
+			}
+
+			// Determine to fetch the cache of perform fresh query onto DB
+			if ($cached == TRUE)
+			{
+				$result = self::fetch_cache($token);
+			}
+			else
+			{
+				$result = self::$db->query($sql);
+				self::cache_end($result, $token);
+			}
+
+			return $result;
+		}
+
+		// No need to process anything, 
+		// Just forward the query into DB instance
+		return ($simple) ? self::$db->simple_query($sql) : self::$db->query($sql);
 	}
 
 	/**
@@ -547,7 +645,7 @@ class Core {
 	public function cache_flush()
 	{
 		// Flush the cached resources
-		self::$cached_resource = NULL;
+		self::$cached_resource = array();
 
 		return;
 	}
@@ -556,14 +654,26 @@ class Core {
 	 * Writes cache pointer for each compile tasks
 	 *
 	 * @param   array
+	 * @param   bool   Whether to save into global cache key or not
 	 * @return  void
 	 */
-	public static function cache_start($task)
+	public static function cache_start($task, $global = TRUE)
 	{
 		if ( ! self::cache_status()) return;
 
 		// Hash the task, and assign it into cache key collection
-		self::$cache_key = md5(serialize($task));
+		$key = md5(serialize($task));
+
+		if ($global)
+		{
+			self::$cache_key = $key;
+		}
+
+		if ( ! array_key_exists($key, self::$cached_resource))
+		{
+			// Generate empty cache holder
+			self::$cached_resource[$key] = NULL;
+		}
 
 		return;
 	}
@@ -571,15 +681,20 @@ class Core {
 	/**
 	 * Writes sibling hash for each resource's records
 	 *
-	 * @param   mixed
+	 * @param   mixed    DB resource or any data
+	 * @param   string   Cache key
 	 * @return  void
 	 */
-	public static function cache_end($resource)
+	public static function cache_end($resource, $key = NULL)
 	{
 		if ( ! self::cache_status()) return;
 
 		// Assign it into cache resource collection
-		$key = self::$cache_key;
+		if (empty($key))
+		{
+			$key = self::$cache_key;
+		}
+	
 		self::$cached_resource[$key] = $resource;
 
 		return;
@@ -588,27 +703,46 @@ class Core {
 	/**
 	 * Validate cache state
 	 * 
+	 * @param   string  Cache key
 	 * @return  bool
 	 */
-	public static function validate_cache()
+	public static function validate_cache($key = NULL)
 	{
 		if ( ! self::cache_status()) return;
 
+		if (empty($key))
+		{
+			$key = self::$cache_key;
+		}
+
 		// Determine whether a resource is a valid cached 
-		return isset(self::$cached_resource[self::$cache_key]);
+		if (array_key_exists($key, self::$cached_resource) && ! empty(self::$cached_resource[$key]))
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
 	}
 
 	/**
 	 * Fetching cache collections
 	 * 
+	 * @param   string  Cache key
 	 * @return  mixed
 	 */
-	public static function fetch_cache()
+	public static function fetch_cache($key = NULL)
 	{
 		if ( ! self::cache_status()) return;
 
+		if (empty($key))
+		{
+			$key = self::$cache_key;
+		}
+
 		// Return the cached resource
-		return self::$cached_resource[self::$cache_key];
+		return self::$cached_resource[$key];
 	}
 
 	/**
@@ -699,204 +833,538 @@ class Core {
 	}
 
 	/**
-	 * Generate the child model/instance
+	 * Generate the related entities of model/instance
 	 *
 	 * @param  object Gas instance
 	 * @param  mixed  Gas relationship spec
-	 * @param  mixed  Gas parent ids
 	 * @return object Child Gas 
 	 */
-	protected static function _generate_child($gas, $relationship, $ids = array())
+	public static function generate_entity($gas, $relationship, $resources = array())
 	{
-		// Define allowed options
-		$allowed = array('select', 'order_by', 'limit');
-
-		// Extract relationship properties
-		$type    = $relationship['type'];
-		$model   = $relationship['model'];
-		$key     = $relationship['key'];
+		// Get the relationship properties
+		$path    = $relationship['path'];
+		$child   = $relationship['child'];
+		$single  = $relationship['single'];
 		$options = $relationship['options'];
-		$through = count($model) > 1;
+		$roadmap = explode('=', $path);
 
-		// Child information
-		$foreign_model = $model[0]::make();
-		$fk            = $foreign_model->primary_key;
-		$foreign_table = $foreign_model->table;
-
-		// Parent information
-		if (is_array($gas))
+		// Now we are in serious business
+		if ( ! empty($resources))
 		{
-			// Get a sample instance
-			$sample   = $gas;
-			$instance = array_shift($sample);
+			// Generate original identifier and entities holder
+			$holder         = new Data();
+			$original_table = $gas->table;
+			$original_pk    = $gas->primary_key;
+			$original_ids   = array();
 
-			$pk       = $instance->primary_key;
-			$table    = $instance->table;
-		}
-		else
-		{
-			$pk      = $gas->primary_key;
-			$table   = $gas->table;
-		}
-
-		// Generate key and identifier based by relationship type
-		switch ($type)
-		{
-			case 'belongs_to' :
-				// check for key
-				if (empty($key))
-				{
-					$key = $foreign_table.'_'.$fk;
-				}
-
-				// Generate the identifier
-				$identifier = $key;
-
-				// If through not detected, changed back key to pk
-				if ( ! $through or $relationship['revert']) $key = $pk;
-
-				break;
-
-			case 'has_one' :
-			case 'has_many':
-				// check for key
-				if (empty($key))
-				{
-					$key = $table.'_'.$pk;
-				}
-
-				// Generate the identifier
-				$identifier = $pk;
-
-				break;
-		}
-
-
-		// Grab the ids with the identifier
-		if (empty($ids))
-		{
-			if (is_array($gas))
+			foreach ($resources as $resource)
 			{
-				foreach ($gas as $entity)
-				{
-					$ids[] = $entity->$identifier;
-				}
+				// Populate the ids
+				$original_ids[] = $resource[$original_pk];
+
+				// Generate new token and empty holder for each original identifier
+				$token = $original_table.':'.$original_pk.'.';
+				$index = $resource[$original_pk];
+				$holder->set("$token$index", array($index));
+			}
+		}
+
+		// Generate the tuple
+		$tuples = array();
+		$index  = 0;
+		$max    = count($roadmap) - 1;
+
+		// The goal is to parse full path :
+		//		Model\Foo=>Model\Bar<=Model\Lorem
+		//
+		// Into paired tuples like :
+		//		Model\Foo>Model\Bar
+		//		Model\Bar<Model\Lorem
+		//
+		// `>` or `<`, thus identify entity ownership
+		do {
+			$dirty_tuple = $roadmap[$index].$roadmap[$index+1];
+
+			if (in_array(substr($dirty_tuple, 0, 1), array('>', '<')))
+			{
+				$tuples[] = substr($dirty_tuple, 1);
+			}
+			elseif (in_array(substr($dirty_tuple, -1), array('>', '<')))
+			{
+				$tuples[] = substr($dirty_tuple, 0, -1);
 			}
 			else
 			{
-				$ids = array($gas->$identifier);
+				$tuples[] = $dirty_tuple;
 			}
+
+			$index++;
+		} while ($index < $max);
+
+		// Query holder
+		$queries = array();
 			
-		}
-
-		// Unser the first tier model, since its now has been used
-		unset($relationship['model'][0]);
-		unset($model[0]);
-
-		// Initial instances
-		$instances    = NULL;
-
-		// Build the options if exists
-		if ( ! empty($options) && ! $through)
+		// Then generate nested query to fetch each record entity
+		foreach ($tuples as $level => $tuple)
 		{
-			foreach ($options as $option)
-			{
-				// Parse option annotation
-				list($method, $args) = explode(':', $option);
+			list($domain, $key, $identifier) = self::generate_identifier($tuple);
 
-				if ( ! in_array($method, $allowed))
+			if ($level == 0)
+			{
+				if (isset($holder))
 				{
-					// No valid method found
-					continue;
+					// This mean we really have a business
+					$ids = $original_ids;
 				}
 				else
 				{
-					// Casting the argument annotation
-					// and do the pre-process 
-					switch ($method)
-					{
-						case 'select':
-						case 'limit':
-							$foreign_model->$method($args);
-
-							break;
-						
-						case 'order_by':
-							if (preg_match('/^([^\n]+)\[(.*?)\]$/', $args, $m) AND count($m) == 3)
-							{
-								$foreign_model->$method($m[1], $m[2]);
-							}
-
-							break;
-					}
+					// We handle a single instance here
+					$ids[] = $gas->record->get('data.'.$identifier);
 				}
-			}
-		}
 
-		// Sort the ids and remove same id
-		$ids = array_unique($ids);
-		sort($ids);
-
-		// Passed the ids and fetch the child instances
-		$foreign_model->where_in($key, $ids);
-		$instances = $foreign_model->get();
-
-		// Recursive call for more than one tier model stack
-		if ($through)
-		{
-			// Build tier information from recent level
-			$tier_relation   = NULL;
-			$sample          = $instances;
-			$instance        = is_array($sample) ? array_shift($sample) : $sample;
-			$relationships   = $instance::$relationships;
-			$path            = array_values($model);
-
-			// Is there match model to run after this one?
-			foreach ($relationships as $index => $relation)
-			{
-				// Get the bottom and up path, as diff identifier
-				$rel    = $relation['model'];
-				$up     = (count($rel) > count($path)) ? count($rel) : count($path);
-				$bottom = (count($rel) < count($path)) ? count($rel) : count($path);
-
-				// Compare the relationship path
-				$diff = array_diff($path, $rel);
-				$intersection = array_intersect($path, $rel);
-
-				// Gotcha
-				if ($up > count($diff) and count($intersection) == count($bottom))
-				{
-					// Merge the passed options
-					if ( ! empty($options))
-					{
-						$relation['options'] = array_merge($options, $relation['options']);
-					}
-
-					// Include the diff onto the courier model
-					$relation['model']  = array_merge($rel, $diff);
-					$relation['revert'] = TRUE;
-
-					// Set tier index
-					$tier_relation = $relation;
-
-					break;
-				}
-			}
-
-			// Diagnose the next tier relation entity
-			if ( ! empty($tier_relation))
-			{
-				// Valid entity found, make a recursive call
-				return self::_generate_child($instances, $tier_relation);
+				$queries[] = array($domain, $key, '');
 			}
 			else
 			{
-				// Non valid or broke path models relationships occurs
-				throw new \LogicException('models_found_no_relations:'.implode(' => ', $path));
+				// Get previous tier index
+				$lower_level = $queries[$level-1];
+
+				if (isset($holder))
+				{
+					// If holder exists we need to also adding corresponding collumn
+					$paired_cols = array_unique(array($identifier, $lower_level[1]));
+					$lower_query = self::generate_clause($lower_level[0], $paired_cols, $lower_level[1], '');
+					$queries[]   = array($domain, $key, $lower_query);
+				}
+				else
+				{
+					// Straight forward sub-query
+					$lower_query = self::generate_clause($lower_level[0], $identifier, $lower_level[1], $lower_level[2]);
+					$queries[]   = array($domain, $key, $lower_query);
+				}
 			}
 		}
 
-		return $instances;
+		// Parse the ids into string
+		$ids = implode(', ', $ids);
+
+		// Finalize entity generator
+		if (count($queries) == 1)
+		{
+			// We handle one level of relationship, easy...
+			$query     = array_shift($queries);
+			$subquery  = $ids;
+			$domain    = $query[0];
+			$candidate = $query[1];
+		}
+		else
+		{
+			// If there was a holder, we have to do something first 
+			if (isset($holder))
+			{
+				// Before doing anything, get as much info as possible
+				$original_queries = $queries;
+
+				// Parse necessary info
+				$query     = array_pop($queries);
+				$subquery  = sprintf(array_pop($query), $ids);
+				$domain    = $query[0];
+				$candidate = $query[1];
+
+				// Doing effective sub-queries for `with` marked records
+				foreach ($original_queries as $level => $original_query)
+				{
+					if (empty($original_query[2]))
+					{
+						// Take the identifier for further use
+						$holder->set('identifier', $original_query[1]);
+						$holder->set('ids', $original_ids);
+					}
+					else
+					{
+						$sql         = sprintf($original_query[2], implode(',', $holder->get('ids')));
+						$subresults  = self::query($sql)->result_array();
+						
+						$identifier  = $original_query[1];
+						$matched_id  = array();
+						$subids      = array();
+
+						foreach ($subresults as $index => $subresult)
+						{
+							$all_identifier = array_keys($subresult);
+							$old_identifier = $holder->get('identifier');
+
+							if (count($all_identifier) == 1)
+							{
+								$new_identifier = array_shift($all_identifier);
+							}
+							else
+							{
+								$new_identifier = array_diff($all_identifier, array($old_identifier));
+								$new_identifier = array_shift($new_identifier);
+							}
+
+							$matcher_id     = $subresult[$old_identifier];
+							$identifier_id  = $subresult[$new_identifier];
+
+							foreach ($original_ids as $original_id)
+							{
+								if ( ! is_array($holder->get($token.$original_id)))
+								{
+									// Do nothing
+								}
+								elseif (is_array($holder->get($token.$original_id)))
+								{
+									// we have assoc ids
+									if (in_array($matcher_id, $holder->get($token.$original_id)))
+									{
+										// Found matched identifier, save it to holder
+										$matched_id[$original_id][] = $identifier_id;
+									}
+									else
+									{
+										// Generate empty values
+										$matched_id[$original_id][] = NULL;
+									}
+								}
+								else
+								{
+									// We've lost!
+									throw new \InvalidArgumentException('empty_arguments:'. __METHOD__);
+								}
+							}
+
+							// Save the identifier ids for further use
+							$subids[] = $identifier_id;
+						}
+
+						// Make sure we have unique ids
+						$subids = array_unique($subids);
+						sort($subids);
+
+						// Save above process into holder Data
+						$holder->set('ids', $subids);
+						$holder->set('identifier', $identifier);
+						
+						// Perform checking to assign each new identifier id
+						// For further process, into each original ids
+						foreach($matched_id as $id => $matched)
+						{
+							$holder->set($token.$id, array_filter($matched));
+						}
+					}
+				}
+
+				// Build the subquery
+				$subquery = implode(', ', $holder->get('ids'));
+			}
+			else
+			{
+				// We have more than one tiers level, get the last...
+				$query     = array_pop($queries);
+				$subquery  = sprintf(array_pop($query), $ids);
+				$domain    = $query[0];
+				$candidate = $query[1];
+			}
+		}
+
+		// Initiate empty additional queries
+		$order_by = '';
+		$limit    = '';
+		
+		// Initial select would be SELECT *
+		// unless there are pre-query option to overide it
+		$key = '*';
+
+		// Do we have pre-process query options ?
+		if (count($options) > 0)
+		{
+			$additional_queries = self::generate_options($options);
+
+			// Do we need to overide the default key for SELECT clause ?
+			if (array_key_exists('select', $additional_queries))
+			{
+				$key = $additional_queries['select'];
+
+				// Lets make sure the identifier was included
+				if ( ! in_array($candidate, $key)) $key[] = $candidate;
+			}
+
+			// Do we have ORDER BY clause ?
+			if (array_key_exists('order_by', $additional_queries))
+			{
+				$order_by = ' ORDER BY `$domain`'.$additional_queries['order_by'];
+			}
+
+			// Do we have LIMIT clause ?
+			if (array_key_exists('limit', $additional_queries))
+			{
+				$limit = ' LIMIT '.$additional_queries['limit'];
+			}
+		}
+
+		// By now, we could generate the result
+		$childs = array();
+		$sql    = self::generate_clause($domain, $key, $candidate, $subquery);
+		$res    = self::query($sql)->result_array();
+
+		// In case we handle a holder...
+		$matched_id = array();
+
+		foreach ($res as $row)
+		{
+			// Hydrate child entities
+			$child_instance        = new $child($row);
+			$child_instance->empty = FALSE;
+
+			// We have associative ids to check
+			if (isset($holder))
+			{
+				foreach ($original_ids as $original_id)
+				{
+					// Get the identifier to check
+					$matcher_id = $row[$holder->get('identifier')];
+
+					// We have assoc ids to check against it
+					if (in_array($matcher_id, $holder->get($token.$original_id)))
+					{
+						$matched_id[$original_id][] = $child_instance;
+					}
+					else
+					{
+						$matched_id[$original_id][] = NULL;
+					}
+				}
+			}
+
+			$childs[] = $child_instance;
+		}
+		
+		// All done
+		if (isset($holder))
+		{
+			$final_key = substr($token,0,-1);
+
+			list($table, $identifier) = explode(':', $final_key);
+
+			// Build the holder
+			$holder->set('data', array_filter($matched_id));
+			$holder->set('identifier', $identifier);
+			$holder->set('ids', array_keys($matched_id));
+
+			// Transfer into save place, then unset the holder
+			$final_entities = $holder;
+
+			unset($holder);
+
+			return $final_entities;
+		}
+		else
+		{
+			return ($single) ? array_shift($childs) : $childs;
+		}
+		
+	}
+
+	/**
+	 * Generate the all necessary identifier based a tuple
+	 *
+	 * @param  string  Tuple
+	 * @return array   Domain, key and identifier
+	 */
+	public function generate_identifier($tuple)
+	{
+		if ( ! self::$entity_repository->get('tuples.'.$tuple))
+		{
+			// Initial empty
+			$direction = '';
+
+			if (strpos($tuple, '<') !== FALSE)
+			{
+				// We found this pattern direction :
+				// 		Model\Foo<Model\Bar
+				// This mean Model\Bar is OWNED by Model\Foo
+				list($left, $right) = explode('<', $tuple);
+				$direction = '<=';
+			}
+			elseif  (strpos($tuple, '>') !== FALSE)
+			{
+				// We found this pattern direction :
+				// 		Model\Foo>Model\Bar
+				// This mean Model\Foo is OWNED by Model\Bar
+				list($left, $right) = explode('>', $tuple);
+				$direction = '=>';
+			}
+			else
+			{
+				// We dont know this one, for sure
+				throw new \LogicException('models_found_no_relations:'.$tuple);
+			}
+
+			// Build parent information
+			$parent_model = $left::make();
+			$parent_name  = '\\'.$parent_model->model();
+			$parent_table = $parent_model->table;
+			$parent_pk    = $parent_model->primary_key;
+
+			// Build child information
+			$child_model  = $right::make();
+			$child_name   = '\\'.$child_model->model();
+			$child_table  = $child_model->table;
+			$child_pk     = $child_model->primary_key;
+
+			// Generate `key` and `identifier` information for query processing
+			switch ($direction)
+			{
+				case '<=':
+					if (array_key_exists($parent_name, $child_model->foreign_key))
+					{
+						$key = $child_model->foreign_key[$parent_name];
+					}
+					else
+					{
+						$key = $parent_table.'_'.$parent_pk;
+					}
+
+					$identifier = $parent_pk;
+
+					break;
+
+				case '=>':
+					$key = $child_pk;
+
+					if (array_key_exists($child_name, $parent_model->foreign_key))
+					{
+						$identifier = $parent_model->foreign_key[$child_name];
+					}
+					else
+					{
+						$identifier = $child_table.'_'.$child_pk;
+					}
+
+
+					break;
+			}
+
+			// Build the tuple information
+			$tuple_information = array($child_table, $key, $identifier);
+
+			// Save onto entity repositories
+			self::$entity_repository->set('tuples.'.$tuple, $tuple_information);
+		}
+		else
+		{
+			// Build the tuple information from entity repositories
+			$tuple_information = self::$entity_repository->get('tuples.'.$tuple);
+		}
+
+		// Give them final tuple information
+		return $tuple_information;
+	}
+
+	/**
+	 * Generate the relationship option for pre-process queries
+	 *
+	 * @param  array  Gas relationship option spec
+	 * @return array  Formatted option
+	 */
+	public function generate_options($options)
+	{
+		// Initiate new queries holder, and define allowable options
+		$queries = array();
+		$allowed = array('select', 'order_by', 'limit');
+
+		// Loop over it
+		foreach ($options as $option)
+		{
+			// Parse option annotation
+			list($method, $args) = explode(':', $option);
+
+			if ( ! in_array($method, $allowed))
+			{
+				// No valid method found
+				continue;
+			}
+			else
+			{
+				// Casting the argument annotation
+				// and do the pre-process 
+				switch ($method)
+				{
+					case 'select':
+						$select_statement = explode(',', $args);
+						$queries[$method] = Janitor::arr_trim($select_statement);
+
+						break;
+
+					case 'limit':
+						$queries[$method] = " 0, $args";
+
+						break;
+					
+					case 'order_by':
+						if (preg_match('/^([^\n]+)\[(.*?)\]$/', $args, $m) AND count($m) == 3)
+						{
+							$queries[$method] = "`$m[1]` strtoupper($m[2])";
+						}
+
+						break;
+				}
+			}
+		}
+
+		// Return the formatted queries options
+		return $queries;
+	}
+
+	/**
+	 * Generate SELECT %s FROM %s WHERE & IN (%s) clauses
+	 * This is used by entity generator only (internal usage).
+	 *
+	 * @param  string  Table name
+	 * @param  string  Key collumn name
+	 * @param  string  Identifier collumn name
+	 * @param  string  Either ids or subquery
+	 * @return array   Formatted SQL clause
+	 */
+	public function generate_clause($domain, $key, $identifier, $ids = '')
+	{
+		// Generate subquery
+		if ($key == '*')
+		{
+			// Do we have special selector char
+			$pattern = "SELECT * FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+		}
+		elseif (is_array($key))
+		{
+			// Initial empty select
+			$select = array();
+
+			// We need to add protector and identifier
+			foreach ($key as $collumn)
+			{
+				$select[] = "`$domain`.`$collumn`";
+			}
+
+			$key = implode(', ', $select);
+			
+			$pattern = "SELECT $key FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+		}
+		else
+		{
+			// Default pattern
+			$pattern = "SELECT `$domain`.`$key` FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+		}
+
+		// Do we need to replace the string identifier
+		// Either into sub-query or the real COLUMN value(s) ?
+		if ( ! empty($ids))
+		{
+			$pattern = sprintf($pattern, $ids);
+		}
+
+		// Statement is ready
+		return $pattern;
 	}
 
 	/**
@@ -970,19 +1438,62 @@ class Core {
 							{
 								// Hydrate the gas instance
 								$instances = array();
+								$entities  = array();
+								$ids       = array();
 								$model     = $gas->model();
+								$includes  = $gas->related->get('include', array());
+								$relation  = $gas->meta->get('entities');
 
-								foreach ($res->result_array() as $result)
+								// Do we have entities to eagerly-loaded?
+								if (count($includes))
+								{
+									// Then generate new colleciton holder for it
+									$tuples = new \Gas\Data();
+								}
+
+								// Get the array of fetched rows
+								$results   = $res->result_array();
+
+								// Generate the entitiy records
+								foreach ($results as $result)
 								{
 									// Passed the result as record
-									$instance = new $model($result);
+									$instance        = new $model($result);
 									$instance->empty = FALSE;
 
-									// Pool to instance holder
+									foreach ($includes as $include)
+									{
+										if (array_key_exists($include, $relation))
+										{
+											$table      = $instance->table;
+											$pk         = $instance->primary_key;
+											$identifier = $instance->record->get('data.'.$pk);
+											$concenate  = $table.':'.$pk.':'.$identifier;
+											$tuple      = $relation[$include];
+
+											if ($tuples->get('entities.'.$include))
+											{
+												// Retrieve this user entity
+												$assoc_entities = $tuples->get('entities.'.$include);
+											}
+											else
+											{
+												$assoc_entities = \Gas\Core::generate_entity($gas, $tuple, $results);
+												$tuples->set('entities.'.$include, $assoc_entities);
+											}
+
+											// Assign the included entity, respectively
+											$entity = array_values(array_filter($assoc_entities->get('data.'.$identifier)));
+											$instance->related->set('entities.'.$include, $entity);
+										}
+									}
+								
+									// Pool to instance holder and unset the instance
 									$instances[] = $instance;
 									unset($instance);
 								}
-
+								
+								// Determine whether to return an instance or a collection of instance(s)
 								$res = count($instances) > 1 ? $instances : array_shift($instances);
 							}
 
@@ -992,6 +1503,7 @@ class Core {
 						}
 						else
 						{
+							// Return the native DB driver method execution
 							return call_user_func_array(array(\Gas\Core::$db, $action), $args);
 						}
 					}
@@ -1070,8 +1582,8 @@ class Core {
 		{
 			// Get all necessary property for perform validation
 			$label     = ucfirst(str_replace('_', ' ', $field));
-			$rules     = $gas::$fields[$field]['rules'];
-			$callbacks = $gas::$fields[$field]['callbacks'];
+			$rules     = $gas->meta->get($field.'.rules', '');
+			$callbacks = $gas->meta->get($field.'.callbacks', '');
 
 			// Set each field's rule respectively	
 			$CI->form_validation->set_rules($field, $label, $rules);
@@ -1280,26 +1792,20 @@ class Core {
 		else
 		{
 			// Last try check relationships
-			$gas           = array_shift($args);
-			$relationships = $gas::$relationships;
+			$gas = array_shift($args);
 
-			// Iterate over relationship
-			foreach ($relationships as $patron => $props)
+			if (FALSE != ($relationship = $gas->meta->get('entities.'.$name)))
 			{
-				// Gotcha
-				if ($name == $patron && $gas->empty == FALSE)
+				// Gotcha!
+				// Check for any pre-process options
+				if ( ! empty($args))
 				{
-					// Check for any pre-process options
-					if ( ! empty($args))
-					{
-						$props['options'] = array_merge($args, $props['options']);
-					}
-
-					// Generate the child model
-					return self::_generate_child($gas, $props);
+					$relationship['options'] = array_merge($args, $relationship['options']);
 				}
-			}
 
+				return self::generate_entity($gas, $relationship);
+			}
+			
 			// Good bye
 			throw new \BadMethodCallException('['.$name.']Unknown method.');
 		}

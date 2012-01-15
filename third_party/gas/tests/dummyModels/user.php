@@ -76,7 +76,7 @@ class User extends ORM {
 		self::forge()->drop_table($table);
 
 		//Build the new one now
-		foreach (self::$fields as $field => $rule) 
+		foreach ($reflection->meta->get('fields') as $field => $rule) 
 		{
 			$annotation     = $rule['annotations'];
 			$fields[$field] = Core::identify_annotation($annotation);
@@ -102,9 +102,10 @@ class User extends ORM {
 	{
 		// Define relationships
 		self::$relationships = array(
-			'wife' => ORM::has_one('\\Model\\Wife', NULL, array('select:id,name')),
-			'kid'  => ORM::has_many('\\Model\\Kid', NULL, array('select:id,name')),
-			'job'  => ORM::has_many('\\Model\\Job_user => \\Model\\Job', NULL, array('select:id,name')),
+			'wife' => ORM::has_one('\\Model\\Wife', array('select:id,name')),
+			'kid'  => ORM::has_many('\\Model\\Kid', array('select:id,name')),
+			'job'  => ORM::has_many('\\Model\\Job_user => \\Model\\Job', array('select:id,name')),
+			'role' => ORM::has_many('\\Model\\Role_user => \\Model\\Role', array('select:id,name')),
 		);
 
 		// Define fields definition

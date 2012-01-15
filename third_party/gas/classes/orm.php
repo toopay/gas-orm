@@ -75,6 +75,16 @@ class ORM {
 	public $primary_key = 'id';
 
 	/**
+	 * @var  array  Composite key collumn name(s)
+	 */
+	public $composite_key = array();
+
+	/**
+	 * @var  array  Foreign key collumn name(s)
+	 */
+	public $foreign_key = array();
+
+	/**
 	 * @var  bool    Determine whether an instance hold a record
 	 */
 	public $empty = TRUE;
@@ -90,20 +100,29 @@ class ORM {
 	public $record;
 
 	/**
+	 * @var  object  Meta informations holder
+	 */
+	public $meta;
+
+	/**
+	 * @var  object  Related entities holder
+	 */
+	public $related;
+
+	/**
 	 * @var  array   Relationship collections
 	 */
-	public static $relationships;
+	public static $relationships = array();
 
 	/**
 	 * @var  array   Field collections
 	 */
-	public static $fields;
+	public static $fields = array();
 
 	/**
 	 * @var  object  Recorder holder
 	 */
 	public static $recorder;
-
 
 	/**
 	 * Constructor
@@ -111,27 +130,54 @@ class ORM {
 	 * @param  array
 	 * @return void
 	 */
-	function __construct($record = array())
+	function __construct($record = array(), $related = array())
 	{
 		// Validate namespace and table name
 		$this->validate_namespace();
 		$this->validate_table();
 
-		// Instantiate data interface for `recorder` and `record` properties
-		$this->record   = new Data();
-		self::$recorder = new Data();
+		// Instantiate data interface for `recorder`, `related`, `meta` and `record` properties
+		static::$recorder = Core::data();
+		$this->related    = Core::data();
+		$this->meta       = Core::data();
+		$this->record     = Core::data();
 
 		// Is there any data to record?
 		if ( ! empty($record))
 		{
-			foreach ($record as $key => $value)
+			$this->record->set('data', $record);
+		}
+
+		// Is there any related entites to save?
+		if ( ! empty($related))
+		{
+			$this->related->set('entity', $related);
+		}
+
+		// Validate meta data, and assign into its place
+		$metadata = self::validate_meta($this);
+		$this->meta->set('entities', $metadata['entities']);
+		$this->meta->set('fields',   $metadata['fields']);
+		$this->meta->set('collumns', $metadata['collumns']);
+
+		// Validate identifier key (PK) and composite key (FK)
+		if (is_string($this->primary_key))
+		{
+			if ( ! in_array($this->primary_key, $this->meta->get('collumns')))
 			{
-				self::set_record('data.'.$key, $value);
+				$this->primary_key = NULL;
 			}
 		}
 
-		// Run _init method
-		$this->_init();
+		if ( ! empty($this->foreign_key))
+		{
+			// Validate foreign keys for consistency naming convention recognizer
+			foreach($this->foreign_key as $namespace => $fk)
+			{
+				$this->foreign_key[strtolower($namespace)] = $fk;
+				unset($this->foreign_key[$namespace]);
+			}
+		}
 	}
 
 	/**
@@ -221,7 +267,7 @@ class ORM {
 	}
 
 	/**
-	 * Serve static calls for ORM instantiation
+	 * Serve static calls for ORM instantiation (late binding)
 	 * 
 	 * @param  array  set the record
 	 * @return object
@@ -229,6 +275,69 @@ class ORM {
 	final public static function make($record = array())
 	{
 		return new static($record);
+	}
+
+	/**
+	 * Eager-load entities marker
+	 * 
+	 * @param  mixed  entities to load
+	 * @return void
+	 */
+	final public static function with()
+	{
+		$entities = func_get_args();
+		$instance = self::make();
+
+		// Mark necessary entities
+		foreach ($entities as $index => $entity)
+		{
+			$instance->related->set('include.'.$index, $entity);
+		}
+
+		return $instance;
+	}
+
+	/**
+	 * Validating model's meta
+	 *
+	 * @param   object Gas Instance
+	 * @return  array  Entities (relationships) and fields meta data
+	 */
+	final public static function validate_meta($gas)
+	{
+		// Initial meta data
+		$entity_metadata = array();
+
+		if (FALSE != ($metadata = Core::$entity_repository->get('models.\\'.$gas->model())))
+		{
+			// This model has been exists in global repositories
+			// Fetch the information
+			$entity_metadata = $metadata;
+		}
+		else
+		{
+			// Run _init method
+			$gas->_init();
+
+			// Register meta entities information
+			foreach ($gas::$relationships as $name => $relationship)
+			{
+				$entity_metadata['entities'][$name] = $relationship;
+			}
+
+			// Register meta fields information
+			foreach ($gas::$fields as $name => $definition)
+			{
+				$entity_metadata['fields'][$name] = $definition;
+			}
+
+			$entity_metadata['collumns'] = array_keys($entity_metadata['fields']);
+
+			// Save to global entities repository
+			Core::$entity_repository->set('models.\\'.$gas->model(), $entity_metadata);
+		}
+
+		return $entity_metadata;
 	}
 
 	/**
@@ -249,7 +358,6 @@ class ORM {
 		{
 			$arguments = array($arguments);
 		}
-
 
 		return $arguments;
 	}
@@ -315,7 +423,7 @@ class ORM {
 	 */
 	final public function set_record($key, $data)
 	{
-		$this->record->set($key, $data);
+		$this->record->set('data.'.$key, $data);
 	}
 
 	/**
@@ -439,27 +547,61 @@ class ORM {
 	/**
 	 * Interpret relationships definition
 	 *
+	 * @param  mixed 	 Gas instance
 	 * @param  string 	 Relationship Type (`has_one`, `has_many`, `belongs_to`, `self`)
-	 * @param  string 	 Relationship Model
-	 * @param  mixed 	 Relationship Identifier (foreign key)
+	 * @param  string 	 Relationship Models path
 	 * @param  array 	 Relationship Options (pre-process queries)
 	 * @return void
 	 */
-	final public static function relationship($type, $model = '', $key = NULL, $options = array())
+	final public static function relationships($gas = NULL, $type = '', $path = '', $options = array())
 	{
 		// Not found
-		if (empty($model))
+		if (empty($path) && $type != 'self')
 		{
 			throw new \InvalidArgumentException('models_found_no_relations:'.__CLASS__);
 		}
 
-		// Separate model(s) processing
-		$model = explode('=>', trim($model));
-		$model = Janitor::arr_trim($model);
+		// Remove any spaces within path
+		$path     = str_replace(' ', '', $path);
+		$entities = explode('=', str_replace(array('<', '>'), '', $path));
+		$child    = array_pop($entities);
 
-		return array('type'    => $type,
-		             'model'   => $model,
-		             'key'     => $key,
+		// Generate the full path
+		$root      = '\\'.get_class($gas);
+
+		switch($type)
+		{
+			case 'self':
+				$direction = '=';
+				$single    = TRUE;
+
+				break;
+
+			case 'has_one':
+				$direction = '<=';
+				$single    = TRUE;
+
+				break;
+
+			case 'has_many':
+				$direction = '<=';
+				$single    = FALSE;
+
+				break;
+
+			case 'belongs_to':
+				$direction = '=>';
+				$single    = TRUE;
+
+				break;
+		}
+
+		$full_path = $root.$direction.$path;
+		
+		// We're done
+		return array('path'    => $full_path,
+		             'child'   => $child,
+		             'single'  => $single,
 		             'options' => empty($options) ? array() : $options);
 	}
 
@@ -472,17 +614,23 @@ class ORM {
 	 */
 	public function __call($name, $arguments)
 	{
-		// If try to define relationship, immediately serve
-		if (preg_match('/^(has_one|has_many|belongs_to|self)$/', $name, $m) AND count($m) == 2)
-		{
-			// Merge passed arguments with relationship type
-			array_unshift($arguments, $m[1]);
-
-			return call_user_func_array(array('\\Gas\\ORM', 'relationship'), $arguments);
-		}
-
 		$this->validate_namespace();
 		$this->validate_table();
+
+		if (preg_match('/^(has_one|has_many|belongs_to|self)$/', $name, $m) AND count($m) == 2)
+		{
+			// If try to define relationship, immediately serve.
+			// Merge passed arguments with relationship type and caller instance
+			array_unshift($arguments, $m[1]);
+			array_unshift($arguments, $this);
+
+			return call_user_func_array(array('\\Gas\\ORM', 'relationships'), $arguments);
+		}
+		elseif (($entities = $this->related->get('entities', array())) && array_key_exists($name, $entities))
+		{
+			return $this->related->get('entities.'.$name, array());
+		}
+
 		$arguments = self::validate_method($name, $arguments);
 
 		return Core::compile($this, $name, $arguments);
