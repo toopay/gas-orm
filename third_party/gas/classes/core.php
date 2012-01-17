@@ -1259,7 +1259,7 @@ class Core {
 	 * @param  string  Tuple
 	 * @return array   Domain, key and identifier
 	 */
-	public function generate_identifier($tuple)
+	public static function generate_identifier($tuple)
 	{
 		if ( ! self::$entity_repository->get('tuples.'.$tuple))
 		{
