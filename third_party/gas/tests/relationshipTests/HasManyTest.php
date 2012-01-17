@@ -17,9 +17,9 @@ class HasManyTest extends PHPUnit_Framework_TestCase {
      * @see Model\User      (./tests/dummyModels/user.php)
      * @see Model\Kid       (./tests/dummyModels/kid.php)
      * @see Model\Job       (./tests/dummyModels/job.php)
-     * @see Model\Job_user  (./tests/dummyModels/job/user.php)
+     * @see Model\Job\User  (./tests/dummyModels/job/user.php)
      * @see Model\Role      (./tests/dummyModels/role.php)
-     * @see Model\Role_user (./tests/dummyModels/role/user.php)
+     * @see Model\Role\User (./tests/dummyModels/role/user.php)
      */
     public function setUp()
     {
