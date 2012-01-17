@@ -99,8 +99,8 @@ class Gas {
 			}
 			else
 			{
-				// Backward compatibility, support the old configuration default
-				$paths = array(APPPATH.$config['models_path']);
+				// New convention require a paired of namespace - path, sorry...
+				throw new InvalidArgumentException('models_not_found:'.$config['models_path']);
 			}
 
 			// Set `models` directories  and Gas `root` directory look-up
@@ -280,7 +280,17 @@ class Gas {
     		// Parse the namespace spec for further process
     		$namespace = strtolower(array_shift($fragments));
     		$filename  = strtolower(array_pop($fragments));
-    		$path      = implode(DIRECTORY_SEPARATOR, $fragments);
+    		$path      = strtolower(implode(DIRECTORY_SEPARATOR, $fragments));
+
+    		// Finalize the path
+    		if (empty($path))
+    		{
+    			$path = DIRECTORY_SEPARATOR;
+    		}
+    		else
+    		{
+    			$path = DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR;
+    		}
 
     		// Process matched directory
     		if (array_key_exists($namespace, static::$path)
@@ -289,9 +299,9 @@ class Gas {
     			// Walk through files and possible path
 				foreach ($directories as $dir)
 				{
-					if ( file_exists($dir.DIRECTORY_SEPARATOR.$path.$filename.'.php'))
+					if ( file_exists($dir.$path.$filename.'.php'))
 					{
-						include_once($dir.DIRECTORY_SEPARATOR.$path.$filename.'.php');
+						include_once($dir.$path.$filename.'.php');
 						break;
 					}
 				}
