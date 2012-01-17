@@ -102,7 +102,7 @@ class Job extends ORM {
 	{
 		// Define relationships
 		self::$relationships = array(
-			'user'  => ORM::has_many('\\Model\\Job_user => \\Model\\User', array('select:id,name,username')),
+			'user'  => ORM::has_many('\\Model\\Job\\User => \\Model\\User', array('select:id,name,username')),
 		);
 
 		// Define fields definition

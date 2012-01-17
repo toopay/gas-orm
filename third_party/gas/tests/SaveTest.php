@@ -29,9 +29,8 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         $data = array('name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
         Model\User::make($data)->save();
 
-        // Get the new created resource id, then get those resource
-        $id  = Model\User::insert_id();
-        $foo = Model\User::find($id);
+        // Get the last created entry
+        $foo = Model\User::last_created();
         
         // Consist
         $this->assertInstanceOf('Gas\ORM', $foo);
@@ -46,7 +45,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
 
     public function testSaveUpdate()
     {
-       // Create new resource
+        // Create new resource
         $data = array('name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
         Model\User::make($data)->save();
 

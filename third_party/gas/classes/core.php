@@ -307,6 +307,33 @@ class Core {
 	}
 
 	/**
+	 * Perform callback function within a Gas instance
+	 *
+	 * @param   object    Gas Instance
+	 * @param   string    Hook points
+	 * @param   mixed     Argument
+	 * @throws  Exception If the callback returned non-ORM instance
+	 * @return  object    Gas Instance
+	 */
+	final public static function callback($gas, $point, $arg = NULL)
+	{
+		// Get the model name
+		$model = $gas->model();
+
+		// Call the corresponding hook point method
+		$gas = call_user_func(array($gas, $point), $arg);
+
+		// Make sure the callback always returning a Gas instance
+		// Except within `after_save` point
+		if ($point !== '_after_save' && ! $gas instanceof ORM)
+		{
+			throw new \LogicException('Callback '.$point.' within '.$model.' should return an object.');
+		}
+
+		return $gas;
+	}
+
+	/**
 	 * Get all records based by default table name
 	 *
 	 * @param   object Gas Instance
@@ -315,7 +342,7 @@ class Core {
 	final public static function all($gas)
 	{
 		// Set table and return the execution result
-		$gas::$recorder->set('get', array($gas->validate_table()->table));
+		$gas->recorder->set('get', array($gas->validate_table()->table));
 
 		return self::_execute($gas);
 	}
@@ -333,12 +360,11 @@ class Core {
 		// with appropriate arguments.
 		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
 
-		// Sort and remove duplicate id
 		// Sort the ids and remove same id
 		$in = array_unique($in);
 		sort($in);
 
-		$gas  = self::compile($gas, 'where_in', array($gas->primary_key, $in));
+		$gas = self::compile($gas, 'where_in', array($gas->primary_key, $in));
 
 		return self::all($gas);
 	}
@@ -356,7 +382,7 @@ class Core {
 		if ($check)
 		{
 			// Run _before_check and set initial valid mark
-			$gas   = call_user_func(array($gas, '_before_check'));
+			$gas = self::callback($gas, '_before_check');
 			$valid = TRUE;
 
 			// Do the validation rules, if run from CI environment
@@ -368,11 +394,11 @@ class Core {
 			}
 			
 			// Run _after_check
-			$gas = call_user_func(array($gas, '_after_check'));
+			$gas = self::callback($gas, '_after_check');
 		}
 
 		// Run _before_save hook
-		$gas = call_user_func(array($gas, '_before_save'));
+		$gas = self::callback($gas, '_before_save');
 
 		// Get the table and entries
 		$table   = $gas->validate_table()->table;
@@ -384,7 +410,7 @@ class Core {
 		if ($gas->empty)
 		{
 			// INSERT
-			$gas::$recorder->set('insert', array($table, $entries));
+			$gas->recorder->set('insert', array($table, $entries));
 		}
 		else
 		{
@@ -393,16 +419,52 @@ class Core {
 			unset($entries[$pk]);
 
 			// UPDATE
-			$gas::$recorder->set('update', array($table, $entries, $identifier));
+			$gas->recorder->set('update', array($table, $entries, $identifier));
 		}
 
 		// Perform requested saving method
 		$save = self::_execute($gas);
 
-		// Run _after_save hook
-		$gas = call_user_func(array($gas, '_after_save'));
+		// Run _after_save hook, and passed the SAVE result process
+		self::callback($gas, '_after_save', $save);
 
 		return $save;
+	}
+
+	/**
+	 * Destroy (DELETE) the record
+	 *
+	 * @param   object Gas Instance
+	 * @param   array  Identifier ids
+	 * @return  bool
+	 */
+	final public static function delete($gas, $ids = array())
+	{
+		// Run _before_delete hook
+		$gas = self::callback($gas, '_before_delete');
+
+		// Get the table and entries
+		$table   = $gas->validate_table()->table;
+		$pk      = $gas->primary_key;
+
+		// Do we have ids passed ?
+		if ( ! empty($ids))
+		{
+			// Set the WHERE IN Clause
+			$identifier = array($pk, $ids);
+			$gas->recorder->set('where_in', $identifier);
+		}
+
+		// DELETE
+		$gas->recorder->set('delete', array($table));
+
+		// Perform requested delete method
+		$delete = self::_execute($gas);
+
+		// Run _after_delete hook, and passed the result process
+		self::callback($gas, '_after_delete', $delete);
+
+		return $delete;
 	}
 
 	/**
@@ -494,6 +556,25 @@ class Core {
 		
 		if (is_callable($internal_method, TRUE))
 		{
+			if ($method == 'delete')
+			{
+				// Check whether the entity already hold some id
+				// or is it passed by arguments
+				if ( ! $gas->empty)
+				{
+					$identifier = $gas->primary_key;
+					$args       = array($gas->$identifier);
+
+					// Re-merge the arguments
+					$arguments = array($gas, $args);
+				}
+				else
+				{
+					// Just bundle the passed identifier
+					$arguments = array_merge(array($gas), array($args));
+				}
+			}
+
 			return call_user_func_array($internal_method, $arguments);
 		}
 	}
@@ -821,9 +902,11 @@ class Core {
 	 *
 	 * @param  object Gas instance
 	 * @param  mixed  Gas relationship spec
+	 * @param  array  Resource collection
+	 * @param  bool   Whether to return the SQL statement or execute then send its result
 	 * @return object Child Gas 
 	 */
-	public static function generate_entity($gas, $relationship, $resources = array())
+	public static function generate_entity($gas, $relationship, $resources = array(), $raw = FALSE)
 	{
 		// Get the relationship properties
 		$path    = $relationship['path'];
@@ -1087,9 +1170,14 @@ class Core {
 			}
 		}
 
+		// Finalize the SQL statement
+		$sql = self::generate_clause($domain, $key, $candidate, $subquery);
+
+		// Do we need to continue, or just return the full SQL statement ?
+		if ($raw) return $sql;
+
 		// By now, we could generate the result
 		$childs = array();
-		$sql    = self::generate_clause($domain, $key, $candidate, $subquery);
 		$res    = self::query($sql)->result_array();
 
 		// In case we handle a holder...
@@ -1360,7 +1448,7 @@ class Core {
 	protected static function _execute($gas)
 	{
 		// Build the tasks tree
-		$tasks = self::_play_record($gas::$recorder);
+		$tasks = self::_play_record($gas->recorder);
 
 		// Mark every compile process into our caching pool
 		self::cache_start($tasks);
@@ -1566,8 +1654,8 @@ class Core {
 		{
 			// Get all necessary property for perform validation
 			$label     = ucfirst(str_replace('_', ' ', $field));
-			$rules     = $gas->meta->get($field.'.rules', '');
-			$callbacks = $gas->meta->get($field.'.callbacks', '');
+			$rules     = $gas->meta->get('fields.'.$field.'.rules', '');
+			$callbacks = $gas->meta->get('fields.'.$field.'.callbacks', array());
 
 			// Set each field's rule respectively	
 			$CI->form_validation->set_rules($field, $label, $rules);
@@ -1674,6 +1762,20 @@ class Core {
 			return static::$$dbal_component;
 
 		}
+		elseif ($name == 'last_created')
+		{
+			// Get last created entry
+			if (($last_id = self::$db->insert_id()) && empty($last_id))
+			{
+				// Nothing
+				return NULL;
+			}
+
+			// Return the corresponding model instance with last id
+			$gas = array_shift($args);
+
+			return self::find($gas, array($last_id));
+		}
 		elseif (in_array($name, $query))
 		{
 			return call_user_func_array(array(static::$db, $name), array(array_pop($args)));
@@ -1687,7 +1789,7 @@ class Core {
 			$value = array_shift($args);
 			
 			// Build the task onto the Gas instance
-			$gas::$recorder->set('where', array($field, $value));
+			$gas->recorder->set('where', array($field, $value));
 			
 			return self::all($gas);
 		}
@@ -1700,7 +1802,7 @@ class Core {
 			$value = (empty($value)) ? $gas->primary_key : $value;
 			
 			// Build the task onto the Gas instance
-			$gas::$recorder->set('select_'.$type, array($value));
+			$gas->recorder->set('select_'.$type, array($value));
 			
 			return self::all($gas);
 		}
@@ -1713,8 +1815,8 @@ class Core {
 			$collumn = is_null($collumn) ? $gas->primary_key : $collumn;
 
 			// Build the task onto the Gas instance
-			$gas::$recorder->set('order_by', array($collumn, $order));
-			$gas::$recorder->set('limit', array('1'));
+			$gas->recorder->set('order_by', array($collumn, $order));
+			$gas->recorder->set('limit', array('1'));
 			
 			return self::all($gas);
 		}
@@ -1734,7 +1836,7 @@ class Core {
 		    		
 				// Build the task onto the Gas instance
 				$gas = array_shift($args);
-				$gas::$recorder->set($name, $args);
+				$gas->recorder->set($name, $args);
 
 				return $gas;
 			}
@@ -1767,7 +1869,7 @@ class Core {
 					// Merge the table alongside with sent arguments
 					$table    = $gas->validate_table()->table;
 					$argument = array_unshift($args, $table);
-					$gas::$recorder->set($name, $args);
+					$gas->recorder->set($name, $args);
 
 					return self::_execute($gas);
 				}

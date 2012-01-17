@@ -122,7 +122,8 @@ class ORM {
 	/**
 	 * @var  object  Recorder holder
 	 */
-	public static $recorder;
+	//public static $recorder;
+	public $recorder;
 
 	/**
 	 * Constructor
@@ -137,7 +138,8 @@ class ORM {
 		$this->validate_table();
 
 		// Instantiate data interface for `recorder`, `related`, `meta` and `record` properties
-		static::$recorder = new Data();
+		//static::$recorder = new Data();
+		$this->recorder   = new Data();
 		$this->related    = new Data();
 		$this->meta       = new Data();
 		$this->record     = new Data();
@@ -320,18 +322,9 @@ class ORM {
 			$gas->_init();
 
 			// Register meta entities information
-			foreach ($gas::$relationships as $name => $relationship)
-			{
-				$entity_metadata['entities'][$name] = $relationship;
-			}
-
-			// Register meta fields information
-			foreach ($gas::$fields as $name => $definition)
-			{
-				$entity_metadata['fields'][$name] = $definition;
-			}
-
-			$entity_metadata['collumns'] = array_keys($entity_metadata['fields']);
+			$entity_metadata['entities'] = $gas::$relationships;
+			$entity_metadata['fields']   = $gas::$fields;
+			$entity_metadata['collumns'] = is_array($gas::$fields) ? array_keys($gas::$fields) : array();
 
 			// Save to global entities repository
 			Core::$entity_repository->set('models.\\'.$gas->model(), $entity_metadata);
@@ -396,8 +389,8 @@ class ORM {
 
 			// Define table, path and set the table properties
 			$table       = str_replace($namespace.'\\', '', $this->model());
-			$path        = strtolower(implode('_', $fragments));
-			$this->table = strtolower($path.$table);
+			$path        = strtolower(str_replace('\\', '_', $table));
+			$this->table = strtolower($path);
 		}
 		
 		return $this;

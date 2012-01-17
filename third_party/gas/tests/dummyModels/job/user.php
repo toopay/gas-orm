@@ -1,4 +1,4 @@
-<?php namespace Model;
+<?php namespace Model\Job;
 
 /**
  * CodeIgniter Gas ORM Packages
@@ -49,9 +49,9 @@
  */
 
 /**
- * Model\Role_user Class.
+ * Model\Job\User Class.
  *
- * This dummy role_user model, serve all test corresponding with Role_user table and its relation
+ * This dummy job\user model, serve all test corresponding with Job_user table and its relation
  *
  * @package     Gas ORM
  * @version     2.0.0
@@ -60,18 +60,7 @@
 use \Gas\Core;
 use \Gas\ORM;
 
-class Role_user extends ORM {
-
-	/**
-	 * @var  string Table name
-	 */
-	public $table = 'r_u';
-
-	/**
-	 * @var  array  Composite keys (Foreign Keys)
-	 */
-	public $foreign_key = array('\\Model\\User' => 'u_id',
-	                            '\\Model\\Role' => 'r_id');
+class User extends ORM {
 
 	/**
 	 * Set up method for unit testing
@@ -81,7 +70,7 @@ class Role_user extends ORM {
 		// Generate a reflection
 		$reflection  = self::make();
 		$table       = $reflection->validate_table()->table;
-		$foreign_key = $reflection->foreign_key;
+		$primary_key = $reflection->primary_key;
 
 		// Drop if table exists
 		self::forge()->drop_table($table);
@@ -94,22 +83,16 @@ class Role_user extends ORM {
 		}
 
 		self::forge()->add_field($fields);
-
-		foreach ($foreign_key as $key)
-		{
-			self::forge()->add_key($key, TRUE);
-		}
-
+		self::forge()->add_key($primary_key, TRUE);
 		self::forge()->create_table($table);
 
 		// Then add some dummy data
 		$data = array(
-		    array('u_id' => 1, 'r_id' => 2),
-		    array('u_id' => 1, 'r_id' => 3),
-		    array('u_id' => 2, 'r_id' => 1),
-		    array('u_id' => 2, 'r_id' => 2),
-		    array('u_id' => 3, 'r_id' => 2),
-		    array('u_id' => 4, 'r_id' => 3),
+		    array('user_id' => 1, 'job_id' => 3),
+		    array('user_id' => 1, 'job_id' => 2),
+		    array('user_id' => 2, 'job_id' => 1),
+		    array('user_id' => 3, 'job_id' => 4),
+		    array('user_id' => 4, 'job_id' => 4),
 		);
 
 		self::insert_batch($data); 
@@ -120,13 +103,14 @@ class Role_user extends ORM {
 		// Define relationships
 		self::$relationships = array(
 			'user' => ORM::belongs_to('\\Model\\User'),
-			'role' => ORM::belongs_to('\\Model\\Role'),
+			'job'  => ORM::belongs_to('\\Model\\Job'),
 		);
 
 		// Define fields definition
 		self::$fields = array(
-			'u_id'     => ORM::field('int[3]'),
-			'r_id'     => ORM::field('int[3]'),
+			'id'         => ORM::field('auto[3]'),
+			'user_id'    => ORM::field('int[3]'),
+			'job_id'     => ORM::field('int[3]'),
 		);
 	}
 }

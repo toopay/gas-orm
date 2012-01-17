@@ -17,18 +17,18 @@ class HasManyTest extends PHPUnit_Framework_TestCase {
      * @see Model\User      (./tests/dummyModels/user.php)
      * @see Model\Kid       (./tests/dummyModels/kid.php)
      * @see Model\Job       (./tests/dummyModels/job.php)
-     * @see Model\Job_user  (./tests/dummyModels/job_user.php)
+     * @see Model\Job_user  (./tests/dummyModels/job/user.php)
      * @see Model\Role      (./tests/dummyModels/role.php)
-     * @see Model\Role_user (./tests/dummyModels/role_user.php)
+     * @see Model\Role_user (./tests/dummyModels/role/user.php)
      */
     public function setUp()
     {
         Model\User::setUp();
         Model\Kid::setUp();
         Model\Job::setUp();
-        Model\Job_user::setUp();
+        Model\Job\User::setUp();
         Model\Role::setUp();
-        Model\Role_user::setUp();
+        Model\Role\User::setUp();
     }
 
     public function testHasManySimple()

@@ -104,8 +104,8 @@ class User extends ORM {
 		self::$relationships = array(
 			'wife' => ORM::has_one('\\Model\\Wife', array('select:id,name')),
 			'kid'  => ORM::has_many('\\Model\\Kid', array('select:id,name')),
-			'job'  => ORM::has_many('\\Model\\Job_user => \\Model\\Job', array('select:id,name')),
-			'role' => ORM::has_many('\\Model\\Role_user => \\Model\\Role', array('select:id,name')),
+			'job'  => ORM::has_many('\\Model\\Job\\User => \\Model\\Job', array('select:id,name')),
+			'role' => ORM::has_many('\\Model\\Role\\User => \\Model\\Role', array('select:id,name')),
 		);
 
 		// Define fields definition
@@ -115,5 +115,21 @@ class User extends ORM {
 			'email'    => ORM::field('email[40]'),
 			'username' => ORM::field('char[10]', array('required', 'callback_username_check')),
 		);
+	}
+
+	/**
+	 * Example of Before Save callback
+	 *
+	 * @return  object  modified instance
+	 */
+	function _before_save()
+	{
+		// Change `administrator` into `member`
+		if ($this->username == 'administrator')
+		{
+			$this->username = 'member';
+		}
+
+		return $this;
 	}
 }
