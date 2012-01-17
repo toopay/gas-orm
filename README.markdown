@@ -1,6 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png?branch=develop)](http://travis-ci.org/toopay/gas-orm)
-
-# Gas ORM
+# Gas ORM [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png?branch=develop)](http://travis-ci.org/toopay/gas-orm)
 
 A lighweight and easy-to-use ORM for CodeIgniter
 
