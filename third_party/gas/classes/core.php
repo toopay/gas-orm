@@ -1355,7 +1355,7 @@ class Core {
 	 * @param  array  Gas relationship option spec
 	 * @return array  Formatted option
 	 */
-	public function generate_options($options)
+	public static function generate_options($options)
 	{
 		// Initiate new queries holder, and define allowable options
 		$queries = array();
@@ -1414,7 +1414,7 @@ class Core {
 	 * @param  string  Either ids or subquery
 	 * @return array   Formatted SQL clause
 	 */
-	public function generate_clause($domain, $key, $identifier, $ids = '')
+	public static function generate_clause($domain, $key, $identifier, $ids = '')
 	{
 		// Generate subquery
 		if ($key == '*')
