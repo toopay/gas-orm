@@ -1,0 +1,15 @@
+language: php
+
+phps:
+  - 5.3
+  - 5.4
+
+mysql:
+  adapter: mysql2
+  database: gas_test
+  username: root
+  encoding: utf8
+
+before_script:
+  - git submodule update --init
+  - "mysql -e 'create database gas_test;'"

@@ -115,6 +115,15 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 	/**
 	 * global log_message method
 	 */
+	function show_error($message, $status_code = 500, $heading = 'An Error Was Encountered')
+	{
+		// Good bye
+		throw new LogicException('CI Internal Error with message : '.$message);
+	}
+
+	/**
+	 * global log_message method
+	 */
 	function log_message(){}
 
 	/**
