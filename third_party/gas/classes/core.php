@@ -209,6 +209,11 @@ class Core {
 	);
 
 	/**
+	 * @var  array   Paths for included files
+	 */
+	public static $path;
+
+	/**
 	 * @var  array   Entity meta data repositories
 	 */
 	public static $entity_repository;
@@ -227,6 +232,11 @@ class Core {
 	 * @var  array   Hold monitored resorce stated
 	 */
 	public static $resource_state;
+
+	/**
+	 * @var  array   Auto-generate options
+	 */
+	private static $auto = array();
 
 	/**
 	 * @var  bool    Per-request cache flag
@@ -252,12 +262,16 @@ class Core {
 	 * Constructor
 	 * 
 	 * @param  object Database instance
+	 * @param  array  Configuration
 	 * @return void
 	 */
-	public function __construct(\CI_DB $DB)
+	public function __construct(\CI_DB $DB, $config = array())
 	{
 		if (self::init_status() == FALSE)
 		{
+			// Get configuration up
+			$this->_configure($config);
+
 			// Generate needed class name
 			$forge = 'CI_DB_'.$DB->dbdriver.'_forge';
 			$util  = 'CI_DB_'.$DB->dbdriver.'_utility';
@@ -299,11 +313,12 @@ class Core {
 	 * Serve static calls for core instantiation
 	 * 
 	 * @param  object Database instance
+	 * @param  array  Configuration
 	 * @return object
 	 */
-	public static function make(\CI_DB $DB)
+	public static function make(\CI_DB $DB, $config = array())
 	{
-		return new static($DB);
+		return new static($DB, $config);
 	}
 
 	/**
@@ -324,8 +339,8 @@ class Core {
 		$gas = call_user_func(array($gas, $point), $arg);
 
 		// Make sure the callback always returning a Gas instance
-		// Except within `after_save` point
-		if ($point !== '_after_save' && ! $gas instanceof ORM)
+		// Except within `after_save` and `after_delete` points
+		if ( ! in_array($point, array('_after_save', '_after_delete')) && ! $gas instanceof ORM)
 		{
 			throw new \LogicException('Callback '.$point.' within '.$model.' should return an object.');
 		}
@@ -1738,6 +1753,93 @@ class Core {
 		$_POST = $old_post;
 
 		return $valid;
+	}
+
+	/**
+	 * Handle configuration
+	 *
+	 * @param	array
+	 * @return	void
+	 */
+	private function _configure($config = array())
+	{
+		// Validate configuration
+		$keys = array('models_path', 'cache_request', 'auto_create_models', 'auto_create_tables');
+
+		foreach ($keys as $key)
+		{
+			if ( ! array_key_exists($key, $config))
+			{
+				throw new \RuntimeException('Invalid runtime configuration.');
+			}
+		}
+
+		// Set global configuration
+		static::$cache = $config['cache_request'];
+		static::$auto  = array('models' => $config['auto_create_models'],
+		                       'tables' => $config['auto_create_tables']);
+
+		// Populate possible paths
+		if (is_array($config['models_path']))
+		{
+			$paths = $config['models_path'];
+		}
+		else
+		{
+			// New convention require a paired of namespace - path, sorry...
+			throw new \InvalidArgumentException('models_not_found:'.$config['models_path']);
+		}
+
+		// Set `models` directories look-up
+		static::$path['model'] = $paths;
+
+		// Register autoloader
+		spl_autoload_register(array($this, '_autoloader'));
+	}
+
+	/**
+	 * Serve autoloader
+	 *
+	 * @param	string
+	 * @return	void
+	 */
+	private function _autoloader($class) 
+	{
+		// Prepare autoload mechanism
+		if (($fragments = explode('\\', $class))
+		    && count($fragments) > 1
+		    && is_array(static::$path))
+		{
+			// Parse the namespace spec for further process
+			$namespace = strtolower(array_shift($fragments));
+			$filename  = strtolower(array_pop($fragments));
+			$path      = strtolower(implode(DIRECTORY_SEPARATOR, $fragments));
+
+			// Finalize the path
+			if (empty($path))
+			{
+				$path = DIRECTORY_SEPARATOR;
+			}
+			else
+			{
+				$path = DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR;
+			}
+
+			// Process matched directory
+			if (array_key_exists($namespace, static::$path)
+			    && ($directories = static::$path[$namespace]))
+			{
+				// Walk through files and possible path
+				foreach ($directories as $dir)
+				{
+					if ( file_exists($dir.$path.$filename.'.php'))
+					{
+						include_once($dir.$path.$filename.'.php');
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	

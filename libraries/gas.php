@@ -63,16 +63,6 @@ class Gas {
 	protected static $init = FALSE;
 
 	/**
-	 * @var array Namespace registry
-	 */
-	protected static $path;
-
-	/**
-	 * @var array Configuration collection
-	 */
-	protected static $config;
-
-	/**
 	 * Constructor
 	 *
 	 * @throws Exception if `default` group connection fails
@@ -89,69 +79,24 @@ class Gas {
 			$CI->config->load('gas', TRUE, TRUE);
 			$CI->config->load('migration', TRUE, TRUE);	
 
-			// Set temporary handler
+			// Set temporary config handler
 			$config = $CI->config->item('gas');
 
-			// Populate possible paths
-			if (is_array($config['models_path']))
-			{
-				$paths = $config['models_path'];
-			}
-			else
-			{
-				// New convention require a paired of namespace - path, sorry...
-				throw new InvalidArgumentException('models_not_found:'.$config['models_path']);
-			}
-
-			// Set `models` directories  and Gas `root` directory look-up
-			$gas_path = APPPATH .'third_party'.DIRECTORY_SEPARATOR .'gas'.DIRECTORY_SEPARATOR;
-			static::$path['model'] = $paths;
-			static::$path['gas']   = array($gas_path.'classes');
-
-			// Register autoloader
-			spl_autoload_register(array($this, 'autoloader'));
-
-			// Register exception and error handler
-			set_exception_handler(function($e) {
-				Gas::exception($e);
-			});
-
+			// Validate DB instance
 			if ( ! class_exists('CI_DB'))
 			{
-				// No autoloading-database
-				$DB = $CI->load->database('default', TRUE, TRUE);
+				$DB = $CI->load->database('default', TRUE);
+
+				// Register into CI super object, so we could monitore it
+				$CI->db = $DB;
 			}
 			else
 			{
-				// The database already loaded somewhere
 				$DB = $CI->db;
 			}
 
-			// Consist DB integrity
-			if ( ! $DB instanceof CI_DB_Driver)
-			{
-				throw new InvalidArgumentException('db_connection_error:default');
-			}
-
-			// Register the DB instance over CI super object, 
-			// so it could be monitored via profiler
-			$CI->db = $DB;
-
-			// Define DB path
-			define('DBPATH', BASEPATH.'database'.DIRECTORY_SEPARATOR);
-			define('DBDRIVERSPATH', DBPATH.'drivers'.DIRECTORY_SEPARATOR);
-
-			// Load required utility files once
-			require_once(DBPATH.'DB_forge.php');
-			require_once(DBPATH.'DB_utility.php');
-			require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_utility.php');
-			require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_forge.php');
-
-			// Initialize core of Gas ORM
-			Gas\Core::make($DB)->init();
-
-			// Clean up
-			unset($CI, $DB, $config, $paths);
+			// Include the bootstrap
+			include_once APPPATH.'third_party'.DIRECTORY_SEPARATOR.'gas'.DIRECTORY_SEPARATOR.'bootstrap.php';
 
 			// Set initialization flag
 			static::$init = TRUE;
@@ -268,44 +213,5 @@ class Gas {
 		// Output it with CI `show_error`
 		$error .= $trace;
 		show_error($error);
-    }
-
-    private function autoloader($class) 
-    {
-    	// Prepare autoload mechanism
-    	if (($fragments = explode('\\', $class))
-    	    && count($fragments) > 1
-    	    && is_array(static::$path))
-    	{
-    		// Parse the namespace spec for further process
-    		$namespace = strtolower(array_shift($fragments));
-    		$filename  = strtolower(array_pop($fragments));
-    		$path      = strtolower(implode(DIRECTORY_SEPARATOR, $fragments));
-
-    		// Finalize the path
-    		if (empty($path))
-    		{
-    			$path = DIRECTORY_SEPARATOR;
-    		}
-    		else
-    		{
-    			$path = DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR;
-    		}
-
-    		// Process matched directory
-    		if (array_key_exists($namespace, static::$path)
-    		    && ($directories = static::$path[$namespace]))
-    		{
-    			// Walk through files and possible path
-				foreach ($directories as $dir)
-				{
-					if ( file_exists($dir.$path.$filename.'.php'))
-					{
-						include_once($dir.$path.$filename.'.php');
-						break;
-					}
-				}
-    		}
-    	}
     }
 }

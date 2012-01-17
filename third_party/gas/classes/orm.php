@@ -95,6 +95,11 @@ class ORM {
 	public $errors = array();
 
 	/**
+	 * @var  object  Recorder holder
+	 */
+	public $recorder;
+
+	/**
 	 * @var  object  Records holder
 	 */
 	public $record;
@@ -120,12 +125,6 @@ class ORM {
 	public static $fields = array();
 
 	/**
-	 * @var  object  Recorder holder
-	 */
-	//public static $recorder;
-	public $recorder;
-
-	/**
 	 * Constructor
 	 * 
 	 * @param  array
@@ -138,7 +137,6 @@ class ORM {
 		$this->validate_table();
 
 		// Instantiate data interface for `recorder`, `related`, `meta` and `record` properties
-		//static::$recorder = new Data();
 		$this->recorder   = new Data();
 		$this->related    = new Data();
 		$this->meta       = new Data();
