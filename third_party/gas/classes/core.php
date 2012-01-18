@@ -1657,7 +1657,8 @@ class Core {
 							}
 							else
 							{
-								$res = call_user_func_array(array(\Gas\Core::$db, $action), $args);
+								$dbal_method = array(\Gas\Core::$db, $action);
+								$res         = call_user_func_array($dbal_method, $args);
 								\Gas\Core::cache_end($res);
 							}
 
