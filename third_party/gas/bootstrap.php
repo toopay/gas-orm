@@ -6,6 +6,9 @@
  *---------------------------------------------------------------
  */
  
+// Set error level
+if (ENVIRONMENT === 'testing') error_reporting(E_STRICT);
+
 // Define this root folder as Gas ORM base path
 define('GASPATH', __DIR__.DIRECTORY_SEPARATOR);
 

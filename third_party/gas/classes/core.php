@@ -373,13 +373,15 @@ class Core {
 	{
 		// Get WHERE IN clause and execute `find_where_in` method,
 		// with appropriate arguments.
-		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
+		$in = Janitor::get_input(__METHOD__, $args, TRUE);
 
 		// Are we deal with composite keys?
 		if (is_null($gas->primary_key) && is_array($gas->foreign_key))
 		{
 			// Build the identifier
-			foreach (array_values($gas->foreign_key) as $index => $key)
+			$keys = array_values($gas->foreign_key);
+
+			foreach ($keys as $index => $key)
 			{
 				foreach ($in as $ids)
 				{
@@ -387,7 +389,7 @@ class Core {
 				}
 			}
 
-			unset($index, $key, $ids);
+			unset($keys, $index, $key, $ids);
 		}
 		elseif ( ! empty($gas->primary_key))
 		{
@@ -574,7 +576,8 @@ class Core {
 			{
 				// Get tuple and other relationship information
 				$tuple         = $gas->meta->get('entities.'.$entity);
-				$fragments     = explode('=', strpbrk($tuple['path'], '<='));
+				$path          = strpbrk($tuple['path'], '<=');
+				$fragments     = explode('=', $path);
 				$intermediate  = str_replace('>', '', $fragments[1]);
 
 				// Build the child instance
@@ -678,12 +681,7 @@ class Core {
 
 		// No need to process anything, 
 		// Just forward the query into DB instance
-		if ($simple)
-		{
-			return self::$db->simple_query($sql);
-		}
-
-		return self::$db->query($sql);
+		return ($simple) ? self::$db->simple_query($sql) : self::$db->query($sql);
 	}
 
 	/**
@@ -722,7 +720,7 @@ class Core {
 								
 							return FALSE;
 						}
-
+						
 						// We're lost!
 						throw new \InvalidArgumentException('[delete]Could not delete an entity which define relationship');
 					}

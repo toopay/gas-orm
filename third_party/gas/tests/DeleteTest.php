@@ -21,7 +21,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         // Set Up the user table
         Model\User::setUp();
     }
-    /*
+
     public function testDeleteExisted()
     {
         // Find user id `1`
@@ -67,12 +67,11 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $this->assertNull($user2);
         $this->assertNull($user3);
     }
-    */
 
     public function testDeleteCompositeSingle()
     {
         // Re-init user model
-        //Model\User::setUp();
+        Model\User::setUp();
 
         // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
         $role_user = Model\Role\User::find(array(1, 2));
@@ -85,7 +84,6 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $this->assertFalse($role_user->delete());
     }
 
-    /*
     public function testDeleteCompositeViaParent()
     {
         // Re-init user model
@@ -103,5 +101,4 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_object();
         $this->assertEmpty($exists);
     }
-    */
 }
