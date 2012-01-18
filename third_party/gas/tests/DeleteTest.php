@@ -24,9 +24,6 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
 
     public function testDeleteCompositeSingle()
     {
-        // Re-init user model
-        Model\User::setUp();
-
         // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
         $role_user = Model\Role\User::find(array(1, 2));
 
@@ -40,9 +37,6 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
 
     public function testDeleteCompositeViaParent()
     {
-        // Re-init user model
-        Model\User::setUp();
-
         // At this moment, this should result 2 records
         $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_object();
         $this->assertCount(2, $exists);
