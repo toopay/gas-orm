@@ -74,11 +74,11 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         Model\User::setUp();
 
         // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
-        $role_user = Model\Role\User::find(array(1, 2));
+        //$role_user = Model\Role\User::find(array(1, 2));
 
         // Consist
-        $this->assertInstanceOf('Gas\ORM', $role_user);
-        $this->assertInstanceOf('Gas\Data', $role_user->record);
+        //$this->assertInstanceOf('Gas\ORM', $role_user);
+        //$this->assertInstanceOf('Gas\Data', $role_user->record);
         
         // No way we allow composite table, which define entities, delete itself
         //$this->assertFalse($role_user->delete());
