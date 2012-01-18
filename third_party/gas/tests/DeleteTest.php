@@ -67,4 +67,35 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $this->assertNull($user2);
         $this->assertNull($user3);
     }
+
+    public function testDeleteCompositeSingle()
+    {
+        // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
+        $role_user = Model\Role\User::find(array(1, 2));
+
+        // Consist
+        $this->assertInstanceOf('Gas\ORM', $role_user);
+        $this->assertInstanceOf('Gas\Data', $role_user->record);
+        
+        // No way we allow composite table, which define entities, delete itself
+        $this->assertFalse($role_user->delete());
+    }
+
+    public function testDeleteCompositeViaParent()
+    {
+        // Re-init user model
+        Model\User::setUp();
+
+        // At this moment, this should result 2 records
+        $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_object();
+        $this->assertCount(2, $exists);
+
+        // In this case, it should not delete any of the role entry
+        // Instead, it just delete the intermediate table (if it was a composite table)
+        $this->assertTrue( Model\User::with('role')->delete(1));
+
+        // Now, this should contain empty array
+        $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_object();
+        $this->assertEmpty($exists);
+    }
 }

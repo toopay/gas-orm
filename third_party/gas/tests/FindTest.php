@@ -14,11 +14,13 @@
 class FindTest extends PHPUnit_Framework_TestCase {
 
     /**
-     * @see Model\User (./tests/dummyModels/user.php)
+     * @see Model\User      (./tests/dummyModels/user.php)
+     * @see Model\Role\User (./tests/dummyModels/user.php)
      */
     public function setUp()
     {
         Model\User::setUp();
+        Model\Role\User::setUp();
     }
 
     public function testFindInvalidResources()
@@ -75,6 +77,51 @@ class FindTest extends PHPUnit_Framework_TestCase {
                 case '4':
                     $this->assertEquals($user->name, 'Chris Martin');
                     $this->assertEquals($user->username, 'cmartin');
+
+                    break;
+            }
+           
+        }
+    }
+
+    public function testFindCompositeSingle()
+    {
+        // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
+        $role_user = Model\Role\User::find(array(1, 2));
+
+        // Consist
+        $this->assertInstanceOf('Gas\ORM', $role_user);
+        $this->assertInstanceOf('Gas\Data', $role_user->record);
+        
+        // Check result
+        $this->assertEquals($role_user->u_id, '1');
+        $this->assertEquals($role_user->r_id, '2');
+    }
+
+    public function testFindCompositeSeveral()
+    {
+        // Find sequenced of records (which its paired ids follow its composite keys order)
+        $role_users = Model\Role\User::find(array(1, 2), array(3, 2));
+
+        // Should be an array, contain 2 role_user object
+        $this->assertCount(2, $role_users);
+
+        foreach ($role_users as $role_user)
+        {
+            // Consist
+            $this->assertInstanceOf('Gas\ORM', $role_user);
+            $this->assertInstanceOf('Gas\Data', $role_user->record);
+
+            // Check results
+            switch ($role_user->u_id)
+            {
+                case '1':
+                    $this->assertEquals($role_user->r_id, '2');
+
+                    break;
+
+                case '3':
+                    $this->assertEquals($role_user->r_id, '2');
 
                     break;
             }

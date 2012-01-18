@@ -375,11 +375,53 @@ class Core {
 		// with appropriate arguments.
 		$in   = Janitor::get_input(__METHOD__, $args, TRUE);
 
-		// Sort the ids and remove same id
-		$in = array_unique($in);
-		sort($in);
+		// Are we deal with composite keys?
+		if (is_null($gas->primary_key) && is_array($gas->foreign_key))
+		{
+			// Build the identifier
+			foreach (array_values($gas->foreign_key) as $index => $key)
+			{
+				foreach ($in as $ids)
+				{
+					$identifier[$key][] = $ids[$index];
+				}
+			}
 
-		$gas = self::compile($gas, 'where_in', array($gas->primary_key, $in));
+			unset($index, $key, $ids);
+		}
+		elseif ( ! empty($gas->primary_key))
+		{
+			// Sort the ids and remove same id
+			$in = array_unique($in);
+			sort($in);
+
+			// Set the identifier
+			$identifier = array($gas->primary_key, $in);
+		}
+		else
+		{
+			// We're lost!
+			throw new \InvalidArgumentException('[find]Could not find entity identifier');
+		}
+
+		// Determine the identifier
+		if (($sample = $identifier) && is_array(array_shift($sample)))
+		{
+			// We deal with composite table
+			foreach ($identifier as $key => $id)
+			{
+				// Set the identifier
+				$unique = array($key, array_values($id));
+
+				// Call the method directly
+				call_user_func_array(array(self::$db, 'where_in'), $unique);
+			}
+		}
+		else
+		{
+			// Easy one, it a standard entity with single key
+			$gas = self::compile($gas, 'where_in', $identifier);
+		}
 
 		return self::all($gas);
 	}
@@ -418,20 +460,59 @@ class Core {
 		// Get the table and entries
 		$table   = $gas->validate_table()->table;
 		$pk      = $gas->primary_key;
+		$fk      = $gas->foreign_key;
 		$entries = $gas->record->get('data');
 
 		// Determine whether to perform INSERT or UPDATE operation
 		// by checking `empty` property
 		if ($gas->empty)
 		{
+			// Check key integrity
+			if (is_null($pk))
+			{
+				if (empty($fk))
+				{
+					// We're lost!
+					throw new \InvalidArgumentException('[save]Could not save an entity which define relationship');
+				}
+
+				// Handle composite keys
+				foreach ($fk as $key)
+				{
+					if ( ! array_key_exists($key, $entries))
+					{
+						$gas->errors[$key] = sprintf('Could not save a composite entity without valid key : %s', $key);
+
+						return FALSE;
+					}
+				}
+			}
+
 			// INSERT
 			$gas->recorder->set('insert', array($table, $entries));
 		}
 		else
 		{
-			// Extract the identifier
-			$identifier = array($pk => $entries[$pk]);
-			unset($entries[$pk]);
+			// Check key integrity
+			if (is_null($pk))
+			{
+				if (empty($fk))
+				{
+					// We're lost!
+					throw new \InvalidArgumentException('[save]Could not save an entity which define relationship');
+				}
+
+				// Handle composite keys
+				$gas->errors[array_shift($fk)] = 'Could not update a composite entity without parent instance';
+				
+				return FALSE;
+			}
+			else
+			{
+				// Extract the identifier
+				$identifier = array($pk => $entries[$pk]);
+				unset($entries[$pk]);
+			}
 
 			// UPDATE
 			$gas->recorder->set('update', array($table, $entries, $identifier));
@@ -461,10 +542,20 @@ class Core {
 		// Get the table and entries
 		$table   = $gas->validate_table()->table;
 		$pk      = $gas->primary_key;
+		$fk      = $gas->foreign_key;
 
 		// Do we have ids passed ?
 		if ( ! empty($ids))
 		{
+			// Are we deal with composite keys?
+			if (is_null($pk) && is_array($fk))
+			{
+				// Composite key was read-only and only could deleted via its parent
+				$gas->errors[array_shift($fk)] = 'Could not update a composite entity without parent instance';
+					
+				return FALSE;
+			}
+
 			// Set the WHERE IN Clause
 			$identifier = array($pk, $ids);
 			$gas->recorder->set('where_in', $identifier);
@@ -475,6 +566,41 @@ class Core {
 
 		// Perform requested delete method
 		$delete = self::_execute($gas);
+	
+		// Contain relationship to cascade delete ?
+		if (($related = $gas->related->get('include')) && is_array($related))
+		{
+			foreach ($related as $entity)
+			{
+				// Get tuple and other relationship information
+				$tuple         = $gas->meta->get('entities.'.$entity);
+				$fragments     = explode('=', strpbrk($tuple['path'], '<='));
+				$intermediate  = str_replace('>', '', $fragments[1]);
+
+				// Build the child instance
+				$child         = $intermediate::make();
+				$child_table   = $child->table;
+				$child_key     = $gas->table.'_'.$gas->primary_key;
+				$sibling_tuple = $child->meta->get('entities');
+
+				foreach ($sibling_tuple as $root => $family)
+				{
+					if (strpos(strtolower($family['child']), $gas->model()) !== FALSE
+					    && array_key_exists('\\'.$gas->model(), $child->foreign_key))
+					{
+						$child_key = $child->foreign_key['\\'.$gas->model()];
+
+						break(1);
+					}
+				}
+				
+				$child->recorder->set('where_in', array($child_key, $ids));
+				$child->recorder->set('delete', array($child_table));
+
+				// Perform cascade delete 
+				$delete = self::_execute($child);
+			}
+		}
 
 		// Run _after_delete hook, and passed the result process
 		self::callback($gas, '_after_delete', $delete);
@@ -578,9 +704,26 @@ class Core {
 				if ( ! $gas->empty)
 				{
 					$identifier = $gas->primary_key;
-					$args       = array($gas->$identifier);
+
+					// Check key integrity
+					if (is_null($identifier))
+					{
+						// Are we deal with composite keys?
+						if (is_array($gas->foreign_key))
+						{
+							// Composite key was read-only and only could deleted via its parent
+							$fk = $gas->foreign_key;
+							$gas->errors[array_shift($fk)] = 'Could not delete a composite entity without parent instance';
+								
+							return FALSE;
+						}
+						
+						// We're lost!
+						throw new \InvalidArgumentException('[delete]Could not delete an entity which define relationship');
+					}
 
 					// Re-merge the arguments
+					$args      = array($gas->$identifier);
 					$arguments = array($gas, $args);
 				}
 				else
@@ -1683,7 +1826,7 @@ class Core {
 					// If defined callback not exists, show error
 					if ( ! is_callable(array($gas, $callback)))
 					{
-						throw new \InvalidArgumentException($callback.' was invalid callback method');
+						throw new \BadMethodCallException('['.$callback.'] Invalid callback method');
 					}
 
 					// Check the callback result

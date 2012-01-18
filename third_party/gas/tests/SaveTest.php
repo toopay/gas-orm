@@ -43,6 +43,26 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($foo->username, 'foo');
     }
 
+    public function testSaveInsertCompositeIncomplete()
+    {
+        // Create un-conplete new resource
+        $data      = array('u_id' => 1);
+        $role_user = Model\Role\User::make($data);
+
+        // Should be fail, because there is one composite key which undefined
+        $this->assertFalse($role_user->save());
+    }
+
+    public function testSaveInsertCompositeComplete()
+    {
+        // Create un-conplete new resource
+        $data      = array('u_id' => 4, 'r_id' => 1);
+        $role_user = Model\Role\User::make($data);
+
+        // Should be fail, because there is one composite key which undefined
+        $this->assertTrue($role_user->save());
+    }
+
     public function testSaveUpdate()
     {
         // Create new resource
@@ -78,6 +98,19 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($bar->name, 'Mr. Bar');
         $this->assertEquals($bar->email, 'bar@world.com');
         $this->assertEquals($bar->username, 'bar');
+    }
+
+    public function testtestSaveUpdateComposite()
+    {
+        // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
+        $role_user = Model\Role\User::find(array(1, 2));
+
+        // Consist
+        $this->assertInstanceOf('Gas\ORM', $role_user);
+        $this->assertInstanceOf('Gas\Data', $role_user->record);
+        
+        // No way we allow composite table, which define entities, update itself
+        $this->assertFalse($role_user->save());
     }
 
 }
