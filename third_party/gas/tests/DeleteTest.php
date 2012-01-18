@@ -14,12 +14,14 @@
 class DeleteTest extends PHPUnit_Framework_TestCase {
 
     /**
-     * @see Model\User (./tests/dummyModels/user.php)
+     * @see Model\User      (./tests/dummyModels/user.php)
+     * @see Model\Role\User (./tests/dummyModels/user.php)
      */
     public function setUp()
     {
         // Set Up the user table
         Model\User::setUp();
+        Model\Role\User::setUp();
     }
 
     public function testDeleteCompositeSingle()
