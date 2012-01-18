@@ -678,7 +678,12 @@ class Core {
 
 		// No need to process anything, 
 		// Just forward the query into DB instance
-		return ($simple) ? self::$db->simple_query($sql) : self::$db->query($sql);
+		if ($simple)
+		{
+			return self::$db->simple_query($sql);
+		}
+
+		return self::$db->query($sql);
 	}
 
 	/**
@@ -717,7 +722,7 @@ class Core {
 								
 							return FALSE;
 						}
-						
+
 						// We're lost!
 						throw new \InvalidArgumentException('[delete]Could not delete an entity which define relationship');
 					}
