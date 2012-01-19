@@ -17,6 +17,7 @@ require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'core.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'data.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'janitor.php';
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'orm.php';
+require_once GASPATH.'interfaces'.DIRECTORY_SEPARATOR.'extension.php';
 
 // Load needed DB files
 require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';

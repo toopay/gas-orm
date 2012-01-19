@@ -95,6 +95,11 @@ class ORM {
 	public $errors = array();
 
 	/**
+	 * @var  mixed  Extension holder
+	 */
+	public $extension;
+
+	/**
 	 * @var  object  Recorder holder
 	 */
 	public $recorder;
@@ -275,26 +280,6 @@ class ORM {
 	final public static function make($record = array())
 	{
 		return new static($record);
-	}
-
-	/**
-	 * Eager-load entities marker
-	 * 
-	 * @param  mixed  entities to load
-	 * @return void
-	 */
-	final public static function with()
-	{
-		$entities = func_get_args();
-		$instance = self::make();
-
-		// Mark necessary entities
-		foreach ($entities as $index => $entity)
-		{
-			$instance->related->set('include.'.$index, $entity);
-		}
-
-		return $instance;
 	}
 
 	/**
@@ -608,7 +593,18 @@ class ORM {
 		$this->validate_namespace();
 		$this->validate_table();
 
-		if (preg_match('/^(has_one|has_many|belongs_to|self)$/', $name, $m) AND count($m) == 2)
+		if ($name == 'with')
+		{
+			// Mark necessary entities
+			foreach ($arguments as $index => $entity)
+			{
+				$this->related->set('include.'.$index, $entity);
+			}
+
+			// Eager loaded entities has been marker
+			return $this;
+		}
+		elseif (preg_match('/^(has_one|has_many|belongs_to|self)$/', $name, $m) AND count($m) == 2)
 		{
 			// If try to define relationship, immediately serve.
 			// Merge passed arguments with relationship type and caller instance
@@ -620,6 +616,22 @@ class ORM {
 		elseif (($entities = $this->related->get('entities', array())) && array_key_exists($name, $entities))
 		{
 			return $this->related->get('entities.'.$name, array());
+		}
+		elseif ($this->extension instanceof Extension)
+		{
+			// Check for extension
+			$extension        = $this->extension;
+			$extension_method = array($extension, $name);
+
+			// If it was the valid extension method
+			// Emulate the extension, and return the result
+			if (method_exists($extension, $name) && is_callable($extension_method, TRUE))
+			{
+				$gas = $extension->__init($this);
+				$res = call_user_func_array(array($gas, $name), $arguments);
+
+				return $res;
+			}
 		}
 
 		$arguments = self::validate_method($name, $arguments);
@@ -639,6 +651,28 @@ class ORM {
 		$gas       = self::make();
 		$arguments = self::validate_method($name, $arguments);
 		
+		if ($name == 'with')
+		{
+			// Mark necessary entities
+			foreach ($arguments as $index => $entity)
+			{
+				$gas->related->set('include.'.$index, $entity);
+			}
+
+			// Eager loaded entities has been marker
+			return $gas;
+		}
+		elseif (class_exists('\\Gas\\Extension\\'.ucfirst($name)))
+		{
+			// We need to mark the extension property
+			// Assign the extension
+			$extension_name = '\\Gas\\Extension\\'.ucfirst($name);
+			$gas->extension = new $extension_name();
+
+			// Return for further process
+			return $gas;
+		}
+
 		return Core::compile($gas, $name, $arguments);
 	}
 

@@ -1675,6 +1675,7 @@ class Core {
 								$entities  = array();
 								$ids       = array();
 								$model     = $gas->model();
+								$extension = $gas->extension;
 								$includes  = $gas->related->get('include', array());
 								$relation  = $gas->meta->get('entities');
 
@@ -1729,6 +1730,12 @@ class Core {
 								
 								// Determine whether to return an instance or a collection of instance(s)
 								$res = count($instances) > 1 ? $instances : array_shift($instances);
+
+								// Do we need to return the result, or passed into some extension?
+								if ( ! empty($extension) && $extension instanceof Extension)
+								{
+									$res = $extension->__init($res);
+								}
 							}
 
 							// Tell task manager to take a break, and fill the resource holder
@@ -1972,6 +1979,28 @@ class Core {
 				$path = DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR;
 			}
 
+			// Check for extension first
+			if (strpos($class, 'Gas\\Extension') !== FALSE)
+			{
+				// There are only two target directories for this :
+				// 1. GASPATH.'classes/extension'
+				// 2. APPPATH.'libraries/gas/extension'
+				$extension_paths = array(GASPATH.'classes',
+				                         APPPATH.'libraries'.DIRECTORY_SEPARATOR.'gas');
+
+				// Loop over the paths
+				foreach ($extension_paths as $extension_path)
+				{
+					if (file_exists($extension_path.$path.$filename.'.php'))
+					{
+						// Gotcha
+						include_once $extension_path.$path.$filename.'.php';
+
+						return TRUE;
+					}
+				}
+			}
+
 			// Process matched directory
 			if (array_key_exists($namespace, static::$path)
 			    && ($directories = static::$path[$namespace]))
@@ -1979,7 +2008,7 @@ class Core {
 				// Walk through files and possible path
 				foreach ($directories as $dir)
 				{
-					if ( file_exists($dir.$path.$filename.'.php'))
+					if (file_exists($dir.$path.$filename.'.php'))
 					{
 						include_once($dir.$path.$filename.'.php');
 						break;
@@ -1989,7 +2018,6 @@ class Core {
 		}
 	}
 
-	
 	/**
 	 * Overloading static method triggered when invoking special method.
 	 *
