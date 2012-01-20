@@ -9,6 +9,16 @@
 // Set error level
 if (ENVIRONMENT === 'testing') error_reporting(E_STRICT);
 
+// Check the environment var
+if ( ! array_key_exists('db_group', $_ENV))
+{
+	$_ENV['db_group'] = 'default';
+}
+else
+{
+	unset($DB);
+}
+
 // Define this root folder as Gas ORM base path
 define('GASPATH', __DIR__.DIRECTORY_SEPARATOR);
 
@@ -145,7 +155,7 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 // Validate DB instance
 if ( ! class_exists('CI_DB'))
 {
-	$DB = &DB('default');
+	$DB = &DB($_ENV['db_group']);
 }
 
 if ( ! $DB instanceof CI_DB_Driver)

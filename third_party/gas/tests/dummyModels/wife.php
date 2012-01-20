@@ -67,33 +67,30 @@ class Wife extends ORM {
 	 */
 	public static function setUp()
 	{
-		// Generate a reflection
+		// Generate a reflection and sync DB
 		$reflection  = self::make();
-		$table       = $reflection->validate_table()->table;
-		$primary_key = $reflection->primary_key;
-
-		// Drop if table exists
-		self::forge()->drop_table($table);
-
-		//Build the new one now
-		foreach ($reflection->meta->get('fields') as $field => $rule) 
-		{
-			$annotation     = $rule['annotations'];
-			$fields[$field] = Core::identify_annotation($annotation);
-		}
-
-		self::forge()->add_field($fields);
-		self::forge()->add_key($primary_key, TRUE);
-		self::forge()->create_table($table);
+		self::syncdb($reflection);
 
 		// Then add some dummy data
 		$data = array(
-		    array('id' => 1, 'user_id' => 2, 'name' => 'Lourie Jones', 'hair_color' => 'black'),
-		    array('id' => 2, 'user_id' => 1, 'name' => 'Patricia Doe', 'hair_color' => 'black'),
-		    array('id' => 3, 'user_id' => 3, 'name' => 'Lily Sinatra', 'hair_color' => 'brunette'), 
+		    array('id' => '1', 'user_id' => '2', 'name' => 'Lourie Jones', 'hair_color' => 'black'),
+		    array('id' => '2', 'user_id' => '1', 'name' => 'Patricia Doe', 'hair_color' => 'black'),
+		    array('id' => '3', 'user_id' => '3', 'name' => 'Lily Sinatra', 'hair_color' => 'brunette'), 
 		);
 
-		self::insert_batch($data); 
+		if (strpos(\Gas\Core::$db->dbdriver, 'sqlite') === FALSE && strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		{
+			self::insert_batch($data); 
+		}
+		else
+		{
+			foreach ($data as $entry)
+			{
+				$mirror = $reflection;
+				$mirror->record->set('data', $entry);
+				$mirror->save();
+			}
+		}
 	}
 
 	function _init()

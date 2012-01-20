@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <phpunit bootstrap="tests/bootstrap.php">
+	<php>
+        <var name="db_group" value="testing_mysql"/>
+    </php>
     <testsuites>
         <testsuite name="Gas ORM Test Suite">
             <directory>./tests/</directory>

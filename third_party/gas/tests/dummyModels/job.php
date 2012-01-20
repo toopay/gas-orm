@@ -67,24 +67,9 @@ class Job extends ORM {
 	 */
 	public static function setUp()
 	{
-		// Generate a reflection
+		// Generate a reflection and sync DB
 		$reflection  = self::make();
-		$table       = $reflection->validate_table()->table;
-		$primary_key = $reflection->primary_key;
-
-		// Drop if table exists
-		self::forge()->drop_table($table);
-
-		//Build the new one now
-		foreach ($reflection->meta->get('fields') as $field => $rule) 
-		{
-			$annotation     = $rule['annotations'];
-			$fields[$field] = Core::identify_annotation($annotation);
-		}
-
-		self::forge()->add_field($fields);
-		self::forge()->add_key($primary_key, TRUE);
-		self::forge()->create_table($table);
+		self::syncdb($reflection);
 
 		// Then add some dummy data
 		$data = array(
@@ -95,7 +80,19 @@ class Job extends ORM {
 
 		);
 
-		self::insert_batch($data); 
+		if (strpos(\Gas\Core::$db->dbdriver, 'sqlite') === FALSE && strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		{
+			self::insert_batch($data); 
+		}
+		else
+		{
+			foreach ($data as $entry)
+			{
+				$mirror = $reflection;
+				$mirror->record->set('data', $entry);
+				$mirror->save();
+			}
+		}
 	}
 
 	function _init()

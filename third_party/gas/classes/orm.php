@@ -57,7 +57,7 @@
 use Gas\Core;
 use Gas\Janitor;
 
-class ORM {
+abstract class ORM {
 
 	/**
 	 * @var  string  Namespace
@@ -174,13 +174,35 @@ class ORM {
 			}
 		}
 
-		if ( ! empty($this->foreign_key))
+		// We really deal with composite keys here
+		if (empty($this->primary_key))
 		{
-			// Validate foreign keys for consistency naming convention recognizer
-			foreach($this->foreign_key as $namespace => $fk)
+			if ( ! empty($this->foreign_key))
 			{
-				$this->foreign_key[strtolower($namespace)] = $fk;
-				unset($this->foreign_key[$namespace]);
+				// Validate foreign keys for consistency naming convention recognizer
+				foreach($this->foreign_key as $namespace => $fk)
+				{
+					$this->foreign_key[strtolower($namespace)] = $fk;
+					unset($this->foreign_key[$namespace]);
+				}
+			}
+			else
+			{
+				// If so far we didnt have any keys yet, 
+				// then hopefully someone is really follow Gas convention
+				// while he define his entity relationship (yes, YOU!)
+				foreach ($this->meta->get('entities') as $name => $entity)
+				{
+					if ($entity['type'] == 'belongs_to')
+					{
+						$child_name     = $entity['child'];
+						$child_instance = new $child_name;
+						$child_table    = $child_instance->table;
+						$child_key      = $child_instance->primary_key;
+
+						$this->foreign_key[strtolower($child_name)] = $child_table.'_'.$child_key;
+					}
+				}
 			}
 		}
 	}
@@ -188,7 +210,7 @@ class ORM {
 	/**
 	 * Initial _init
 	 */
-	function _init() {}
+	abstract function _init();
 
 	/**
 	 * Initial _before_check
@@ -282,6 +304,52 @@ class ORM {
 		return new static($record);
 	}
 
+	final public static function syncdb(ORM $gas)
+	{
+		$table       = $gas->validate_table()->table;
+		$primary_key = $gas->primary_key;
+		$foreign_key = $gas->foreign_key;
+
+		if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+		{
+			// Drop if table exists
+			self::forge()->drop_table($table);
+		}
+		else
+		{
+			$gas->query('DROP TABLE `'.$table.'`');
+		}
+
+
+		//Build the new one now
+		foreach ($gas->meta->get('fields') as $field => $rule) 
+		{
+			$annotation     = $rule['annotations'];
+			$fields[$field] = Core::identify_annotation($annotation);
+		}
+
+		// Add the field annotations
+		self::forge()->add_field($fields);
+
+		// Add primay key if exists
+		if ( ! empty($primary_key))
+		{
+			self::forge()->add_key($primary_key, TRUE);
+		}
+
+		// Add composite keys if exists
+		if ( ! empty($foreign_key))
+		{
+			foreach ($foreign_key as $key)
+			{
+				self::forge()->add_key($key, TRUE);
+			}
+		}
+
+		// Retrieve necessary information
+		self::forge()->create_table($table, TRUE);
+	}
+
 	/**
 	 * Validating model's meta
 	 *
@@ -303,6 +371,12 @@ class ORM {
 		{
 			// Run _init method
 			$gas->_init();
+
+			if (empty($gas::$fields))
+			{
+				// Now we know something was really goes wrong
+				throw new \LogicException($gas->model().' _init method contain empty field(s) definition.');
+			}
 
 			// Register meta entities information
 			$entity_metadata['entities'] = $gas::$relationships;
@@ -441,9 +515,18 @@ class ORM {
 		{
 			case 'auto':
 				$rules[]       = 'callback_auto_check'; 
-				$annotations[] = 'INT';
-				$annotations[] = 'unsigned';
-				$annotations[] = 'auto_increment';
+
+				// Add exception for sqlite
+				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				{
+					$annotations[] = 'INT';
+					$annotations[] = 'unsigned';
+					$annotations[] = 'auto_increment';
+				}
+				else
+				{
+					$annotations[] = 'INTEGER';
+				}
 
 				break;
 
@@ -473,13 +556,31 @@ class ORM {
 
 			case 'numeric':
 				$rules[]       = 'numeric'; 
-				$annotations[] = 'TINYINT';
+
+				// Add exception for sqlite
+				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				{
+					$annotations[] = 'TINYINT';
+				}
+				else
+				{
+					$annotations[] = 'INTEGER';
+				}
 
 				break;
 				
 			case 'int':
 				$rules[]       = 'integer';
-				$annotations[] = 'INT';
+
+				// Add exception for sqlite
+				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				{
+					$annotations[] = 'INT';
+				}
+				else
+				{
+					$annotations[] = 'INTEGER';
+				}
 
 				break;
 			
@@ -577,6 +678,7 @@ class ORM {
 		// We're done
 		return array('path'    => $full_path,
 		             'child'   => $child,
+		             'type'    => $type,
 		             'single'  => $single,
 		             'options' => empty($options) ? array() : $options);
 	}

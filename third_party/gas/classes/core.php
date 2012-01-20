@@ -321,6 +321,34 @@ class Core {
 		return new static($DB, $config);
 	}
 
+	public static function connect($dsn)
+	{
+		$DB =& DB($dsn, TRUE);
+
+		// Consist the DB object
+		if ( ! $DB instanceof \CI_DB_Driver)
+		{
+			throw new \InvalidArgumentException('db_connection_error:'.$dsn);
+		}
+
+		// Generate needed class name
+		$forge = 'CI_DB_'.$DB->dbdriver.'_forge';
+		$util  = 'CI_DB_'.$DB->dbdriver.'_utility';
+
+		// Load the necessary driver classes
+		require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_utility.php');
+		require_once(DBDRIVERSPATH.$DB->dbdriver.DIRECTORY_SEPARATOR.$DB->dbdriver.'_forge.php');
+
+		// Load the DB, DB Util and DB Forge instances
+		static::$db      = $DB;
+		static::$dbutil  = new $util();
+		static::$dbforge = new $forge();
+
+		// Remove any resource cache
+		self::cache_flush();
+		self::$resource_state = array();
+	}
+
 	/**
 	 * Perform callback function within a Gas instance
 	 *
@@ -416,7 +444,7 @@ class Core {
 				$unique = array($key, array_values($id));
 
 				// Call the method directly
-				call_user_func_array(array(self::$db, 'where_in'), $unique);
+				call_user_func_array(array(static::$db, 'where_in'), $unique);
 			}
 		}
 		else
@@ -672,7 +700,7 @@ class Core {
 			}
 			else
 			{
-				$result = self::$db->query($sql);
+				$result = static::$db->query($sql);
 				self::cache_end($result, $token);
 			}
 
@@ -681,7 +709,7 @@ class Core {
 
 		// No need to process anything, 
 		// Just forward the query into DB instance
-		return ($simple) ? self::$db->simple_query($sql) : self::$db->query($sql);
+		return ($simple) ? static::$db->simple_query($sql) : static::$db->query($sql);
 	}
 
 	/**
@@ -697,8 +725,17 @@ class Core {
 		// Interpret the method and merge argument, for internal method calls
 		$internal_method = array('\\Gas\\Core', $method);
 		$arguments       = array_merge(array($gas), $args);
-		
-		if (is_callable($internal_method, TRUE))
+		$query           = array('query', 'simple_query');
+
+		if (in_array($method, $query))
+		{
+			$query_method = array(static::$db, $method);
+			$query_arg    = array(array_pop($args));
+			$query_result = call_user_func_array($query_method, $query_arg);
+
+			return $query_result;
+		}
+		elseif (is_callable($internal_method, TRUE))
 		{
 			if ($method == 'delete')
 			{
@@ -1030,6 +1067,18 @@ class Core {
 	}
 
 	/**
+	 * Reports resource state
+	 *
+	 * @param   object Gas instance
+	 * @return  mixed  All resource state
+	 */
+	public static function reports($gas)
+	{
+		// Return the resource state
+		return isset(self::$resource_state[$gas->table]) ? self::$resource_state[$gas->table] : array();
+	}
+
+	/**
 	 * Reset Select properties within query builder instance
 	 *
 	 * @param   mixed
@@ -1039,9 +1088,9 @@ class Core {
 	public static function reset_query()
 	{
 		// Reset query and get the cached resource
-		if (method_exists(self::$db, 'reset_query'))
+		if (method_exists(static::$db, 'reset_query'))
 		{
-			self::$db->reset_query();
+			static::$db->reset_query();
 		}
 		else
 		{
@@ -1615,7 +1664,7 @@ class Core {
 		self::cache_start($tasks);
 
 		// Prepare tasks bundle
-		$engine    = get_class(self::$db);
+		$engine    = get_class(static::$db);
 		$compiler  = array('gas' => $gas);
 		$executor  = static::$dictionary['executor'];
 		$write     = array_slice($executor, 0, 6);
@@ -2027,9 +2076,8 @@ class Core {
 	 */
 	public static function __callStatic($name, $args)
 	{
-		// Defined DBAL and low-level query function
+		// Defined DBAL component
 		$dbal  = array('forge', 'util');
-		$query = array('query', 'simple_query');
 
 		if (in_array($name, $dbal))
 		{
@@ -2042,7 +2090,7 @@ class Core {
 		elseif ($name == 'last_created')
 		{
 			// Get last created entry
-			if (($last_id = self::$db->insert_id()) && empty($last_id))
+			if (($last_id = static::$db->insert_id()) && empty($last_id))
 			{
 				// Nothing
 				return NULL;
@@ -2052,11 +2100,6 @@ class Core {
 			$gas = array_shift($args);
 
 			return self::find($gas, array($last_id));
-		}
-		elseif (in_array($name, $query))
-		{
-			return call_user_func_array(array(static::$db, $name), array(array_pop($args)));
-			
 		}
 		elseif (preg_match('/^find_by_([^)]+)$/', $name, $m) && count($m) == 2)
 		{
@@ -2106,7 +2149,7 @@ class Core {
 				$args = Janitor::get_input($name, $args, TRUE);
 
 				// Ensure once, in case there are some deprecated method
-				if ( ! is_callable(array(self::$db, $name)))
+				if ( ! is_callable(array(static::$db, $name)))
 				{
 					throw new \BadMethodCallException('['.$name.']Unknown method.');
 				}
@@ -2127,7 +2170,7 @@ class Core {
 				if (in_array($name, $utility))
 				{
 					// This not affected any row or any record
-					return self::$db->$name();
+					return static::$db->$name();
 				}
 				else
 				{
@@ -2135,7 +2178,7 @@ class Core {
 					$args = Janitor::get_input($name, $args, TRUE);
 
 					// Ensure once, in case there are some deprecated method
-					if ( ! is_callable(array(self::$db, $name)))
+					if ( ! is_callable(array(static::$db, $name)))
 					{
 						throw new \BadMethodCallException('['.$name.']Unknown method.');
 					}

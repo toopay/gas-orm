@@ -26,7 +26,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
     public function testSaveInsert()
     {
         // Create new resource
-        $data = array('name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
+        $data = array('id' => 1, 'name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
         Model\User::make($data)->save();
 
         // Get the last created entry
@@ -66,12 +66,11 @@ class SaveTest extends PHPUnit_Framework_TestCase {
     public function testSaveUpdate()
     {
         // Create new resource
-        $data = array('name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
+        $data = array('id' => 1, 'name' => 'Mr. Foo', 'username' => 'foo', 'email' => 'foo@world.com');
         Model\User::make($data)->save();
 
-        // Get the new created resource id, then get those resource
-        $id  = Model\User::insert_id();
-        $foo = Model\User::find($id);
+        // Get the new created resource
+        $foo = Model\User::find(1);
 
         // At this moment, resource should contain all Mr. Foo values
         $this->assertEquals($foo->name, 'Mr. Foo');
@@ -87,7 +86,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         $foo->save();
 
         // Retrive back the user using old id
-        $bar = Model\User::find($id);
+        $bar = Model\User::find(1);
         
         // Consist
         $this->assertInstanceOf('Gas\ORM', $bar);

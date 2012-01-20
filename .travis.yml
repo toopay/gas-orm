@@ -4,12 +4,12 @@ phps:
   - 5.3
   - 5.4
 
-mysql:
-  adapter: mysql2
-  database: gas_test
-  username: root
-  encoding: utf8
+env:
+  - DB=mysql
+  - DB=sqlite
 
 before_script:
+  - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS gas_test;'; fi"
   - git submodule update --init
-  - "mysql -e 'create database gas_test;'"
+
+script: phpunit --no-globals-backup --configuration third_party/gas/tests/travis/$DB.travis.xml

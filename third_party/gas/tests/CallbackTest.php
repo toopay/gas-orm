@@ -26,7 +26,7 @@ class CallbackTest extends PHPUnit_Framework_TestCase {
     public function testCallbackSave()
     {
         // Create new resource with preserved value for username 
-        $data = array('name' => 'Mr. Foo', 'username' => 'administrator', 'email' => 'foo@world.com');
+        $data = array('id' => 10, 'name' => 'Mr. Foo', 'username' => 'administrator', 'email' => 'foo@world.com');
         $foo  = Model\User::make($data);
 
         // In corresponding model, there is `_before_save` callback
@@ -35,7 +35,7 @@ class CallbackTest extends PHPUnit_Framework_TestCase {
         unset($foo);
 
         // Get the last created entry
-        $foo = Model\User::last_created();
+        $foo = Model\User::find(10);
         
         // Consist
         $this->assertInstanceOf('Gas\ORM', $foo);
