@@ -3,8 +3,7 @@
 <phpunit bootstrap="../bootstrap.php">
 	<php>
         <const name="DB_GROUP" value="testing_mysql"/>
-        <const name="BASEPATH" value="/vendor/CodeIgniter/system/"/>
-        <const name="APPPATH" value="/"/>
+        <const name="ROOTPATH" value="TRUE"/>
     </php>
     <testsuites>
         <testsuite name="Gas ORM Test Suite">
