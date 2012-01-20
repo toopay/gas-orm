@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<phpunit bootstrap="./../bootstrap.php">
+<phpunit bootstrap="../bootstrap.php">
 	<php>
         <var name="db_group" value="testing_mysql"/>
     </php>
