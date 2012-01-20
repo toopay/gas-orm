@@ -27,7 +27,7 @@ $db['testing_mysql']['autoinit'] = TRUE;
 $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
-$db['testing_sqlite']['hostname'] = 'sqlite:/third_party/gas/gas_test.sqlite';
+$db['testing_sqlite']['hostname'] = 'sqlite:'.GASPATH.'gas_test.sqlite';
 $db['testing_sqlite']['username'] = '';
 $db['testing_sqlite']['password'] = '';
 $db['testing_sqlite']['database'] = '';
