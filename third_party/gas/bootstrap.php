@@ -10,9 +10,9 @@
 if (ENVIRONMENT === 'testing') error_reporting(E_STRICT);
 
 // Check the environment var
-if ( ! array_key_exists('db_group', $_ENV))
+if ( ! defined('DB_GROUP'))
 {
-	$_ENV['db_group'] = 'default';
+	define('DB_GROUP', 'default');
 }
 else
 {
@@ -155,7 +155,7 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 // Validate DB instance
 if ( ! class_exists('CI_DB'))
 {
-	$DB = &DB($_ENV['db_group']);
+	$DB = &DB(DB_GROUP);
 }
 
 if ( ! $DB instanceof CI_DB_Driver)

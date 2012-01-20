@@ -16,8 +16,8 @@ $basedir = implode(DIRECTORY_SEPARATOR, $fragdir);
 
 // Define the PATH and ENVIRONMENT
 define('ENVIRONMENT', 'testing');
-define('APPPATH', $basedir.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
-define('BASEPATH', $basedir.DIRECTORY_SEPARATOR.'system'.DIRECTORY_SEPARATOR);
+defined('APPPATH')  or define('APPPATH', $basedir.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
+defined('BASEPATH') or define('BASEPATH', $basedir.DIRECTORY_SEPARATOR.'system'.DIRECTORY_SEPARATOR);
 
 // Define Gas ORM configuration for unit testing
 $config = array('models_path'        => array('Model' => __DIR__.DIRECTORY_SEPARATOR.'dummyModels'),
