@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="../bootstrap.php">
+	<php>
+        <const name="DB_GROUP" value="testing_postgre"/>
+        <const name="ROOTPATH" value="TRUE"/>
+    </php>
+    <testsuites>
+        <testsuite name="Gas ORM Test Suite">
+            <directory>./../testCases</directory>
+            <directory suffix="Test.php" phpVersion="5.3.0" phpVersionOperator=">=">./../testCases</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

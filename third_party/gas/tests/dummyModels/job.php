@@ -80,7 +80,7 @@ class Job extends ORM {
 
 		);
 
-		if (strpos(\Gas\Core::$db->dbdriver, 'sqlite') === FALSE && strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		if (\Gas\Core::$db->dbdriver == 'mysql' or strpos(\Gas\Core::$db->hostname, 'mysql') !== FALSE)
 		{
 			self::insert_batch($data); 
 		}

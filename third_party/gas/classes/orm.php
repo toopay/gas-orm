@@ -514,14 +514,18 @@ abstract class ORM {
 		switch ($type) 
 		{
 			case 'auto':
-				$rules[]       = 'callback_auto_check'; 
+				$rules[] = 'callback_auto_check'; 
 
-				// Add exception for sqlite
+				// Add exception for database spec
 				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
 				{
 					$annotations[] = 'INT';
 					$annotations[] = 'unsigned';
 					$annotations[] = 'auto_increment';
+				}
+				elseif (Core::$db->dbdriver == 'postgre')
+				{
+					$annotations[] = 'SERIAL';
 				}
 				else
 				{
@@ -537,8 +541,16 @@ abstract class ORM {
 				break;
 			
 			case 'string':
-				$rules[]       = 'callback_char_check'; 
-				$annotations[] = 'TEXT';
+				$rules[] = 'callback_char_check'; 
+
+				if (Core::$db->dbdriver == 'postgre')
+				{
+					$annotations[] = 'VARCHAR';
+				}
+				else
+				{
+					$annotations[] = 'TEXT';
+				}
 
 				break;
 
@@ -555,7 +567,7 @@ abstract class ORM {
 				break;
 
 			case 'numeric':
-				$rules[]       = 'numeric'; 
+				$rules[] = 'numeric'; 
 
 				// Add exception for sqlite
 				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
@@ -570,7 +582,7 @@ abstract class ORM {
 				break;
 				
 			case 'int':
-				$rules[]       = 'integer';
+				$rules[] = 'integer';
 
 				// Add exception for sqlite
 				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)

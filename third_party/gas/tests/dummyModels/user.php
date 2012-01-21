@@ -79,7 +79,7 @@ class User extends ORM {
 		    array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@coldplay.com', 'username' => 'cmartin'),
 		);
 
-		if (strpos(\Gas\Core::$db->dbdriver, 'sqlite') === FALSE && strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		if (\Gas\Core::$db->dbdriver == 'mysql' or strpos(\Gas\Core::$db->hostname, 'mysql') !== FALSE)
 		{
 			self::insert_batch($data); 
 		}
@@ -90,6 +90,7 @@ class User extends ORM {
 				$mirror = $reflection;
 				$mirror->record->set('data', $entry);
 				$mirror->save();
+				unset($mirror);
 			}
 		}
 	}
