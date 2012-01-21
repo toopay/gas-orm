@@ -1,0 +1,3 @@
+[submodule "vendor/CodeIgniter"]
+	path = vendor/CodeIgniter
+	url = git://github.com/toopay/CodeIgniter.git

@@ -310,7 +310,7 @@ abstract class ORM {
 		$primary_key = $gas->primary_key;
 		$foreign_key = $gas->foreign_key;
 
-		// Postgre exception
+		// Check table existence
 		if (Core::$db->table_exists($table))
 		{
 			return Core::$db->truncate($table);
