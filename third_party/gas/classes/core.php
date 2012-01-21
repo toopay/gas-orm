@@ -1611,11 +1611,25 @@ class Core {
 	 */
 	public static function generate_clause($domain, $key, $identifier, $ids = '')
 	{
+		// Define the BACKTICKS part
+		if (static::$db->dbdriver == 'postgre')
+		{
+			$bt = '"';
+		}
+		elseif (static::$db->driver == 'sqlite')
+		{
+			$bt = '';
+		}
+		else
+		{
+			$bt = '`';
+		}
+
 		// Generate subquery
 		if ($key == '*')
 		{
 			// Do we have special selector char
-			$pattern = "SELECT * FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+			$pattern = "SELECT * FROM $bt$domain$bt WHERE $bt$domain$bt.$bt$identifier$bt IN (%s)";
 		}
 		elseif (is_array($key))
 		{
@@ -1625,17 +1639,17 @@ class Core {
 			// We need to add protector and identifier
 			foreach ($key as $collumn)
 			{
-				$select[] = "`$domain`.`$collumn`";
+				$select[] = "$bt$domain$bt.$bt$collumn$bt";
 			}
 
 			$key = implode(', ', $select);
 			
-			$pattern = "SELECT $key FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+			$pattern = "SELECT $key FROM $bt$domain$bt WHERE $bt$domain$bt.$bt$identifier$bt IN (%s)";
 		}
 		else
 		{
 			// Default pattern
-			$pattern = "SELECT `$domain`.`$key` FROM `$domain` WHERE `$domain`.`$identifier` IN (%s)";
+			$pattern = "SELECT $bt$domain$bt.$bt$key$bt FROM $bt$domain$bt WHERE $bt$domain$bt.$bt$identifier$bt IN (%s)";
 		}
 
 		// Do we need to replace the string identifier

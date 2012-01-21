@@ -28,9 +28,9 @@ $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
 $db['testing_postgre']['hostname'] = 'localhost';
-$db['testing_postgre']['username'] = 'gas';
-$db['testing_postgre']['password'] = 'gas';
-$db['testing_postgre']['database'] = 'gas_unit_test';
+$db['testing_postgre']['username'] = 'postgres';
+$db['testing_postgre']['password'] = '';
+$db['testing_postgre']['database'] = 'gas_test';
 $db['testing_postgre']['dbdriver'] = 'postgre';
 $db['testing_postgre']['dbprefix'] = '';
 $db['testing_postgre']['pconnect'] = FALSE;

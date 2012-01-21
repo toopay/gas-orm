@@ -310,16 +310,11 @@ abstract class ORM {
 		$primary_key = $gas->primary_key;
 		$foreign_key = $gas->foreign_key;
 
-		if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+		// If table already exists, just truncate it
+		if (Core::$db->table_exists($table))
 		{
-			// Drop if table exists
-			self::forge()->drop_table($table);
+			return Core::$db->truncate($table);
 		}
-		else
-		{
-			$gas->query('DROP TABLE `'.$table.'`');
-		}
-
 
 		//Build the new one now
 		foreach ($gas->meta->get('fields') as $field => $rule) 
@@ -346,8 +341,11 @@ abstract class ORM {
 			}
 		}
 
-		// Retrieve necessary information
-		self::forge()->create_table($table, TRUE);
+		// Create those table if necessary
+		if ( ! Core::$db->table_exists($table))
+		{
+			self::forge()->create_table($table, TRUE);
+		}
 	}
 
 	/**
