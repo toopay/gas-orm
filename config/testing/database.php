@@ -10,11 +10,11 @@
 $active_group = 'testing_mysql';
 $active_record = TRUE;
 
-$db['testing_mysql']['hostname'] = '0.0.0.0';
+$db['testing_mysql']['hostname'] = 'mysql:host=localhost';
 $db['testing_mysql']['username'] = 'root';
 $db['testing_mysql']['password'] = '';
 $db['testing_mysql']['database'] = 'gas_test';
-$db['testing_mysql']['dbdriver'] = 'mysql';
+$db['testing_mysql']['dbdriver'] = 'pdo';
 $db['testing_mysql']['dbprefix'] = '';
 $db['testing_mysql']['pconnect'] = TRUE;
 $db['testing_mysql']['db_debug'] = FALSE;
@@ -27,11 +27,11 @@ $db['testing_mysql']['autoinit'] = TRUE;
 $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
-$db['testing_postgre']['hostname'] = '127.0.0.1';
+$db['testing_postgre']['hostname'] = 'pgsql:host=127.0.0.1';
 $db['testing_postgre']['username'] = 'postgres';
 $db['testing_postgre']['password'] = '';
 $db['testing_postgre']['database'] = 'gas_test';
-$db['testing_postgre']['dbdriver'] = 'postgre';
+$db['testing_postgre']['dbdriver'] = 'pdo';
 $db['testing_postgre']['dbprefix'] = '';
 $db['testing_postgre']['pconnect'] = TRUE;
 $db['testing_postgre']['db_debug'] = FALSE;
