@@ -1616,7 +1616,7 @@ class Core {
 		{
 			$bt = '"';
 		}
-		elseif (static::$db->driver == 'sqlite')
+		elseif (static::$db->dbdriver == 'sqlite')
 		{
 			$bt = '';
 		}
