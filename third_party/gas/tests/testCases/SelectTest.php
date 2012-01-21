@@ -36,7 +36,7 @@ class SelectTest extends PHPUnit_Framework_TestCase {
             $this->assertInstanceOf('Gas\Data', $user->record);
 
             //`id`, `username` and `name` field should contain something
-            $this->assertInternalType('string', $user->id);
+            $this->assertTrue(empty($user->id));
             $this->assertInternalType('string', $user->username);
             $this->assertInternalType('string', $user->name);
             

@@ -310,7 +310,7 @@ abstract class ORM {
 		$primary_key = $gas->primary_key;
 		$foreign_key = $gas->foreign_key;
 
-		// If table already exists, just truncate it
+		// Postgre exception
 		if (Core::$db->table_exists($table))
 		{
 			return Core::$db->truncate($table);
@@ -344,7 +344,7 @@ abstract class ORM {
 		// Create those table if necessary
 		if ( ! Core::$db->table_exists($table))
 		{
-			self::forge()->create_table($table, TRUE);
+			self::forge()->create_table($table);
 		}
 	}
 

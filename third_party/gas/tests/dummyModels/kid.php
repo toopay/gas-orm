@@ -81,7 +81,7 @@ class Kid extends ORM {
 		    array('id' => 6, 'user_id' => 3, 'name' => 'Dolly Sinatra', 'age' => 6),
 		);
 
-		if (\Gas\Core::$db->dbdriver == 'mysql' or strpos(\Gas\Core::$db->hostname, 'mysql') !== FALSE)
+		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
 		{
 			self::insert_batch($data); 
 		}

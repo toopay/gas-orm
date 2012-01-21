@@ -79,7 +79,7 @@ class User extends ORM {
 		    array('id' => 4, 'name' => 'Chris Martin', 'email' => 'chris@coldplay.com', 'username' => 'cmartin'),
 		);
 
-		if (\Gas\Core::$db->dbdriver == 'mysql' or strpos(\Gas\Core::$db->hostname, 'mysql') !== FALSE)
+		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
 		{
 			self::insert_batch($data); 
 		}

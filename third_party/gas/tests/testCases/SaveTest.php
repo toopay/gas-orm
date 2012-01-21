@@ -30,7 +30,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         Model\User::make($data)->save();
 
         // Get the last created entry
-        $foo = Model\User::last_created();
+        $foo = Model\User::find(1);
         
         // Consist
         $this->assertInstanceOf('Gas\ORM', $foo);

@@ -80,7 +80,7 @@ class User extends ORM {
 		    array('id' => 5, 'user_id' => 4, 'job_id' => 4),
 		);
 
-		if (strpos(\Gas\Core::$db->dbdriver, 'sqlite') === FALSE && strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
 		{
 			self::insert_batch($data); 
 		}

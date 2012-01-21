@@ -78,7 +78,7 @@ class Role extends ORM {
 		    array('id' => 3, 'name' => 'Member', 'description' => 'Only higher level tasks.'),
 		);
 
-		if (\Gas\Core::$db->dbdriver == 'mysql' or strpos(\Gas\Core::$db->hostname, 'mysql') !== FALSE)
+		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
 		{
 			self::insert_batch($data); 
 		}
