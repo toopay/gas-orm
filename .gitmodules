@@ -1,3 +1,0 @@
-[submodule "vendor/CodeIgniter"]
-	path = vendor/CodeIgniter
-	url = git://github.com/EllisLab/CodeIgniter.git
