@@ -41,7 +41,7 @@ else
 
 // Define Gas ORM configuration for unit testing
 $config = array('models_path'        => array('Model' => __DIR__.DIRECTORY_SEPARATOR.'dummyModels'),
-                'cache_request'      => TRUE,
+                'cache_request'      => FALSE,
                 'auto_create_models' => FALSE,
                 'auto_create_tables' => FALSE);
 
