@@ -10,14 +10,14 @@
 $active_group = 'testing_mysql';
 $active_record = TRUE;
 
-$db['testing_mysql']['hostname'] = 'mysql:host=localhost';
+$db['testing_mysql']['hostname'] = 'mysql:host=localhost;port=3306';
 $db['testing_mysql']['username'] = 'travis';
 $db['testing_mysql']['password'] = '';
 $db['testing_mysql']['database'] = 'gas_test';
 $db['testing_mysql']['dbdriver'] = 'pdo';
 $db['testing_mysql']['dbprefix'] = '';
 $db['testing_mysql']['pconnect'] = TRUE;
-$db['testing_mysql']['db_debug'] = TRUE;
+$db['testing_mysql']['db_debug'] = FALSE;
 $db['testing_mysql']['cache_on'] = FALSE;
 $db['testing_mysql']['cachedir'] = '';
 $db['testing_mysql']['char_set'] = 'utf8';
@@ -27,7 +27,7 @@ $db['testing_mysql']['autoinit'] = TRUE;
 $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
-$db['testing_postgre']['hostname'] = 'pgsql:host=localhost';
+$db['testing_postgre']['hostname'] = 'pgsql:host=localhost;port=5432';
 $db['testing_postgre']['username'] = 'postgres';
 $db['testing_postgre']['password'] = '';
 $db['testing_postgre']['database'] = 'gas_test';
