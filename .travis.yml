@@ -13,5 +13,6 @@ before_script:
   - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'create database gas_test;' -U postgres; fi"
   - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS gas_test;'; fi"
   - git submodule update --init
+  - cd third_party/gas/test/travis
 
-script: phpunit --no-globals-backup --configuration third_party/gas/tests/travis/$DB.travis.xml
+script: phpunit --no-globals-backup --configuration $DB.travis.xml
