@@ -48,3 +48,15 @@ $config = array('models_path'        => array('Model' => __DIR__.DIRECTORY_SEPAR
 
 // Include Gas ORM configuration and Bootstrap
 include_once $gasdir.DIRECTORY_SEPARATOR.'bootstrap.php';
+
+// Initialize all Model's setup
+Model\Job\User::setUp();
+Model\Role\User::setUp();
+Model\Job::setUp();
+Model\Kid::setUp();
+Model\Role::setUp();
+Model\User::setUp();
+Model\Wife::setUp();
+
+// Reconnect
+Gas\Core::connect(DB_GROUP);
