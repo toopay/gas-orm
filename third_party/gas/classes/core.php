@@ -911,7 +911,7 @@ class Core {
 	 *
 	 * @return	void
 	 */
-	public function cache_flush()
+	public static function cache_flush()
 	{
 		// Flush the cached resources
 		self::$cached_resource = array();
