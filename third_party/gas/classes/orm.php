@@ -339,7 +339,11 @@ abstract class ORM {
 		$foreign_key = $gas->foreign_key;
 
 		// Check table existence
-		if (Core::$db->table_exists($table))
+		if (self::driver('sqlite'))
+		{
+			return Core::$db->truncate($table);
+		}
+		elseif (Core::$db->table_exists($table))
 		{
 			return Core::$db->truncate($table);
 		}

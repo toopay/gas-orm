@@ -321,6 +321,12 @@ class Core {
 		return new static($DB, $config);
 	}
 
+	/**
+	 * Use a dsn connection
+	 * 
+	 * @param  string DSN
+	 * @return void
+	 */
 	public static function connect($dsn)
 	{
 		$DB =& DB($dsn, TRUE);

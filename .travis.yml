@@ -7,6 +7,7 @@ phps:
 env:
   - DB=mysql
   - DB=pgsql
+  - DB=sqlite
 
 before_script:
   - sh -c "if [ '$DB' = 'pgsql' ]; then psql -c 'DROP DATABASE IF EXISTS gas_test;' -U postgres; fi"
