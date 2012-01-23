@@ -20,7 +20,7 @@ else
 }
 
 // Define this root folder as Gas ORM base path
-define('GASPATH', __DIR__.DIRECTORY_SEPARATOR);
+defined('GASPATH') or define('GASPATH', __DIR__.DIRECTORY_SEPARATOR);
 
 // Load everything on base gas directory
 require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'core.php';

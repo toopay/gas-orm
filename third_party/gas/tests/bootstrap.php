@@ -28,6 +28,7 @@ $basedir = implode(DIRECTORY_SEPARATOR, $fragdir);
 
 // Define the PATH and ENVIRONMENT
 define('ENVIRONMENT', 'testing');
+
 if (defined('ROOTPATH'))
 {
 	define('APPPATH', $basedir.DIRECTORY_SEPARATOR);
