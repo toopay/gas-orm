@@ -15,18 +15,20 @@ class FindTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @see Model\User      (./tests/dummyModels/user.php)
+     * @see Model\Wife      (./tests/dummyModels/wife.php)
      * @see Model\Role\User (./tests/dummyModels/user.php)
      */
     public function setUp()
     {
         Model\User::setUp();
+        Model\Wife::setUp();
         Model\Role\User::setUp();
     }
 
     public function testFindInvalidResources()
     {
         // Test looking for invalid user
-        $user10 = Model\User::find(10);
+        $user10 = Model\User::find(11);
         $this->assertEmpty($user10);
     }
 
@@ -48,35 +50,32 @@ class FindTest extends PHPUnit_Framework_TestCase {
 
     public function testFindSeveral()
     {
-        $users = Model\User::find(2, 3, 4);
+        $wifes = Model\Wife::find(1, 2, 3);
 
-        // Should be an array, contain 3 user object
-        $this->assertCount(3, $users);
+        // Should be an array, contain 3 wife objects
+        $this->assertCount(3, $wifes);
 
-        foreach ($users as $user)
+        foreach ($wifes as $wife)
         {
             // Consist
-            $this->assertInstanceOf('Gas\ORM', $user);
-            $this->assertInstanceOf('Gas\Data', $user->record);
+            $this->assertInstanceOf('Gas\ORM', $wife);
+            $this->assertInstanceOf('Gas\Data', $wife->record);
 
             // Check results
-            switch ($user->id)
+            switch ($wife->id)
             {
+                case '1':
+                    $this->assertEquals($wife->name, 'Lourie Jones');
+
+                    break;
+
                 case '2':
-                    $this->assertEquals($user->name, 'Derek Jones');
-                    $this->assertEquals($user->username, 'derek');
+                    $this->assertEquals($wife->name, 'Patricia Doe');
 
                     break;
 
                 case '3':
-                    $this->assertEquals($user->name, 'Frank Sinatra');
-                    $this->assertEquals($user->username, 'fsinatra');
-
-                    break;
-
-                case '4':
-                    $this->assertEquals($user->name, 'Chris Martin');
-                    $this->assertEquals($user->username, 'cmartin');
+                    $this->assertEquals($wife->name, 'Lily Sinatra');
 
                     break;
             }

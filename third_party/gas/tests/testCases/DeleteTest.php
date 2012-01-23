@@ -24,6 +24,17 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         Model\Role\User::setUp();
     }
 
+    /**
+     * @see Model\User      (./tests/dummyModels/user.php)
+     * @see Model\Role\User (./tests/dummyModels/user.php)
+     */
+    public function tearDown()
+    {
+        // Re-set up corresponding models
+        Model\User::setUp();
+        Model\Role\User::setUp();
+    }
+
     public function testDeleteCompositeSingle()
     {
         // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)

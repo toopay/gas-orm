@@ -304,6 +304,34 @@ abstract class ORM {
 		return new static($record);
 	}
 
+	/**
+	 * Check driver
+	 * 
+	 * @param  string  Driver name
+	 * @return bool
+	 */
+	final public static function driver($name = '')
+	{
+		$name = Janitor::get_input(__CLASS__, $name, '', TRUE);
+
+		if ($name == 'postgre')
+		{
+			$is_driver = (bool) (Core::$db->dbdriver == $name or strpos(Core::$db->hostname, 'pgsql') !== FALSE);
+		}
+		else
+		{
+			$is_driver = (bool) (Core::$db->dbdriver == $name or strpos(Core::$db->hostname, $name) !== FALSE);
+		}
+
+		return $is_driver;
+	}
+
+	/**
+	 * Synchronize models state with database
+	 * 
+	 * @param  object  Models
+	 * @return void
+	 */
 	final public static function syncdb(ORM $gas)
 	{
 		$table       = $gas->validate_table()->table;
@@ -515,13 +543,13 @@ abstract class ORM {
 				$rules[] = 'callback_auto_check'; 
 
 				// Add exception for database spec
-				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				if (self::driver('mysql'))
 				{
 					$annotations[] = 'INT';
 					$annotations[] = 'unsigned';
 					$annotations[] = 'auto_increment';
 				}
-				elseif (Core::$db->dbdriver == 'postgre')
+				elseif (self::driver('postgre'))
 				{
 					$annotations[] = 'SERIAL';
 				}
@@ -541,7 +569,7 @@ abstract class ORM {
 			case 'string':
 				$rules[] = 'callback_char_check'; 
 
-				if (Core::$db->dbdriver == 'postgre')
+				if (self::driver('postgre'))
 				{
 					$annotations[] = 'VARCHAR';
 				}
@@ -567,8 +595,8 @@ abstract class ORM {
 			case 'numeric':
 				$rules[] = 'numeric'; 
 
-				// Add exception for sqlite
-				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				// Add exception for mysql
+				if (self::driver('mysql'))
 				{
 					$annotations[] = 'TINYINT';
 				}
@@ -582,8 +610,8 @@ abstract class ORM {
 			case 'int':
 				$rules[] = 'integer';
 
-				// Add exception for sqlite
-				if (strpos(Core::$db->dbdriver, 'sqlite') === FALSE && strpos(Core::$db->hostname, 'sqlite') === FALSE)
+				// Add exception for mysql
+				if (self::driver('mysql'))
 				{
 					$annotations[] = 'INT';
 				}

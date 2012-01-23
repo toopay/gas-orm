@@ -28,13 +28,13 @@ $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
 $db['testing_postgre']['hostname'] = 'pgsql:host=localhost;port=5432';
-$db['testing_postgre']['username'] = 'postgres';
+$db['testing_postgre']['username'] = 'postgre';
 $db['testing_postgre']['password'] = '';
 $db['testing_postgre']['database'] = 'gas_test';
 $db['testing_postgre']['dbdriver'] = 'pdo';
 $db['testing_postgre']['dbprefix'] = '';
 $db['testing_postgre']['pconnect'] = TRUE;
-$db['testing_postgre']['db_debug'] = TRUE;
+$db['testing_postgre']['db_debug'] = FALSE;
 $db['testing_postgre']['cache_on'] = FALSE;
 $db['testing_postgre']['cachedir'] = '';
 $db['testing_postgre']['char_set'] = 'utf8';
