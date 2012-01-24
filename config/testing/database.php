@@ -10,6 +10,10 @@
 $active_group = 'testing_mysql';
 $active_record = TRUE;
 
+/**
+ * MySQL configuration for PDO
+ */
+
 $db['testing_mysql']['hostname'] = 'mysql:host=localhost;port=3306;';
 $db['testing_mysql']['username'] = 'travis';
 $db['testing_mysql']['password'] = '';
@@ -27,6 +31,10 @@ $db['testing_mysql']['autoinit'] = TRUE;
 $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
+/**
+ * Postgre configuration for PDO
+ */
+
 $db['testing_postgre']['hostname'] = 'pgsql:host=localhost;port=5432;';
 $db['testing_postgre']['username'] = 'postgres';
 $db['testing_postgre']['password'] = '';
@@ -42,7 +50,26 @@ $db['testing_postgre']['dbcollat'] = 'utf8_general_ci';
 $db['testing_postgre']['swap_pre'] = '';
 $db['testing_postgre']['autoinit'] = TRUE;
 $db['testing_postgre']['stricton'] = FALSE;
+// Emulate failover
+$db['testing_postgre']['failover'][0]['dsn']      = 'pgsql:host=localhost;port=5432;dbname=gas_unit_test;';
+$db['testing_postgre']['failover'][0]['provider'] = 'pgsql';
+$db['testing_postgre']['failover'][0]['username'] = 'gas';
+$db['testing_postgre']['failover'][0]['password'] = 'gas';
+$db['testing_postgre']['failover'][0]['dbdriver'] = 'pdo';
+$db['testing_postgre']['failover'][0]['dbprefix'] = '';
+$db['testing_postgre']['failover'][0]['pconnect'] = TRUE;
+$db['testing_postgre']['failover'][0]['db_debug'] = FALSE;
+$db['testing_postgre']['failover'][0]['cache_on'] = FALSE;
+$db['testing_postgre']['failover'][0]['cachedir'] = '';
+$db['testing_postgre']['failover'][0]['char_set'] = 'utf8';
+$db['testing_postgre']['failover'][0]['dbcollat'] = 'utf8_general_ci';
+$db['testing_postgre']['failover'][0]['swap_pre'] = '';
+$db['testing_postgre']['failover'][0]['autoinit'] = TRUE;
+$db['testing_postgre']['failover'][0]['stricton'] = FALSE;
 
+/**
+ * SQLite configuration for PDO
+ */
 $db['testing_sqlite']['hostname'] = 'sqlite:';
 $db['testing_sqlite']['username'] = '';
 $db['testing_sqlite']['password'] = '';
