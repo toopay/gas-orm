@@ -10,7 +10,7 @@
 $active_group = 'testing_mysql';
 $active_record = TRUE;
 
-$db['testing_mysql']['hostname'] = 'mysql:host=localhost;port=3306';
+$db['testing_mysql']['hostname'] = 'mysql:host=localhost;port=3306;';
 $db['testing_mysql']['username'] = 'travis';
 $db['testing_mysql']['password'] = '';
 $db['testing_mysql']['database'] = 'gas_test';
@@ -27,7 +27,7 @@ $db['testing_mysql']['autoinit'] = TRUE;
 $db['testing_mysql']['stricton'] = FALSE;
 $db['testing_mysql']['failover'] = array();
 
-$db['testing_postgre']['hostname'] = 'pgsql:host=localhost;port=5432';
+$db['testing_postgre']['hostname'] = 'pgsql:host=localhost;port=5432;';
 $db['testing_postgre']['username'] = 'postgres';
 $db['testing_postgre']['password'] = '';
 $db['testing_postgre']['database'] = 'gas_test';
@@ -43,14 +43,14 @@ $db['testing_postgre']['swap_pre'] = '';
 $db['testing_postgre']['autoinit'] = TRUE;
 $db['testing_postgre']['stricton'] = FALSE;
 
-$db['testing_sqlite']['hostname'] = 'sqlite:'.GASPATH.'gas_test.sqlite';
+$db['testing_sqlite']['hostname'] = 'sqlite:';
 $db['testing_sqlite']['username'] = '';
 $db['testing_sqlite']['password'] = '';
-$db['testing_sqlite']['database'] = '';
+$db['testing_sqlite']['database'] = GASPATH.'gas_test.sqlite';
 $db['testing_sqlite']['dbdriver'] = 'pdo';
 $db['testing_sqlite']['dbprefix'] = '';
 $db['testing_sqlite']['pconnect'] = FALSE;
-$db['testing_sqlite']['db_debug'] = TRUE;
+$db['testing_sqlite']['db_debug'] = FALSE;
 $db['testing_sqlite']['cache_on'] = FALSE;
 $db['testing_sqlite']['cachedir'] = '';
 $db['testing_sqlite']['char_set'] = 'utf8';
