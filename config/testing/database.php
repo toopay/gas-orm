@@ -32,7 +32,7 @@ $db['testing_mysql']['failover'] = array();
 
 $db['testing_postgre']['hostname'] = 'localhost';
 $db['testing_postgre']['hostport'] = '5432';
-$db['testing_postgre']['username'] = 'postgre';
+$db['testing_postgre']['username'] = 'postgres';
 $db['testing_postgre']['password'] = '';
 $db['testing_postgre']['database'] = 'gas_test';
 $db['testing_postgre']['dbdriver'] = 'pdo';
