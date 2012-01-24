@@ -316,11 +316,15 @@ abstract class ORM {
 
 		if ($name == 'postgre')
 		{
-			$is_driver = (bool) (Core::$db->dbdriver == $name or strpos(Core::$db->hostname, 'pgsql') !== FALSE);
+			$is_driver = (bool) (Core::$db->dbdriver == $name 
+				                or Core::$db->provider == 'pgsql' 
+				                or strpos(Core::$db->hostname, 'pgsql') !== FALSE);
 		}
 		else
 		{
-			$is_driver = (bool) (Core::$db->dbdriver == $name or strpos(Core::$db->hostname, $name) !== FALSE);
+			$is_driver = (bool) (Core::$db->dbdriver == $name 
+				                or Core::$db->provider == $name 
+				                or strpos(Core::$db->hostname, $name) !== FALSE);
 		}
 
 		return $is_driver;

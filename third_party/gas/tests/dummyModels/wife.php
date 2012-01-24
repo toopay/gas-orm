@@ -78,7 +78,7 @@ class Wife extends ORM {
 		    array('id' => '3', 'user_id' => '3', 'name' => 'Lily Sinatra', 'hair_color' => 'brunette'), 
 		);
 
-		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		if ( ! self::driver('sqlite'))
 		{
 			self::insert_batch($data); 
 		}

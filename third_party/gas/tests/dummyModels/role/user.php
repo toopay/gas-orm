@@ -92,7 +92,7 @@ class User extends ORM {
 		    array('u_id' => 4, 'r_id' => 3),
 		);
 
-		if (strpos(\Gas\Core::$db->hostname, 'sqlite') === FALSE)
+		if ( ! self::driver('sqlite'))
 		{
 			self::insert_batch($data); 
 		}
