@@ -51,21 +51,21 @@ $db['testing_postgre']['swap_pre'] = '';
 $db['testing_postgre']['autoinit'] = TRUE;
 $db['testing_postgre']['stricton'] = FALSE;
 // Emulate failover
-$db['testing_postgre']['failover'][0]['dsn']      = 'pgsql:host=localhost;port=5432;dbname=gas_unit_test;';
-$db['testing_postgre']['failover'][0]['provider'] = 'pgsql';
-$db['testing_postgre']['failover'][0]['username'] = 'gas';
-$db['testing_postgre']['failover'][0]['password'] = 'gas';
-$db['testing_postgre']['failover'][0]['dbdriver'] = 'pdo';
-$db['testing_postgre']['failover'][0]['dbprefix'] = '';
-$db['testing_postgre']['failover'][0]['pconnect'] = TRUE;
-$db['testing_postgre']['failover'][0]['db_debug'] = FALSE;
-$db['testing_postgre']['failover'][0]['cache_on'] = FALSE;
-$db['testing_postgre']['failover'][0]['cachedir'] = '';
-$db['testing_postgre']['failover'][0]['char_set'] = 'utf8';
-$db['testing_postgre']['failover'][0]['dbcollat'] = 'utf8_general_ci';
-$db['testing_postgre']['failover'][0]['swap_pre'] = '';
-$db['testing_postgre']['failover'][0]['autoinit'] = TRUE;
-$db['testing_postgre']['failover'][0]['stricton'] = FALSE;
+$db['testing_postgre']['failover'][0]['dsn']       = 'pgsql:host=localhost;port=5432;dbname=gas_unit_test;';
+$db['testing_postgre']['failover'][0]['pdodriver'] = 'pgsql';
+$db['testing_postgre']['failover'][0]['username']  = 'gas';
+$db['testing_postgre']['failover'][0]['password']  = 'gas';
+$db['testing_postgre']['failover'][0]['dbdriver']  = 'pdo';
+$db['testing_postgre']['failover'][0]['dbprefix']  = '';
+$db['testing_postgre']['failover'][0]['pconnect']  = TRUE;
+$db['testing_postgre']['failover'][0]['db_debug']  = FALSE;
+$db['testing_postgre']['failover'][0]['cache_on']  = FALSE;
+$db['testing_postgre']['failover'][0]['cachedir']  = '';
+$db['testing_postgre']['failover'][0]['char_set']  = 'utf8';
+$db['testing_postgre']['failover'][0]['dbcollat']  = 'utf8_general_ci';
+$db['testing_postgre']['failover'][0]['swap_pre']  = '';
+$db['testing_postgre']['failover'][0]['autoinit']  = TRUE;
+$db['testing_postgre']['failover'][0]['stricton']  = FALSE;
 
 /**
  * SQLite configuration for PDO
