@@ -42,7 +42,7 @@ class ConnectionTest extends PHPUnit_Framework_TestCase {
     public function testConnectionViaDsnPDODriver()
     {
         // Connect using a valid dsn string
-        Gas\Core::connect('pdo://travis:@localhost:3306/gas_test?provider=mysql');
+        Gas\Core::connect('pdo://travis:@localhost:3306/gas_test?pdodriver=mysql');
 
         $db = Gas\Core::$db;
 
