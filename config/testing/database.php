@@ -70,10 +70,11 @@ $db['testing_postgre']['failover'][0]['stricton']  = FALSE;
 /**
  * SQLite configuration for PDO
  */
-$db['testing_sqlite']['hostname'] = 'sqlite:';
+$db['testing_sqlite']['dsn']      = 'sqlite:'.GASPATH.'gas_test.sqlite';
+$db['testing_sqlite']['hostname'] = '';
 $db['testing_sqlite']['username'] = '';
 $db['testing_sqlite']['password'] = '';
-$db['testing_sqlite']['database'] = GASPATH.'gas_test.sqlite';
+$db['testing_sqlite']['database'] = '';
 $db['testing_sqlite']['dbdriver'] = 'pdo';
 $db['testing_sqlite']['dbprefix'] = '';
 $db['testing_sqlite']['pconnect'] = FALSE;
