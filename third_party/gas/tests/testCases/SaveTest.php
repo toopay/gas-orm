@@ -45,7 +45,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
 
     public function testSaveInsertCompositeIncomplete()
     {
-        // Create un-conplete new resource
+        // Create in-complete new resource
         $data      = array('u_id' => 1);
         $role_user = Model\Role\User::make($data);
 
@@ -55,11 +55,11 @@ class SaveTest extends PHPUnit_Framework_TestCase {
 
     public function testSaveInsertCompositeComplete()
     {
-        // Create un-conplete new resource
+        // Create valid new resource
         $data      = array('u_id' => 4, 'r_id' => 1);
         $role_user = Model\Role\User::make($data);
 
-        // Should be fail, because there is one composite key which undefined
+        // Should be sucess, because all composite keys has been defined
         $this->assertTrue($role_user->save());
     }
 
@@ -99,7 +99,7 @@ class SaveTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($bar->username, 'bar');
     }
 
-    public function testtestSaveUpdateComposite()
+    public function testSaveUpdateComposite()
     {
         // Find WHERE IN u_id = 1 and r_id = 2 (sequece was follow its composite keys order)
         $role_user = Model\Role\User::find(array(1, 2));

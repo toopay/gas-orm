@@ -175,7 +175,8 @@ class Core {
 		                    'REAL', 'BIT',
 		                    'BOOL', 'SERIAL',
 		                    'SERIAL8', 'BIGSERIAL',
-		                    'DOUBLE PRECISION', 'NUMERIC'),
+		                    'DOUBLE PRECISION', 'NUMERIC', 
+		                    'LONG'),
 		'datetime' => array('DATE', 'DATETIME',
 		                    'TIMESTAMP', 'TIMESTAMPTZ',
 		                    'TIME', 'TIMETZ',
@@ -187,7 +188,8 @@ class Core {
 		                    'BINARY', 'VARBINARY',
 		                    'TINYBLOB', 'MEDIUMBLOB',
 		                    'LONGBLOB', 'ENUM',
-		                    'SET'),
+		                    'SET', 'VAR_STRING',
+		                    'BLOB'),
 		'spatial'  => array('GEOMETRY', 'POINT',
 		                    'LINESTRING', 'POLYGON',
 		                    'MULTIPOINT', 'MULTILINESTRING',
@@ -212,6 +214,11 @@ class Core {
 	 * @var  array   Paths for included files
 	 */
 	public static $path;
+
+	/**
+	 * @var  array   Migration configuration
+	 */
+	public static $migration;
 
 	/**
 	 * @var  array   Entity meta data repositories
@@ -283,6 +290,20 @@ class Core {
 
 			// Generate new collection of needed properties
 			static::$entity_repository = new Data();
+
+			// Check auto-models and tables
+			if (static::$auto['models'] == TRUE && static::$auto['tables'] == TRUE)
+			{
+				throw new \InvalidArgumentException('both_auto_error');
+			}
+			elseif (static::$auto['models'] == TRUE)
+			{
+				$this->_generate_models();
+			}
+			elseif (static::$auto['tables'] == TRUE)
+			{
+				$this->_generate_tables();
+			}
 
 			// Instantiate process has done now
 			self::init();
@@ -2016,6 +2037,9 @@ class Core {
 		// Set `models` directories look-up
 		static::$path['model'] = $paths;
 
+		// Get migration config
+		static::$migration = $config['migration'];
+
 		// Register autoloader
 		spl_autoload_register(array($this, '_autoloader'));
 	}
@@ -2083,6 +2107,67 @@ class Core {
 						break;
 					}
 				}
+			}
+		}
+	}
+
+	/**
+	 * Generate models based by curent schema
+	 * This is used by config only (internal usage).
+	 *
+	 * @return void   
+	 */
+	private function _generate_models()
+	{
+		// Get the tables
+		$tables = self::$db->list_tables(TRUE);
+
+		// Generate models
+		foreach ($tables as $table) 
+		{
+			// Build table and field definition
+			$primary_key = '';
+			$field_meta = self::$db->field_data($table);
+			$field_definition = 'self::$fields = array('."\n";
+
+			foreach ($field_meta as $meta)
+			{
+				$definition = self::identify_field($meta);
+				$field_definition .= "\t\t\t".'\''.$definition[0].'\' => ORM::field(\''.$definition[1].$definition[2].'\'),'."\n";
+
+				if ($definition[3] == TRUE && empty($primary_key))
+				{
+					$primary_key = "\n\t".'$primary_key = \''.$definition[0].'\';'."\n";
+				}
+			}
+
+			$field_definition .= "\t\t".');'."\n";
+			
+			// Build model component
+			$fragment = explode('_', $table);
+			$namespace = key(static::$path['model']);
+			$path = static::$path['model'][$namespace];
+
+			if (count($fragment) == 1)
+			{
+				$model = ucfirst(current($fragment));
+			}
+			else
+			{
+				$model = ucfirst(array_pop($fragment));
+				$namespace .= '\\'.implode('\\', array_map('ucfirst', $fragment));
+				$path .= DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $fragment);
+				mkdir($path, DIR_WRITE_MODE);
+			}
+
+			// Build the model
+			$model_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'model.tpl');
+			$model_convention = sprintf($model_convention, $namespace, $model, $primary_key, $field_definition);
+			
+			// Write the model
+			if ( ! write_file($path.DIRECTORY_SEPARATOR.strtolower($model).'.php', $model_convention))
+			{
+				throw new \RuntimeException('cannot_create_model:'.$path.DIRECTORY_SEPARATOR.strtolower($model).'.php');
 			}
 		}
 	}

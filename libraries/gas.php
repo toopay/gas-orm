@@ -85,7 +85,7 @@ class Gas {
 			$CI->config->load('migration', TRUE, TRUE);	
 
 			// Set temporary config handler
-			$config = $CI->config->item('gas');
+			$config = array_merge($CI->config->item('gas'), array('migration' => $CI->config->item('migration')));
 
 			// Validate DB instance
 			if ( ! class_exists('CI_DB'))
@@ -98,6 +98,13 @@ class Gas {
 			else
 			{
 				$DB = $CI->db;
+			}
+
+			if ($config['auto_create_models'] == TRUE or $config['auto_create_tables'] == TRUE)
+			{
+				// Load necessary helper and library
+				$CI->load->helper('file');
+				$CI->load->library('migration');
 			}
 
 			// Include the bootstrap
