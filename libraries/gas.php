@@ -110,6 +110,15 @@ class Gas {
 			// Include the bootstrap
 			include_once APPPATH.'third_party'.DIRECTORY_SEPARATOR.'gas'.DIRECTORY_SEPARATOR.'bootstrap.php';
 
+			if (array_key_exists('auto', Gas\Core::$migration))
+			{
+				// Execute migration if necessary
+				if ( ! $CI->migration->latest())
+				{
+					show_error($CI->migration->error_string());
+				}
+			}
+
 			// Set initialization flag
 			static::$init = TRUE;
 		}

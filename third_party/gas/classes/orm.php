@@ -413,6 +413,7 @@ abstract class ORM {
 			}
 
 			// Register meta entities information
+			$entity_metadata['table']    = $gas->table;
 			$entity_metadata['entities'] = $gas::$relationships;
 			$entity_metadata['fields']   = $gas::$fields;
 			$entity_metadata['collumns'] = is_array($gas::$fields) ? array_keys($gas::$fields) : array();

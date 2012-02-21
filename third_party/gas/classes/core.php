@@ -2166,7 +2166,7 @@ class Core {
 
 					if ($definition[3] == TRUE && empty($primary_key))
 					{
-						$primary_key = "\n\t".'$primary_key = \''.$definition[0].'\';'."\n";
+						$primary_key = "\n\t".'public $primary_key = \''.$definition[0].'\';'."\n";
 					}
 
 					// Build field migration
@@ -2180,7 +2180,7 @@ class Core {
 				}
 
 				$field_definition .= "\t\t".');'."\n";
-				$field_migration .= "\t\t".');'."\n";
+				$field_migration .= "\t\t".'));'."\n";
 
 				if (count($key) > 0)
 				{
@@ -2228,7 +2228,7 @@ class Core {
 				$migration_name = (($counter+1) < 10) ? '00'.($counter+1).'_'.$table : 
 				                  ((($counter+1) < 100) ? '0'.($counter+1).'_'.$table : ($counter+1).'_'.$table);
 
-				$field_migration_up = $field_migration."\n\t\t".'$this->dbforge->create_table(\''.$table.'\');';
+				$field_migration_up = $field_migration."\n\t\t".'$this->dbforge->create_table(\''.$table.'\', TRUE);';
 				$field_migration_down = '$this->dbforge->drop_table(\''.$table.'\');';
 				$migration_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'migration.tpl');
 				$migration_convention = sprintf($migration_convention, 'Migration_'.$table, $field_migration_up, $field_migration_down);
@@ -2243,6 +2243,103 @@ class Core {
 				$counter++;
 			}
 		}
+	}
+
+	/**
+	 * Generate tables based by existed models
+	 * This is used by config only (internal usage).
+	 *
+	 * @return void   
+	 */
+	private function _generate_tables()
+	{
+		// Get all models
+		$model_paths = self::$path['model'];
+
+		foreach ($model_paths as $namespace => $model_path)
+		{
+			if (is_dir($model_path))
+			{
+				$models = get_filenames($model_path, TRUE);
+				
+				foreach ($models as $model)
+				{
+					// Sort only php file
+					if (strpos($model, 'php') === FALSE) continue;
+
+					// Instantiate all models to collect all information
+					$raw_model_name = str_replace($model_path, '<PATH>', $model);
+					$model_name = end(explode('<PATH>', $raw_model_name));
+
+					// Parse directory separator
+					if (strpos($model_name, DIRECTORY_SEPARATOR) === 0)
+					{
+						$model_name = substr($model_name, 1);
+					}
+
+					$model_name = str_replace(array(DIRECTORY_SEPARATOR, '.php'), array('\\', ''), $model_name);
+					$model_name = $namespace.'\\'.$model_name;
+
+					// Collect all model(s) info, by instantiate it
+					$model_name::make();
+				}
+			}
+		}
+
+		$counter = 0;
+		$entity_repository = self::$entity_repository->get('models');
+
+		// Now, itterate over entity repository to generate migration files
+		foreach ($entity_repository as $entity)
+		{
+			$table = $entity['table'];
+			$fields = $entity['fields'];
+			$field_annotation = array();
+
+			foreach ($fields as $field => $prop)
+			{
+				$field_annotation[$field] = self::identify_annotation($prop['annotations']);
+			}
+
+			$field_migration = '$this->dbforge->add_field(array('."\n";
+
+			foreach ($field_annotation as $field_name => $meta)
+			{
+				// Build field migration
+				$field_migration .= "\t\t\t".'\''.$field_name.'\' => array('."\n";
+
+				foreach ($meta as $type => $value) $field_migration .= "\t\t\t\t".'\''.$type.'\' => \''.$value.'\','."\n";
+
+				$field_migration .= "\t\t\t".'),'."\n";
+			}
+
+			$field_migration .= "\t\t".'));'."\n";
+
+			// Build the migration
+			$migration_path = self::$migration['migration_path'];
+			
+			if ( ! is_dir($migration_path)) mkdir($migration_path, DIR_WRITE_MODE);
+
+			$migration_name = (($counter+1) < 10) ? '00'.($counter+1).'_'.$table : 
+			                  ((($counter+1) < 100) ? '0'.($counter+1).'_'.$table : ($counter+1).'_'.$table);
+
+			$field_migration_up = $field_migration."\n\t\t".'$this->dbforge->create_table(\''.$table.'\', TRUE);';
+			$field_migration_down = '$this->dbforge->drop_table(\''.$table.'\');';
+			$migration_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'migration.tpl');
+			$migration_convention = sprintf($migration_convention, 'Migration_'.$table, $field_migration_up, $field_migration_down);
+
+			// Write the migration
+			if ( ! write_file($migration_path.strtolower($migration_name).'.php', $migration_convention))
+			{
+				throw new \RuntimeException('cannot_create_migration:'.$migration_path.strtolower($migration_name).'.php');
+			}
+
+			// Increment the counter
+			$counter++;
+		}
+
+		// Late binding to flagged auto-migration process
+		static::$migration['auto'] = TRUE;
 	}
 
 	/**
