@@ -211,6 +211,20 @@ class Core {
 	);
 
 	/**
+	 * @var  array  Hold all common datatypes collections
+	 */
+	public static $common_datatypes = array(
+		'datetime' => 'VARCHAR', 
+		'string'   => 'VARCHAR', 
+		'spatial'  => 'VARCHAR', 
+		'char'     => 'VARCHAR', 
+		'numeric'  => 'INTEGER', 
+		'auto'     => 'INTEGER', 
+		'int'      => 'INTEGER', 
+		'email'    => 'VARCHAR'
+	);
+
+	/**
 	 * @var  array   Paths for included files
 	 */
 	public static $path;
@@ -859,7 +873,14 @@ class Core {
 			// Set Forge type and constraint spec
 			if (self::$default_datatypes[$field_gas_type] != $field_raw_type)
 			{
-				$field_type = $field_raw_type;
+				if (in_array($field_raw_type, array('LONG', 'BLOB', 'VAR_STRING')))
+				{
+					$field_type = self::$common_datatypes[$field_gas_type];
+				} 
+				else
+				{
+					$field_type = $field_raw_type;
+				}
 			}
 			else
 			{
@@ -2121,53 +2142,105 @@ class Core {
 	{
 		// Get the tables
 		$tables = self::$db->list_tables(TRUE);
+		$counter = 0;
 
 		// Generate models
 		foreach ($tables as $table) 
 		{
-			// Build table and field definition
-			$primary_key = '';
-			$field_meta = self::$db->field_data($table);
-			$field_definition = 'self::$fields = array('."\n";
-
-			foreach ($field_meta as $meta)
+			//Avoid migration table
+			if($table != self::$migration['migration_table'])
 			{
-				$definition = self::identify_field($meta);
-				$field_definition .= "\t\t\t".'\''.$definition[0].'\' => ORM::field(\''.$definition[1].$definition[2].'\'),'."\n";
+				// Build table and field definition
+				$key = array();
+				$forge_key = '';
+				$primary_key = '';
+				$field_meta = self::$db->field_data($table);
+				$field_definition = 'self::$fields = array('."\n";
+				$field_migration = '$this->dbforge->add_field(array('."\n";
 
-				if ($definition[3] == TRUE && empty($primary_key))
+				foreach ($field_meta as $meta)
 				{
-					$primary_key = "\n\t".'$primary_key = \''.$definition[0].'\';'."\n";
+					// Build field definition
+					$definition = self::identify_field($meta);
+					$field_definition .= "\t\t\t".'\''.$definition[0].'\' => ORM::field(\''.$definition[1].$definition[2].'\'),'."\n";
+
+					if ($definition[3] == TRUE && empty($primary_key))
+					{
+						$primary_key = "\n\t".'$primary_key = \''.$definition[0].'\';'."\n";
+					}
+
+					// Build field migration
+					$migration = self::identify_field($meta, 'forge_field');
+					$field_migration .= "\t\t\t".'\''.$migration[0].'\' => array('."\n"
+					                   ."\t\t\t\t".'\'type\' => \''.$migration[1].'\','."\n"
+					                   ."\t\t\t\t".'\'constraint\' => '.$migration[2].','."\n"
+					                   ."\t\t\t".'),'."\n";
+
+					if ($migration[3] == TRUE) $key[] = $migration[0];
 				}
-			}
 
-			$field_definition .= "\t\t".');'."\n";
-			
-			// Build model component
-			$fragment = explode('_', $table);
-			$namespace = key(static::$path['model']);
-			$path = static::$path['model'][$namespace];
+				$field_definition .= "\t\t".');'."\n";
+				$field_migration .= "\t\t".');'."\n";
 
-			if (count($fragment) == 1)
-			{
-				$model = ucfirst(current($fragment));
-			}
-			else
-			{
-				$model = ucfirst(array_pop($fragment));
-				$namespace .= '\\'.implode('\\', array_map('ucfirst', $fragment));
-				$path .= DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $fragment);
-				mkdir($path, DIR_WRITE_MODE);
-			}
+				if (count($key) > 0)
+				{
+					foreach ($key as $pk)
+					{
+						$forge_key .= "\n\t\t".'$this->dbforge->add_key(\''.$pk.'\', TRUE);'."\n";
+					}
+				}
 
-			// Build the model
-			$model_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'model.tpl');
-			$model_convention = sprintf($model_convention, $namespace, $model, $primary_key, $field_definition);
-			
-			// Write the model
-			if ( ! write_file($path.DIRECTORY_SEPARATOR.strtolower($model).'.php', $model_convention))
-			{
-				throw new \RuntimeException('cannot_create_model:'.$path.DIRECTORY_SEPARATOR.strtolower($model).'.php');
+				$field_migration .= $forge_key;
+
+				// Build model component
+				$fragment = explode('_', $table);
+				$namespace = key(static::$path['model']);
+				$path = static::$path['model'][$namespace];
+
+				if (count($fragment) == 1)
+				{
+					$model = ucfirst(current($fragment));
+				}
+				else
+				{
+					$model = ucfirst(array_pop($fragment));
+					$namespace .= '\\'.implode('\\', array_map('ucfirst', $fragment));
+					$path .= DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $fragment);
+
+					if ( ! is_dir($path)) mkdir($path, DIR_WRITE_MODE);
+				}
+
+				// Build the model
+				$model_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'model.tpl');
+				$model_convention = sprintf($model_convention, $namespace, $model, $primary_key, $field_definition);
+				
+				// Write the model
+				if ( ! write_file($path.DIRECTORY_SEPARATOR.strtolower($model).'.php', $model_convention))
+				{
+					throw new \RuntimeException('cannot_create_model:'.$path.DIRECTORY_SEPARATOR.strtolower($model).'.php');
+				}
+
+				// Build the migration
+				$migration_path = self::$migration['migration_path'];
+				
+				if ( ! is_dir($migration_path)) mkdir($migration_path, DIR_WRITE_MODE);
+
+				$migration_name = (($counter+1) < 10) ? '00'.($counter+1).'_'.$table : 
+				                  ((($counter+1) < 100) ? '0'.($counter+1).'_'.$table : ($counter+1).'_'.$table);
+
+				$field_migration_up = $field_migration."\n\t\t".'$this->dbforge->create_table(\''.$table.'\');';
+				$field_migration_down = '$this->dbforge->drop_table(\''.$table.'\');';
+				$migration_convention = read_file(GASPATH.'template'.DIRECTORY_SEPARATOR.'migration.tpl');
+				$migration_convention = sprintf($migration_convention, 'Migration_'.$table, $field_migration_up, $field_migration_down);
+
+				// Write the migration
+				if ( ! write_file($migration_path.strtolower($migration_name).'.php', $migration_convention))
+				{
+					throw new \RuntimeException('cannot_create_migration:'.$migration_path.strtolower($migration_name).'.php');
+				}
+
+				// Increment the counter
+				$counter++;
 			}
 		}
 	}
