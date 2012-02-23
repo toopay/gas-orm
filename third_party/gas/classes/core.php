@@ -871,9 +871,9 @@ class Core {
 		elseif ($type == 'forge_field')
 		{
 			// Set Forge type and constraint spec
-			if (self::$default_datatypes[$field_gas_type] != $field_raw_type)
+			if (self::$default_datatypes[$field_gas_type] != $field_raw_type or ! isset(self::$db->pdodriver))
 			{
-				if (in_array($field_raw_type, array('LONG', 'BLOB', 'VAR_STRING')))
+				if (in_array($field_raw_type, array('LONG', 'BLOB', 'VAR_STRING')) && isset(self::$db->pdodriver))
 				{
 					$field_type = self::$common_datatypes[$field_gas_type];
 				} 
