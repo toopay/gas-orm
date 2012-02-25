@@ -476,8 +476,23 @@ abstract class ORM {
 		if (empty($this->table))
 		{
 			// Parse namespace into table spec
-			$fragments   = explode('\\', $this->namespace);
-			$namespace   = strtolower(array_shift($fragments));
+			if (array_key_exists($this->namespace, Core::$path['model']))
+			{
+				// Namespace already in the correct position
+				$namespace = strtolower($this->namespace);
+			}
+			else
+			{
+				// Get the namespace from parent
+				foreach (Core::$path['model'] as $parent => $path)
+				{
+					if (strpos($this->namespace, $parent) !== FALSE)
+					{
+						$namespace = strtolower($parent);
+						break;
+					}
+				}
+			}
 
 			// Define table, path and set the table properties
 			$table       = str_replace($namespace.'\\', '', $this->model());

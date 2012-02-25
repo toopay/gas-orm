@@ -2081,17 +2081,11 @@ class Core {
 			// Parse the namespace spec for further process
 			$namespace = strtolower(array_shift($fragments));
 			$filename  = strtolower(array_pop($fragments));
-			$path      = strtolower(implode(DIRECTORY_SEPARATOR, $fragments));
+			$ori_path  = strtolower(implode(DIRECTORY_SEPARATOR, $fragments));
 
 			// Finalize the path
-			if (empty($path))
-			{
-				$path = DIRECTORY_SEPARATOR;
-			}
-			else
-			{
-				$path = DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR;
-			}
+			$full_namespace = (empty($ori_path)) ? $namespace : $namespace.'\\'.str_replace(DIRECTORY_SEPARATOR, '\\', $ori_path);
+			$path = (empty($ori_path)) ? DIRECTORY_SEPARATOR : DIRECTORY_SEPARATOR.$ori_path.DIRECTORY_SEPARATOR;
 
 			// Check for extension first
 			if (strpos($class, 'Gas\\Extension') !== FALSE)
@@ -2120,11 +2114,14 @@ class Core {
 			    && ($directories = static::$path[$namespace]))
 			{
 				// Walk through files and possible path
-				foreach ($directories as $dir)
+				foreach ($directories as $ns => $dir)
 				{
-					if (file_exists($dir.$path.$filename.'.php'))
+					$orm_path = str_replace(strtolower($ns), '', $full_namespace);
+					$orm_path = str_replace('\\', DIRECTORY_SEPARATOR, $orm_path).DIRECTORY_SEPARATOR;
+
+					if (file_exists($dir.$orm_path.$filename.'.php'))
 					{
-						include_once($dir.$path.$filename.'.php');
+						include_once($dir.$orm_path.$filename.'.php');
 						break;
 					}
 				}
