@@ -1829,7 +1829,7 @@ class Core {
 											}
 
 											// Assign the included entity, respectively
-											$entity = array_values(array_filter($assoc_entities->get('data.'.$identifier)));
+											$entity = array_values(array_filter($assoc_entities->get('data.'.$identifier, array())));
 											$instance->related->set('entities.'.$include, $entity);
 										}
 									}
@@ -2078,6 +2078,10 @@ class Core {
 		    && count($fragments) > 1
 		    && is_array(static::$path))
 		{
+			// Parse the slash
+			$class = ltrim($class, '\\');
+			$fragments = explode('\\', $class);
+			
 			// Parse the namespace spec for further process
 			$namespace = strtolower(array_shift($fragments));
 			$filename  = strtolower(array_pop($fragments));
