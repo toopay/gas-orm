@@ -1,7 +1,7 @@
 .. Gas ORM documentation [index]
    Index page.
 
-Gas ORM version 1.4 Documentation
+Gas ORM version 2.0 Documentation
 ===================================
 
 .. toctree::
@@ -14,35 +14,24 @@ Gas ORM version 1.4 Documentation
 	quickstart
 	convention
 	validation
-	callbacks
 	relationship
-	reserved
+	callbacks
 	finder
 	CRUD
 	utility
 	extension
-	cli
 	credits
 
 
 Download
 ++++++++++++
 
-Ready? Grab the latest version_ then. Optionaly you can download the console packages_, so you can run Gas ORM syntax via CLI.
+Ready? Grab the latest version_ then.
 
 Repositories
 ++++++++++++
 
 Watch, fork, clone or just download the zip files on GitHub repo_ 
-
-Upgrade Instruction
-+++++++++++++++++++
-
-.. toctree::
-	:glob:
-	:titlesonly:
-	
-	upgrade_instructure/index
 
 Issues
 +++++++
@@ -55,10 +44,9 @@ Discussion
 Join on-going discussion (and release history) on CodeIgniter forum_
 
 .. _forum: http://codeigniter.com/forums/viewthread/202669/
-.. _repo: https://github.com/toopay/CI-GasORM-Library
+.. _repo: https://github.com/toopay/gas-orm
 .. _request: http://help.github.com/pull-requests/
-.. _issues: https://github.com/toopay/CI-GasORM-Library/issues
+.. _issues: https://github.com/toopay/gas-orm/issues
 .. _version : http://gasorm-doc.taufanaditya.com/GasORM.zip
-.. _packages : http://gasorm-doc.taufanaditya.com/GasORM-CLI.zip
 
 

@@ -3,7 +3,7 @@
 What is Gas ORM ?
 =================
 
-A **lighweight** [#light]_ and **easy-to-use** [#easy]_ ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
+A **lighweight** and **easy-to-use** [#easy]_ ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
 
 Gas ORM is Object Relational Mapping...
 +++++++++++++++++++++++++++++++++++++++
@@ -18,7 +18,7 @@ Active record is an approach to accessing data in a database. A database table o
 
 Gas ORM is highly-optimized...
 ++++++++++++++++++++++++++++++
-Scaling database is the most hard and the most expensive process. If you already doing indexing, normalization and other schema optimization, then Gas ORM will respect and put it on a good use. Because, when reading/scanning your table and its relationships records, Gas ORM uses neither repetitive queries nor joins, because they can be slow. Instead, **Gas ORM  sends a constant number of simple queries (one query for each table type). This imply that volume of transferred data is minimized and the number of queries stays low no matter how many rows are processed**. This approach will increase your application performance [#benchmark]_ . And if you still want to make it more better and efficient, there are per-request caching option, which make sure no same queries executed twice.
+Scaling database is the most hard and the most expensive process. If you already doing indexing, normalization and other schema optimization, then Gas ORM will respect and put it on a good use. Because, when reading/scanning your table and its relationships records, Gas ORM uses neither repetitive queries nor joins, because they can be slow. Instead, **Gas ORM  sends a constant number of simple queries (one query for each table type). This imply that volume of transferred data is minimized and the number of queries stays low no matter how many rows are processed**. This approach will increase your application performance. And if you still want to make it more better and efficient, there are per-request caching option, which make sure no same queries executed twice.
 
 Gas ORM is for CodeIgniter...
 +++++++++++++++++++++++++++++
@@ -57,11 +57,9 @@ Gas ORM is licensed under BSD. [#bsd]_
 
 
 
-.. [#light] The main libraries files size is just 110 Kb, and it uses small memory footprint.
 .. [#easy] If you follow the convention, the setup is minimal.
 .. [#orm_wikipedia] http://en.wikipedia.org/wiki/Object-relational_mapping.
 .. [#ar_wikipedia] http://en.wikipedia.org/wiki/Active_record.
-.. [#save] There are 20+ PHPUnit files passed, also an optional controller : gasunittest.php contain (browser) unit testing, to ensure all method working properly as it should.
-.. [#benchmark] https://github.com/toopay/CI-GasORM-Library/downloads.
+.. [#save] http://travis-ci.org/toopay/gas-orm
 .. [#bsd] http://en.wikipedia.org/wiki/BSD_licenses
 

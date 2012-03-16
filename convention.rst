@@ -5,9 +5,14 @@ Convention
 
 Gas makes some assumptions about your database structure. Each table should have primary key, default to **id**. If your primary key isn't **id**, you can set **primary_key** properties. Each table should have same name with its corresponding Gas model's name, otherwise you will need to set **table** properties.
 
-Typically your Gas model will be something like this, let say you have user_gas.php to hold user table. ::
+Typically your Gas model will be something like this, let say you have user.php to hold user table. ::
 
-	class User extends Gas {
+	<?php namespace Model;
+
+	use \Gas\Core;
+	use \Gas\ORM;
+
+	class User extends ORM {
 
 	}
 
@@ -18,11 +23,29 @@ Model Properties
 
 But if somehow, your schema didn't allow you to follow above convention, you can specify both **table** and **primary_key** properties, so it would be something like : ::
 
-	class User extends Gas {
+	<?php namespace Model;
 
-		public $table = 'peoples';
+	use \Gas\Core;
+	use \Gas\ORM;
 
-		public $primary_key = 'people_id';
+	class User extends ORM {
+
+		public $table = 'person';
+
+		public $primary_key = 'person_id';
+
+	}
+
+If you have a pivot table, that has composite key, you can specify **foreign_key** properties : ::
+
+	 <?php namespace Model\Role;
+
+	use \Gas\Core;
+	use \Gas\ORM;
+
+	class User extends ORM {
+
+		public $foreign_key = array('\\Model\\User' => 'user_id', '\\Model\\Role' => 'role_id');
 
 	}
 

@@ -3,7 +3,7 @@
 Quick Start
 ===========
 
-Gas ORM is a library, so you will need to load it first, or for for convenience you can autoload it on **autoload.php** located under **aplication/config** folder. ::
+Gas ORM is a third-party package library, so you will need to load it first, or for for convenience you can autoload it on **autoload.php** located under **aplication/config** folder. ::
 
 	$autoload['libraries'] = array('gas');
 
@@ -12,31 +12,30 @@ Otherwise, you would need to load Gas library manually.
 Gas ORM at a Glance
 +++++++++++++++++++
 
-Before start using any of Gas available methods, you should have a gas model, which follow :doc:`Gas ORM standard model convention <convention>`. Then, you can start using it either by instantiate new Gas object or by using factory interface. ::
+Before start using any of Gas available methods, you should have a gas model, which follow :doc:`Gas ORM standard model convention <convention>`. Then, you can start using it like bellow. ::
 
 	// FINDER
-	$all = Gas::factory('user')->all();
-	$user = new User;
-	$some_user = $user->find_by_username('foo');
-	$first_user = $user->first();
+	$all_users = Model\User::all();
+	$some_user = Model\User::find_by_username('foo');
+	$first_user = Model\User::first();
 
 	// WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
-	$new_user = new User;
-	$new_user->fill($_POST)->save(TRUE);
+	$new_user = Model\User::make($_POST);
+	$new_user->save(TRUE);
 
 	// RELATIONSHIP AND EAGER LOADING
-	$some_wife = $user->wife;
-	$users = Gas::factory('user')->with('wife', 'kid', 'job')->all();
+	$some_user_wife = Model\User::find(1)->wife();
+	$users = Model\User::with('wife', 'kid', 'job')->all();
 
 Thats how you will use Gas ORM, in your application.
 
 Gas ORM Features
 ++++++++++++++++
 
-- Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.
+- Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv. (including PDO, if you keep sync with CI repo)
 - Support multiple database connection.
-- Support modular models directories.
-- Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table, self)
+- Support multiple relationships, including Polymorphic Associations.
+- Support composite keys (for key that define relationship).
 - Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.
 - Per-request caching.
 - Self-referential and adjacency column/data (hierarchical data).
@@ -46,3 +45,4 @@ Gas ORM Features
 - Hooks points, to control over your model.
 - Extensions, to share your common function/library across your model.
 - Transaction, and other CI AR goodness.
+- Included phpunit test suite, to ensure most of API consistency.
