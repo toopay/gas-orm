@@ -3,14 +3,23 @@
 Data Types and Validation
 =========================
 
-Every Gas model could have **_init()** function. It primarily used for set up a table's fields definition and validation but it can be used as a replacement for constructor method. ::
+Every Gas model could have **_init()** function. It primarily used for set up a fields definition and relationship but it can be used as a replacement for constructor method. ::
 
- 	class User extends Gas {
+ 	<?php namespace Model;
 
- 		function _init()
- 		{
- 			
- 		}
+	use \Gas\Core;
+	use \Gas\ORM;
+
+	class User extends ORM {
+
+		function _init() 
+		{
+			// Relationship definition
+
+			// Field definition
+
+			// Do your stuff here..
+		}
 
 	}
 
@@ -23,34 +32,32 @@ Everytime we need to doing some write operation (insert or updating a record), w
 
 Lets throw an example scenario. Suppose we are about inserting new record into our user table. Our user table holds several fields, and we only want to validate several of them, let say they are : username, email and name. And because we often running validation procedure when we update a record, we also want to validate the id and active columns. In this case, then we could set it as bellow ::
 
- 	class User extends Gas {
+ 	class User extends ORM {
 
- 		function _init()
- 		{
- 			$this->_fields = array(
+		function _init() 
+		{
+			// Relationship definition
 
- 				'id'       => Gas::field('auto[11]'),
-
- 				'name'     => Gas::field('char[40]'),
-
- 				'email'    => Gas::field('email'),
-
- 				'username' => Gas::field('char[3,10]'),
-
- 				'active'   => Gas::field('int[1]'),
-
+			// Field definition
+			self::$fields = array(
+				'id'       => ORM::field('auto[3]'),
+				'name'     => ORM::field('char[40]'),
+				'email'    => ORM::field('email[40]'),
+				'username' => ORM::field('char[5,10]'),
+				'active'   => ORM::field('int[1]'),
 			);
- 		}
+		}
+
 	}
 
 This is one-time set-up, unless in the future, we need to change our table schema. So basicly, we have set several fields rules, which is : **auto** , **char** , **email** , **int** .
 
-It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]** or specify both min length and max length using **[n,n]**, and this will usefull to define your field length since this will represent your field constrain (auto-create tables mechanism will use this value as your field constraint).
+It just provide a generic rule for common used datatype. Also as you may already notice, we can add max length rule directly using **[n]** or specify both min length and max length using **[n,n]**, and this will usefull to define your field length since this will represent your field constrain (auto-create tables mechanism will use this value as your field constraint). More explanation about field definition, described in bellow section.
 
-Annotation
+Data Type
 ++++++++++
 
-Each of your field is represent actual field within your tables. The purpose of annotation was to clear this up. This property values also usefull when you use Gas ORM auto-create tables feature. So each time you set a field value within **_fields** properties, you actually already define some basic information about your table's fields. 
+Each of your field is represent actual field within your tables. The purpose of **field** method was to clear this up. This **fields** property values also usefull when you use Gas ORM auto-create tables feature. So each time you set a field value within **fields** propertiy, you actually already define some basic information about your table's fields. 
 
 The most common datatype are :
 
@@ -84,7 +91,7 @@ Above is also represent each datatype category. And most-likely your field datat
 
 	// ...
 
-	'project_file' => Gas::field('string', array('required'), 'TINYBLOB, null'),
+	'project_file' => ORM::field('string', array('required'), 'TINYBLOB, null'),
 
 	// ...
 
@@ -99,97 +106,57 @@ As you may expected, if you need to put additional rules, which is a standard CI
 
 	// ...
 
-	'username' => Gas::field('char[10]', array('required')),
+	'username' => ORM::field('char[10]', array('required')),
 
 	// ...
 
-And for more custom validation, we also could do that, with slightly different convention. So let say, we want to implement some custom callback into email field. We add a callback rule : ::
+And for more custom validation, we also could do that. So let say, we want to implement some custom callback into username field. We add a callback rule : ::
 
 	// ...
 
-	'email'    => Gas::field('email', array('callback_check_email')),
+	'username' => ORM::field('char[10]', array('required', 'callback_username_check')),
 
 	// ...
 
-Then you would need to set up your callback function as bellow.
+Then you would need to set up your callback function as bellow  : ::
 
-Unique Fields
-+++++++++++++
+	function _username_check($str)
+	{
+		if ($str == 'test')
+		{
+			return FALSE;
+		}
 
-We often want to make sure that some field should have unique values, when create a new record. **_unique_fields** properties within **_init** function will do this job ::
-
-	class User extends Gas {
-
- 		function _init()
- 		{
- 			$this->_fields = array(
-
- 				// ...
-
-			);
-
-			$this->_unique_fields = array('email', 'username');
- 		}
+		return TRUE;
 	}
 
-Unique fields is non-uniformal validation rule, and by doing this way, we doesnt pollute our above fields datatype definition.
+If you want to set custom error on above method, you just need to add a line (with 'username_check' as key) to your gas language file.
 
 Timestamp Fields
 ++++++++++++++++
 
-Anytime we save some record(s), we often need to record the insert or update time. Gas ORM help you to avoid those repeatable process. Just define your **datetime** field into **_ts_fields** properties within **_init** function ::
+Anytime we save some record(s), we often need to record the insert or update time. Gas ORM help you to avoid those repeatable process. Just define your **datetime** field into **ts_fields** properties within **_init** function ::
 
-	class User extends Gas {
+	function _init()
+	{
+		self::$fields = array(
 
- 		function _init()
- 		{
- 			$this->_fields = array(
+				// ...
 
- 				// ...
+		);
 
-			);
-
-			$this->_ts_fields = array('time_updated');
- 		}
+		$this->ts_fields = array('time_updated');
 	}
 
-Then everytime you perform update operation, those field will be automatically filled with current timestamp. If you prefer to have UNIX timestamp (integer) value in your field, use **_unix_ts_fields** instead.
+Then everytime you perform update operation, those field will be automatically filled with current timestamp. If you prefer to have UNIX timestamp (integer) value in your field, use **unix_ts_fields** instead.
 
 If you have some field to store the created timestamp, put those field within bracket ::
 
 	 // ...
 
-	$this->_unix_ts_fields = array('time_updated', '[time_created]');
+	$this->unix_ts_fields = array('time_updated', '[time_created]');
 
 	// ...
 
 You could have both unix or normal datatime properties within your model's **_init** method.
-
-Custom Rules
-++++++++++++
-
-As you may already know, CI validation system supports callbacks to your own validation functions. This permits you to extend the validation class to meet your needs. From above case, if we need to run a database query to see if the user is registering a unique email, we can create a callback function that does that. It will depend on how you want to validate the input. Let's create a example of this. ::
-
-	public function check_email($field, $val)
-	{
-		if ($val == 'valid@email.com')
-		{
-			return TRUE;
-		}
-		else
-		{
-			self::set_message('check_email', 'The %s field should only contain \'valid@email.com\'', $field);
-
-			return FALSE;
-		}
-	}
-
-Gas has its own validation mechanism. It still rely on CI validation afterall, only with several exception in usage convention :
-
-- Your callbacks function should located within your Gas model, instead in your controller.
-- Your callbacks function should expect 2 parameter instead one. While **val** (second parameter) is containing a value to check, **field** (first parameter) will be automatically populated by Gas mechanism. You doesn't need to worrying anything, or set anything. Just put it in place.
-- If you use **set_message** method, you will use static instead dynamic method, and put **field** variable as third parameter.
-
-Thats it. Soon you feel convinient with Gas internal validation mechanism, you will realize that your codebase become much more maintanable than ever, because each callbacks is belongs to its own model/logic, instead polluted your controllers (and make it fatter).
-
 

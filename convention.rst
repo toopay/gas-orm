@@ -14,9 +14,16 @@ Typically your Gas model will be something like this, let say you have user.php 
 
 	class User extends ORM {
 
+		function _init() 
+		{
+			// Relationship definition
+
+			// Field definition
+		}
+
 	}
 
-As simple as that, then you can start using finder or doing some write operation.
+Notice that you will need to specify the field definition and relationship definition, then you can start using finder or doing some write operation.
 
 Model Properties
 ++++++++++++++++
@@ -34,6 +41,13 @@ But if somehow, your schema didn't allow you to follow above convention, you can
 
 		public $primary_key = 'person_id';
 
+		function _init() 
+		{
+			// Relationship definition
+
+			// Field definition
+		}
+
 	}
 
 If you have a pivot table, that has composite key, you can specify **foreign_key** properties : ::
@@ -46,6 +60,13 @@ If you have a pivot table, that has composite key, you can specify **foreign_key
 	class User extends ORM {
 
 		public $foreign_key = array('\\Model\\User' => 'user_id', '\\Model\\Role' => 'role_id');
+
+		function _init() 
+		{
+			// Relationship definition
+
+			// Field definition
+		}
 
 	}
 
