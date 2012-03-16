@@ -13,9 +13,6 @@ A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for
 
 Go to [home of Gas ORM](http://gasorm-doc.taufanaditya.com "home of Gas ORM") for full guide about convention and in-depth usage.
 
-## Support
-If you like and use it, flattr it to support this project.
-
 [![][FlattrButton]][FlattrLink] 
 
 [FlattrLink]: https://flattr.com/submit/auto?url=https://github.com/toopay/gas-orm

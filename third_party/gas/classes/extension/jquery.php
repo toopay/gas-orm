@@ -62,6 +62,11 @@ class Jquery implements Extension {
 	 * @var mixed Gas instance(s)
 	 */
 	public $gas;
+
+	/**
+	 * @var string Fields selector
+	 */
+	public $selector;
 	
 	/**
 	 * Extension initialization method
@@ -73,6 +78,19 @@ class Jquery implements Extension {
 	{
 		// Here, Gas will transport your instance
 		$this->gas = $gas;
+
+		return $this;
+	}
+
+	/**
+	 * Set selector
+	 *
+	 * @param  string	Fields to be included
+	 * @return void
+	 */
+	public function set_select($fields = '')
+	{
+		$this->selector = $fields;
 
 		return $this;
 	}
@@ -154,7 +172,19 @@ class Jquery implements Extension {
 		$json['iTotalDisplayRecords'] = (string) $total;
 
 		// Build the records
-		foreach($results as $record) $json['aaData'][] = array_values($record->record->get('data'));
+		if ( ! empty($results))
+		{
+			foreach($results as $record) 
+			{
+				// Get the record
+				$record = array_values($record->record->get('data'));
+				$json['aaData'][] = $record;
+			}
+		}
+		else
+		{
+			$json['aaData'] = array();
+		}
 
 		// Output the json
 		return json_encode($json);
@@ -185,14 +215,23 @@ class Jquery implements Extension {
 		$model    = $gas;
 		$collumns = $gas->meta->get('collumns');
 
-		// Process LIKE clause
-		if ($like !== FALSE)
+		// Do we have an active selector ?
+		if ( ! empty($this->selector))
 		{
-			$counter = 0;
+			$model->select($this->selector);
+		}
 
-			foreach ($collumns as $collumn)
+		// Think!
+		$gesture = array('name', 'title', 'description');
+		$behave = array_values(array_intersect($collumns, $gesture));
+		sort($behave);
+
+		// Process LIKE clause
+		if ($like !== FALSE && ! empty($behave))
+		{
+			foreach ($behave as $counter => $collumn)
 			{
-				if ($counter === 0)
+				if ($counter == 0)
 				{
 					$model->like($collumn, $like);
 				}
@@ -200,8 +239,6 @@ class Jquery implements Extension {
 				{
 					$model->or_like($collumn, $like);
 				}
-
-				$counter++;
 			}
 		}
 
@@ -221,7 +258,18 @@ class Jquery implements Extension {
 
 		// Populate the result
 		$results = is_object($this->gas) ? array($this->gas) : $this->gas;
-		$total   = is_object($this->gas) ? 1 : count($this->gas);
+
+		// Get actual total records
+		$CI =& get_instance();
+
+		if ( ! empty($results) && ($sample = current($results)))
+		{
+			$total = $CI->db->count_all_results($sample->table);
+		}
+		else
+		{
+			$total = is_object($this->gas) ? 1 : count($this->gas);
+		}
 
 		return $this->set_datatable_output($echo, $limit, $total, $results);
 	}
