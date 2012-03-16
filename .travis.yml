@@ -23,5 +23,5 @@ script: phpunit --no-globals-backup --configuration third_party/gas/tests/travis
 
 branches:
   only:
-    - develop
     - master
+    - develop
