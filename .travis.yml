@@ -22,6 +22,6 @@ before_script:
 script: phpunit --no-globals-backup --configuration third_party/gas/tests/travis/$DB.travis.xml
 
 branches:
-  only:
-    - master
-    - develop
+  except:
+    - gh-pages
+    - doc
