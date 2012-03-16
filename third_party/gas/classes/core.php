@@ -418,6 +418,43 @@ class Core {
 	}
 
 	/**
+	 * Perform auto-timestamp within a Gas instance
+	 *
+	 * @param   object    Gas Instance
+	 * @return  object    Gas Instance
+	 */
+	final public static function timestamp($gas)
+	{
+		$fields = array('ts_fields', 'unix_ts_fields');
+
+		// Check for datetime fields
+		foreach ($fields as $field)
+		{
+			if ( ! empty($gas->$field))
+			{
+				foreach ($gas->$field as $ts_field)
+				{
+					if (strpos($ts_field, '[') === 0)
+					{
+						// Only for new created record
+						if ($gas->empty)
+						{
+							$ts_field = str_replace(array('[',']'), array('',''), $ts_field);
+							$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d h:i:s') : time();
+						}
+					}
+					else
+					{
+						$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d h:i:s') : time();
+					}
+				}
+			}
+		}
+
+		return $gas;
+	}
+
+	/**
 	 * Get all records based by default table name
 	 *
 	 * @param   object Gas Instance
@@ -527,6 +564,9 @@ class Core {
 
 		// Run _before_save hook
 		$gas = self::callback($gas, '_before_save');
+
+		// Check for timestamp properties
+		$gas = self::timestamp($gas);
 
 		// Get the table and entries
 		$table   = $gas->validate_table()->table;

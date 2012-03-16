@@ -120,6 +120,16 @@ abstract class ORM {
 	public $related;
 
 	/**
+	 * @var  array  Datetime field for auto-timestamp
+	 */
+	public $ts_fields = array();
+
+	/**
+	 * @var  array  UNIXtime field for auto-timestamp
+	 */
+	public $unix_ts_fields = array();
+
+	/**
 	 * @var  array   Relationship collections
 	 */
 	public static $relationships = array();
@@ -158,6 +168,9 @@ abstract class ORM {
 		{
 			$this->related->set('entity', $related);
 		}
+
+		// Run _init method
+		$this->_init();
 
 		// Validate meta data, and assign into its place
 		$metadata = self::validate_meta($this);
@@ -403,9 +416,6 @@ abstract class ORM {
 		}
 		else
 		{
-			// Run _init method
-			$gas->_init();
-
 			if (empty($gas::$fields))
 			{
 				// Now we know something was really goes wrong
