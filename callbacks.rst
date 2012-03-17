@@ -28,15 +28,15 @@ Lets throw another scenario. You are just submit a form, which contain some data
 _before_check()
 +++++++++++++++
 
-This allow you to intercept **validate** method. You can place this method within your Gas model. ::
+This allow you to intercept **_check** method. You can place this method within your Gas model. ::
 
-	$preserve_key = array('hobbies', 'bio');
+	public $preserve_key = array('hobbies', 'bio');
 
-	$preserve_fields = array();
+	public $preserve_fields = array();
 
 	function _before_check()
 	{
-		$post_data = $this->filled_fields();
+		$post_data = $this->record->get('data');
 
 		foreach ($post_data as $key => $value)
 		{
@@ -48,16 +48,18 @@ This allow you to intercept **validate** method. You can place this method withi
 			}
 		}
 
-		$this->set_fields($post_data);
+		$this->record->set('data', $post_data);
+
+		return $this;
 	}
 
 Notice that to get all input which have set, we could use ::
 
-	$this->filled_fields();
+	$this->record->get('data');
 
 And to re-set the input, we didnt modify any **$_POST** data, instead we use ::
 
-	$this->set_fields($post_data);
+	$this->record->set('data', $post_data);
 
 So in this example, we are preserve (and remove for temporary) some fields for being validated.
 
@@ -68,11 +70,13 @@ You can place this method within your Gas model. ::
 
 	function _after_check()
 	{
-		$post_data = $this->filled_fields();
+		$post_data = $this->record->get('data');
 
 		$full_data = array_merge($post_data, $this->preserve_fields);
 
-		$this->set_fields($full_data);
+		$this->record->set('data', $full_data);
+
+		return $this;
 	}
 
 So in this example, we are rebuild our data, for next process.
@@ -80,11 +84,11 @@ So in this example, we are rebuild our data, for next process.
 _before_save()
 +++++++++++++++
 
-You can place this method within your Gas model. Let say, we want adding some **updated_at** value. ::
+You can place this method within your Gas model. Let say, we want adding some **active** value. ::
 
 	function _before_save()
 	{
-		$this->updated_at = time();
+		$this->record->set('data.active', 1);
 
 		return $this;
 	}
@@ -126,7 +130,10 @@ You can place this method within your Gas model. ::
 
 	function _before_delete()
 	{
-		
+		// Do some stuff in record
+
+
+		return $this;
 	}
 
 Here you can sort some stuff, before delete a record(s).

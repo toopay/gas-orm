@@ -7,6 +7,42 @@ Gas supported three type of table relationship, **one-to-one** relationship, **o
 
 Setting up your model relationship is one-time set-up, unless in the future, you need to change your table schema.
 
+Define Relationship
++++++++++++++++++++
+
+To define some entity association, you need to perform one of available relationship methods : 
+
++---------------------+-------------------------------------------------------------------------------+
+| Relationship option | Description                                                                   |
++=====================+===============================================================================+
+| **has_one**         | for one-to-one relationship                                                   |
++---------------------+-------------------------------------------------------------------------------+
+| **has_many**        | for one-to-many and many-to-many relationship                                 |
++---------------------+-------------------------------------------------------------------------------+
+| **belongs_to**      | for represent the relationships above in the target model                     |
++---------------------+-------------------------------------------------------------------------------+
+
+All relationship method could accept two parameter. The first parameter is contain the 'path' and the second parameter could contain additional query to run, eg : ::
+
+	'wife' => ORM::has_one('\\Model\\Wife'),
+	'job'  => ORM::has_many('\\Model\\Job\\User => \\Model\\Job', array('select:id,name')),
+
+If the 'path' are more than one model, you need to add a separator which explain the ownership status of each models. In above **job** relationship for example, the separator was **=>**. That simply mean **Model\\Job\\User** (which hold the job_user table) is OWNED (or belongs to) both **Model\\User** and **Model\\Job**.
+
+The second parameter, contain an array of additional queries method. Available option for second parameter are : 
+
++---------------------+-------------------------------------------------------------------------------+
+| Additional option   | Syntax example                                                                |
++=====================+===============================================================================+
+| **select**          | 'kid' => ORM::has_many('\\Model\\Kid', array('select:id,name'))               |
++---------------------+-------------------------------------------------------------------------------+
+| **limit**           | 'kid' => ORM::has_many('\\Model\\Kid', array('select:id,name', limit:2))      |
++---------------------+-------------------------------------------------------------------------------+
+| **order_by**        | 'kid' => ORM::has_many('\\Model\\Kid', array('order_by:name[asc]'))           |
++---------------------+-------------------------------------------------------------------------------+
+
+You can have one, some, or all of those option(s) in each of your relationship definition.
+
 has_one
 +++++++
 
@@ -14,14 +50,24 @@ First, we will talk about **has_one** relationship. For example, let say we have
 
 Your user model would be something like : ::
 
-	class User extends Gas {
-		
-		public $relations = array(
+	class User extends ORM {
 
-					'has_one' => array('wife' => array()),
+		function _init() 
+		{
+			// Relationship definition
+			self::$relationships = array(
+				'wife' => ORM::has_one('\\Model\\Wife'),
+			);
 
-                        		);
-
+			// Field definition
+			self::$fields = array(
+				'id'       => ORM::field('auto[3]'),
+				'name'     => ORM::field('char[40]'),
+				'email'    => ORM::field('email[40]'),
+				'username' => ORM::field('char[5,10]'),
+				'active'   => ORM::field('int[1]'),
+			);
+		}
 	}
 
 Thats it. Now Gas will assume that each record in user table, might have one related record in wife table.
@@ -29,15 +75,25 @@ Thats it. Now Gas will assume that each record in user table, might have one rel
 belongs_to
 ++++++++++
 
-After you declare some relationship, in some model, the corresponding model should represent those relationship as well. So, based by example above, your wife model should be something like : ::
+After you declare some relationship, in some model, the corresponding model **should represent those relationship as well**. So, based by example above, your wife model should be something like : ::
 
-	class Wife extends Gas {
-		
-		public $relations = array(
+	class Wife extends ORM {
 
-					'belongs_to' => array('user' => array()),
+		function _init()
+		{
+			// Define relationships
+			self::$relationships = array(
+				'user' => ORM::belongs_to('\\Model\\User'),
+			);
 
-                        		);
+			// Define fields definition
+			self::$fields = array(
+				'id'         => ORM::field('auto[3]'),
+				'user_id'    => ORM::field('int[3]'),
+				'name'       => ORM::field('char[40]'),
+				'hair_color' => ORM::field('email[20]'),
+			);
+		}
 
 	}
 
@@ -49,159 +105,142 @@ has_many
 
 Secondly, we will talk about **has_many** relationship. This relationship type, is similar with above, except for **one-to-many** relationship, Gas will asume that one record from parent table, is always have several records in child table. For example, lets say we have two table which have **one-to-many** relationship, user table (as parent table) and kid table (as child table), then user table now would have relations properties as follow : ::
 
-	class User extends Gas {
-		
-		public $relations = array(
+	class User extends ORM {
 
-					'has_one' => array('wife' => array()),
+		function _init() 
+		{
+			// Relationship definition
+			self::$relationships = array(
+				'wife' => ORM::has_one('\\Model\\Wife'),
+				'kid'  => ORM::has_many('\\Model\\Kid'),
+			);
 
-					'has_many' => array('kids' => array()),
-
-                        		);
-
+			// Field definition
+			self::$fields = array(
+				'id'       => ORM::field('auto[3]'),
+				'name'     => ORM::field('char[40]'),
+				'email'    => ORM::field('email[40]'),
+				'username' => ORM::field('char[5,10]'),
+				'active'   => ORM::field('int[1]'),
+			);
+		}
 	}
 
-Make sure kid model represent this relationship as well, by setting up **belongs_to** values.
+.. note:: Always ensure that the related model, represented the relationship as well everytime you set up some relationship. For example, in above case, make sure kid model represent this relationship as well, by setting up **belongs_to** values.
 
-has_and_belongs_to
-++++++++++++++++++
+**Has many** also could be a **many-to-many** relationship. This is the most tricky relationship in your database. This relationship type, is exist when you have a pivot table. Pivot table is an intermediate table, which links one table with another table, when each table is having many and belongs to each other : **mant-to-many** relationship.
 
-Last, this is the most tricky relationship in your database. This relationship type, is exist when you have a pivot table. Pivot table is an intermediate table, which links one table with another table, when each table is having many and belongs to each other : **mant-to-many** relationship.
+For example, assume a user has many jobs, but a job can also belong to many users. Three tables must be created to accomplish this relationship: a user table, a job table, and a job_user table. How to set up this type of relationship?
 
-For example, assume a user has many jobs, but a job can also belong to many users. Three tables must be created to accomplish this relationship: a user table, a job table, and a job_user table. In this critical scenario, Gas will leave you with two option :
+First, set up both **user** and **job** model. Our user model now may looks like : ::
 
-- use **has_and_belongs_to** : mean both user and job, directly referenced each other.
-- use **has_many** and **through** : mean both user and job referenced each other **through** another model.
+	<?php namespace Model;
 
-So, let say you choose option one, what you have to do is define **has_and_belongs_to** properties in your corresponding table(s). So refer to above scenario (user and job), you will take this below step.
+	use \Gas\Core;
+	use \Gas\ORM;
 
-Your user model now would be something like : ::
+	class User extends ORM {
 
-	class User extends Gas {
-		
-		public $relations = array(
+		function _init() 
+		{
+			// Relationship definition
+			self::$relationships = array(
+				'wife' => ORM::has_one('\\Model\\Wife'),
+				'kid'  => ORM::has_many('\\Model\\Kid'),
+				'job'  => ORM::has_many('\\Model\\Job\\User => \\Model\\Job'),
+			);
 
-					'has_one' => array('wife' => array()),
-
-					'has_many' => array('kids' => array()),
-
-					'has_and_belongs_to' => array('job' => array()),
-
-                        		);
-
+			// Field definition
+			self::$fields = array(
+				'id'       => ORM::field('auto[3]'),
+				'name'     => ORM::field('char[40]'),
+				'email'    => ORM::field('email[40]'),
+				'username' => ORM::field('char[5,10]'),
+				'active'   => ORM::field('int[1]'),
+			);
+		}
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_and_belongs_to** values.
+Then the **job** model would be something like : ::
 
-foreign_table
-+++++++++++++
+	<?php namespace Model;
 
-While by following Gas nature convention, define a relationship(s) is almost does not require setting, in real life it may not be followed smoothly (eg : by our recent schema, its imposible to match each table with Gas naming convention). Gas alleviate this cases with several options.
+	use \Gas\Core;
+	use \Gas\ORM;
 
-First, we will look at **foreign_table** option.
+	class Job extends ORM {
 
-In previous example, Gas assume your intermediate table were job_user or user_job. Otherwise, you can still working on it, by specify **foreign_table** option. So lets say your intermediate table name was **j_u**, now your user model would be something like : ::
+		function _init() 
+		{
+			// Define relationships
+			self::$relationships = array(
+				'user'  => ORM::has_many('\\Model\\Job\\User => \\Model\\User'),
+			);
 
-	class User extends Gas {
-		
-		public $relations = array(
-
-					'has_one' => array('wife' => array()),
-
-					'has_many' => array('kids' => array()),
-
-					'has_and_belongs_to' => array('job' => array(
-							
-							'foreign_table' => 'j_u',
-						
-							)),
-
-                        		);
-
+			// Define fields definition
+			self::$fields = array(
+				'id'          => ORM::field('auto[3]'),
+				'name'        => ORM::field('char[40]'),
+				'description' => ORM::field('string[100]'),
+			);
+		}
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_and_belongs_to** values which also contain **foreign_table** option.
+Last, you will need to create a subfolder on your model directory, called **job**. Then create a **user.php** file to handle **job_user** entity, which contain : ::
 
-foreign_key
-+++++++++++
 
-Now, we will look at **foreign_key** option.
+	<?php namespace Model\Job;
 
-In previous example, you successfully define your intermediate table name to **j_u**. There is one more thing you should concern, while you define a relationship. Gas always assume that your **foreign key** is follow **table_pk** (pk for primary key) convention, so Gas was thingking there must be 'user_id' collumn in your intermediate table, to linked it with user table. Unfortunately, in some cases, your recent schema can't follow this convention too. Then you will need to add one more line  : ::
+	use \Gas\Core;
+	use \Gas\ORM;
+	
+	class User extends ORM {
 
-	class User extends Gas {
-		
-		public $relations = array(
+		function _init() 
+		{
+			// Define relationships
+			self::$relationships = array(
+				'user' => ORM::belongs_to('\\Model\\User'),
+				'job'  => ORM::belongs_to('\\Model\\Job'),
+			);
 
-					'has_one' => array('wife' => array()),
-
-					'has_many' => array('kids' => array()),
-
-					'has_and_belongs_to' => array('job' => array(
-							
-							'foreign_table' => 'j_u',
-
-							'foreign_key' => 'u_id',
-						
-							)),
-
-                        		);
-
+			// Define fields definition
+			self::$fields = array(
+				'id'         => ORM::field('auto[3]'),
+				'user_id'    => ORM::field('int[3]'),
+				'job_id'     => ORM::field('int[3]'),
+			);
+		}
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_and_belongs_to** values which also contain **foreign_key** option.
+While by following Gas nature convention, define a relationship(s) is pretty simple, in real life it may not be followed smoothly (eg : by our recent schema, its imposible to match each table with Gas field-naming convention). Gas alleviate this cases with several options.
 
-through
-+++++++
+In previous example, when you define a relationship. Gas always assume that your **foreign key** is follow **table_pk** (pk for primary key) convention, so Gas was thingking there must be 'user_id' collumn in your intermediate table, to linked it with user table. Unfortunately, in some cases, your recent schema can't follow this convention. Then you will need to add **foreign_key** to your pivot table.  : ::
 
-As you see in **has_and_belongs_to** example, there are another option to set-up **many-to-many** relationship. This option exists, and could be your option whether your pivot table is not only used to linked two tables, but also have its own primary key and other columns. If you are in this situation, dont panic. You still can using the second option : **through**.
+	<?php namespace Model\Job;
 
-So, instead having **has_and_belongs_to** values, now your user model would be something like : ::
+	use \Gas\Core;
+	use \Gas\ORM;
+	
+	class User extends ORM {
 
-	class User extends Gas {
-		
-		public $relations = array(
+		public $foreign_key = array('\\model\\user' => 'u_id', '\\model\\job' => 'j_id');
 
-					'has_one' => array('wife' => array()),
+		function _init() 
+		{
+			// Define relationships
+			self::$relationships = array(
+				'user' => ORM::belongs_to('\\Model\\User'),
+				'job'  => ORM::belongs_to('\\Model\\Job'),
+			);
 
-					'has_many' => array('kids' => array()),
-
-					'has_many' => array('job' => array(
-							
-							'through' => 'job_user',
-						
-							)),
-
-                        		);
-
+			// Define fields definition
+			self::$fields = array(
+				'u_id'    => ORM::field('int[3]'),
+				'j_id'     => ORM::field('int[3]'),
+			);
+		}
 	}
 
-Make sure job model represent this relationship as well, by setting up **has_many** values which also contain **through** option.
 
-self
-++++
-
-The last option, **self**, is to handle self-referential and adjacency column/data (hierarchical data).
-
-The easier way to describe or giving an example about this kind of data, is comments system. In this case, each comment can be a reply to other comment, mean they reference themself within one table. If you have this kind of table, you can working on it by specify self option in your relations properties. Self-referential works as you need, means it support all of defined relation types (but you should only define one type at a time).
-
-So, let say we have a comment table and model already set up. And we decide to use **has_many** type, which mean, each comment can have several replies, then our comment model would be something like : ::
-
-	class Comment extends Gas {
-		
-		public $relations = array(
-
-					'has_many' => array('comment' => array(
-							
-							'self' => TRUE,
-
-							'foreign_key' => 'parent_id',
-						
-							)),
-
-                        		);
-
-	}
-
-This way, you can accessing replies comment as well.
 

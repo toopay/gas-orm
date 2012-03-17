@@ -10,12 +10,6 @@ Models Path
 
 Models path is a directory you are telling Gas ORM to look for your model classes. Generally, it would be on **application/models**. ::
 
-	$config['models_path'] = 'models';
-
-Otherwise, you will need to specify it. 
-
-If you working with **modular directory structure** , you will need to set it to your modules path. For example, if you put your modules directories under **aplication** folder, then you can set **models_path** as bellow : ::
-
 	$config['models_path'] = array('Model' => APPPATH.'models');
 
 If you use this default config, **Model** will be the namespace of your model(s).

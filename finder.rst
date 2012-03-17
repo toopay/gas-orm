@@ -12,52 +12,42 @@ all()
 
 You can use **all** to fetch all record within your table. Let say we want to scan our table to dump out all user's name : ::
 
-	$users = Gas::factory('user')->all();
+	$users = Model\user::all();
 
 	foreach ($users as $user)
 	{
 		echo 'User '.$user->id.' name is '.$user->name;
-
 		echo "\n";
 	}
 
-All will always return an array of object (in this case, user instance).
+All will return an array of object (in this case, user instance) if the record(s) more than one, an object if the total record only one, and NULL if there is no records at all.
 
 find()
 ++++++
 
 You can use **find** to fetch a record(s) based by your primary key. ::
 
-	$user_1 = Gas::factory('user')->find(1);
+	$user_1 = Model\User::find(1);
+	echo $user_1->name;
 
-Above will returning a user's record where **id** (or your defined primary key) equivalent with 1.
+Above will returning a user's record where **id** (or your defined primary key) equivalent with 1, and echo the name.
 
-Using factory method, give you flexibility. But if you are working with a set of finder method, you may want to reduce keystroke, by instantiate once, then use it several times. ::
+Each Gas instance, hold a **Gas\\Data** instance as a record holder. This allow you to do useful thing, for example to set the default value of some property which you unsure : ::
 
-	$user = new User;
+	$user = Model\User::find(1);
+	echo $user->record->get('data.biodata', 'No biodata yet');
 
-	$user_1 = $user->find(1);
-
-	echo 'User 1 name is '.$user_1->name;
-
-	echo "\n";
-
-	$user_2 = $user->find(2);
-
-	echo 'User 2 name is '.$user_2->name;
-
-	echo "\n";
+In above example, if the **biodata** is NULL, then the second parameter will apply.
 
 Normally, if you use **find** method and passed a single id as above, Gas will return an user instance at a time.
 
 To find several **ids**, you can do that by : ::
 
-	$admin_users = Gas::factory('user')->find(1, 2, 3);
+	$admin_users = Model\User::find(1, 2, 3);
 
 	foreach ($admin_users as $admin)
 	{
 		echo 'User '.$admin->id.' is an admin, and his name is '.$admin->name;
-
 		echo "\n";
 	}
 
@@ -68,51 +58,26 @@ find_by_collumn()
 
 You can use **find_by_collumn** to fetch a record(s) based by some collumn. For example, your user table have : id, name, username, email and so on. Then you can use those column name like bellow ::
 
-	$active_users = Gas::factory('user')->find_by_active('1');
+	$active_users = Model\User::find_by_active('1');
 
 	foreach ($active_users as $active_user)
 	{
 		echo 'User '.$active_user->id.' is active, and his name is '.$active_user->name;
-
 		echo "\n";
 	}
 
-By default, **find_by_column** will returning an array of object. While you just need to match and returned one record, as an instance, passing second parameter (that is **limit**) to 1 will do that. ::
+By default, **find_by_column** will return an array of object (in this case, user instance) if the record(s) more than one, an object if the total record only one, and NULL if there is no records at all. When you just need to match and returned one or specific number of record(s), you can do so by chaining this method with **limit** method from CI query builder, eg ::
 
-	$user = new User;
-
-	$moderators = $user->find_by_role('moderator', 3, 1);
+	$moderators = Model\User::limit(3)->find_by_role('moderator');
 
 	foreach ($moderators as $moderator)
 	{
 		echo 'User '.$moderator_user->id.' is a moderator, and her name is '.$moderator->name;
-
 		echo "\n";
 	}
 
-	$me = $user->find_by_role('administrator', 1);
-
+	$me = Model\User::limit(1)->find_by_role('administrator', 1);
 	echo 'My name is '.$me->name;
-
-You can passing **offset** as third parameter as well. Notice that unless you passing 1 as second parameter, **find_by_column** will returning an array of object/instance.
-
-find_where()
-+++++++++++++++++
-
-If **find_by_collumn** doesn't enough, you can use **find_where** to fetch a set of record(s) based by several collumns. For example ::
-
-	$bad_condition = array('behaviour' => 'bad', 'attitude' => 'bad');
-
-	$bad_user = Gas::factory('user')->find_where($bad_condition, 20, 10);
-
-	foreach ($active_users as $active_user)
-	{
-		echo 'User '.$active_user->id.' is active, and his name is '.$active_user->name;
-
-		echo "\n";
-	}
-
-You can passing **limit** as second parameter and **offset** as third parameter as well. Notice that unless you passing 1 as second parameter, **find_where** will returning an array of object/instance.
 
 first() and last()
 ++++++++++++++++++
@@ -127,19 +92,7 @@ Will return an instance with **max**, **min**, **sum** or **avg** of your primar
 Chaining Finder with CI AR
 ++++++++++++++++++++++++++
 
-You will soon realize, that when using Gas ORM, you have not to lose all of your habbit to chaining several method together. Gas ORM even adding some additional shorthand to make wrote your syntax easier. Here some basic implementation examples : ::
+You will soon realize, that when using Gas ORM, you have not to lose all of your habbit to chaining several method together. Almost all CI query builder method are chainable with Gas ORM method(s). Here some basic implementation examples : ::
 
-	$someusers = Gas::factory('user')->group_by('email')->all();
-
-	$someusers = Gas::factory('user')->like('email', 'yahoo.com')->all();
-
-	$someusers = Gas::factory('user')->left_join_phone('phone.user_id = user.id')->all();
-
-	$someusers = Gas::factory('user')->left_outer_join_sandals('sandals.id = user.sandal_id')->all();
-
-
-
-
-
-
-
+	$someusers = Model\User::group_by('email')->all();
+	$someusers = Model\User::like('email', 'yahoo.com')->all();

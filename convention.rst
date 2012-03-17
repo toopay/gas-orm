@@ -59,7 +59,7 @@ If you have a pivot table, that has composite key, you can specify **foreign_key
 
 	class User extends ORM {
 
-		public $foreign_key = array('\\Model\\User' => 'user_id', '\\Model\\Role' => 'role_id');
+		public $foreign_key = array('\\model\\user' => 'user_id', '\\model\\role' => 'role_id');
 
 		function _init() 
 		{

@@ -34,7 +34,7 @@ Gas ORM Features
 
 - Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv. (including PDO, if you keep sync with CI repo)
 - Support multiple database connection.
-- Support multiple relationships, including Polymorphic Associations.
+- Support multiple relationships.
 - Support composite keys (for key that define relationship).
 - Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.
 - Per-request caching.

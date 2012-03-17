@@ -18,137 +18,145 @@ Dummy Extension
 
 I include this **dummy** extension within the repo as well. Lets look how it works : ::
 
-	class Gas_extension_dummy implements Gas_extension { 
 	
-		// This is a properties, which will be used to transport Gas Instance
-		public $gas;
+	use \Gas\Extension;
 
-		public $explanation;
+	class Dummy implements Extension {
 
 		/**
-		 * __init
+		 * @var mixed Gas instance(s)
+		 */
+		public $gas;
+		
+		/**
+		 * Extension initialization method
 		 * 
-		 * Initialize extension
-		 * 
-		 * @access public
 		 * @param  object
 		 * @return void
 		 */
-		public function __init($gas)
+		function __init($gas)
 		{
 			// Here, Gas will transport your instance
 			$this->gas = $gas;
+
+			return $this;
 		}
 
 		/**
-		 * explain
-		 * 
-		 * Explain about related Gas instance
-		 * 
-		 * @access public
-		 * @param  mixed
-		 * @return string
+		 * Simple example of Extension usage
+		 *
+		 * @param  string Argument
+		 * @return string Explanation
 		 */
-		public function explain($args = null)
+		public function explain($arg = NULL)
 		{
+			// Load CI libraries
 			$CI =& get_instance();
 
 			if ( ! class_exists('CI_Typography')) $CI->load->library('typography');
 
 			if ( ! class_exists('CI_Table')) $CI->load->library('table');
 
-			$arguments = ! is_null($this->explanation) ? var_export($this->explanation, TRUE) : var_export($args, TRUE);
+			// Build the Extension information
+			$argument = var_export($arg, TRUE);
+			$fullname = __CLASS__;
+			$fragment = explode('\\', $fullname);
+			$nickname = strtolower(end($fragment));
+			$path     = __FILE__;
 
-			$nickname = key($this->gas->extensions);
-
-			$fullname = $this->gas->extensions[$nickname];
-
-			$path = __FILE__;
-
-			$model = ucfirst($this->gas->model());
-
-			$structure = $this->gas->list_fields();
-
-			$relationships = array_keys($this->gas->relations);
-
-			$records = $this->gas->get_raw_record();
-
-			$CI->table->set_heading($structure);
-
-			foreach ($records as $record)
+			// Determine the caller condition
+			if (is_object($this->gas))
 			{
+				// This for single Gas instance
+				$model         = ucfirst($this->gas->model());
+				$structure     = $this->gas->meta->get('collumns');
+				$relationships = array_keys($this->gas->meta->get('entities'));
 
-				$CI->table->add_row(array_values($record));
+				// Get all the records and start build the record table
+				$records = $this->gas->record->get();
+				$CI->table->set_heading($structure);
 
+				foreach ($records as $record)
+				{
+					$CI->table->add_row(array_values($record));
+				}
+
+				$table = $CI->table->generate();
+				$CI->table->clear();
 			}
+			elseif (is_array($this->gas) && ! empty($this->gas))
+			{
+				// This for a collection of Gas instance(s)
+				$sample        = $this->gas;
+				$gas           = array_shift($sample);
+				$model         = ucfirst($gas->model());
+				$structure     = $gas->meta->get('collumns');
+				$relationships = array_keys($gas->meta->get('entities'));
 
-			$table = $CI->table->generate();
+				// Get all the records and start build the record table
+				$records = $this->gas;
+				$CI->table->set_heading($structure);
 
-			$CI->table->clear();
+				foreach ($records as $record)
+				{
+					$CI->table->add_row(array_values($record->record->get('data')));
+				}
 
-
-			$explanation = 'Hello, i am an extension. ';
-
-			$explanation .= 'My nickname is '.$nickname.' and my fullname is '.$fullname.'.'."\n";
-
+				$table = $CI->table->generate();
+				$CI->table->clear();
+			}
+			else
+			{
+				// This for nothing
+				$model         = 'NULL';
+				$structure     = array('undefined');
+				$relationships = array('undefined');
+				$records       = array();
+				$table         = '<strong>Empty Record</strong>'."\n";
+			}
+			
+			// Now build the explanation
+			$explanation  = 'Hello, i am an extension. ';
+			$explanation .= 'My nickname is <strong>'.$nickname.'</strong> and my fullname is <strong>'.$fullname.'</strong>.';
+			$explanation .= "\n";
 			$explanation .= 'You can found me at '.$path.'.'."\n";
-
 			$explanation .= 'You call me through '.$model.' instance, and passing bellow arguments : '."\n";
-
-			$explanation .= $arguments ."\n";
-
+			$explanation .= $argument ."\n";
 			$explanation .= 'to processed, and to explain what '.$model.' model looks like.'."\n";
-
-			$explanation .= $model.' model have table structure : ';
-
+			$explanation .= $model.' have table structure : ';
 			$explanation .= implode(', ', $structure)."\n";
-
-			$explanation .= $model.' model have defined relationship : ';
-
+			$explanation .= $model.' have defined relationships : ';
 			$explanation .= implode(', ', $relationships)."\n";
-
 			$explanation .= $model.' instance now is holding : '.count($records).' record(s)'."\n";
-
-			$explanation .= 'With little help from Table and Typography library,'."\n";
-
+			$explanation .= 'With little help from CodeIgniter\'s Table and Typography library,'."\n";
 			$explanation .= 'I can create this paragraph, also output the record into this table : '."\n";
-
 			$explanation .= $table;
-
 			$explanation .= 'So basicly, my purpose is to become a standard interface which you can use,'."\n";
-
 			$explanation .= 'to share common function which utilize either CI Library or your own library, '."\n";
-
 			$explanation .= 'across your Gas models/instances.'."\n";
-
 			$explanation .= 'This is all I can say.'."\n";
 
+			// Format the explanation, then output it
 			$formatted_explanation = $CI->typography->auto_typography($explanation);
 
 			return '<pre>'.$formatted_explanation.'</pre>';
 		}
 	}
 
-If you put **dummy** on your extension list, and enable the **extension autoload** option, then from any of your Gas model, you can directly use it. ::
+You can directly use it. ::
 
-	$user = new User;
-
-	echo $user->dummy->all()->explain();
+	echo Model\User::dummy()->all()->explain();
 
 This should be a simple way, to describe how **extension** works in Gas ORM.
 
 HTML Extension
 ++++++++++++++
 
-If you did not autoload html extension, load it first ::
-
-	Gas::load_extension('html');
-
 You can see the demo for table on my sandbox [#html1_sandbox]_ .
 Generate HTML table from Gas model records  ::
 	
 	// execute some Gas finder
-	$users = Gas::factory('user')->html->all();
+	$users = Model\User::html()->all();
 	
 	// simple usage
 	echo $users->table();
@@ -181,7 +189,7 @@ Generate HTML table from Gas model records  ::
 Generate HTML form from Gas model records ::
 	
 	// execute some Gas finder
-	$user = Gas::factory('user')->html->find(1);
+	$user = Model\User::html()->find(1);
 
 	// simple usage
 	echo $user->form('controller/function');
@@ -198,10 +206,6 @@ There are option for setting **submit**, **separator**, **entity** and **hide** 
 jQuery Extension
 ++++++++++++++++
 
-If you did not autoload jquery extension, load it first ::
-
-	Gas::load_extension('jquery');
-
 This extension will be a good place to sharing common handler for any similar jQuery data processor plugin (eg : flot [#flot]_ for outputing graph or chart).
 
 For now, it provide a method to handle and generate response for datatable. [#datatable]_ 
@@ -210,11 +214,11 @@ Assume you have download and put it into your application directory, and set it 
 
 	if ($_POST)
 	{
-		echo Gas::factory('user')->jquery->datatable($_POST);
+		echo Model\User::jquery()->datatable($_POST);
 	}
 	else
 	{
-		echo Gas::factory('user')->jquery->datatable($_GET);
+		echo Model\User::jquery()->datatable($_GET);
 	}
 
 That will serve datatable for browsing **user** table. You can see the demo on my sandbox [#jquery1_sandbox]_ .
@@ -224,10 +228,10 @@ Write your own Gas ORM extension
 
 From above extension example, if you are ready to create your own, here litlle note you should remember :
 
-- Your extension, should prefixed with **Gas_extension_** , then you can adding your extension name after it. 
-- Your extension, should implements **Gas_extension** interface.
+- Your extension, should have namespace **Gas\Extension**.
+- Your extension, should implements **Gas\Extension** interface.
 - Your extension, should have **__init($gas)** method (notice the double underscore, distungished it from your model init method).
-- Your extension, should be under **application/libraries**.
+- Your extension, should located under **libraries/gas/extension** folder within your application 
 
 Thats all about extension.
 
