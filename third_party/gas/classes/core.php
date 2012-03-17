@@ -1321,6 +1321,12 @@ class Core {
 			$subquery  = $ids;
 			$domain    = $query[0];
 			$candidate = $query[1];
+
+			// If there was a holder, set the identifier
+			if (isset($holder))
+			{
+				$holder->set('identifier', $candidate);
+			}
 		}
 		else
 		{
