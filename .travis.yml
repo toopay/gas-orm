@@ -25,3 +25,4 @@ branches:
   except:
     - gh-pages
     - doc
+    - spark

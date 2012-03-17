@@ -2144,6 +2144,7 @@ class Core {
 				// 1. GASPATH.'classes/extension'
 				// 2. APPPATH.'libraries/gas/extension'
 				$extension_paths = array(GASPATH.'classes',
+				                         GASSPARKPATH.DIRECTORY_SEPARATOR.'gas',
 				                         APPPATH.'libraries'.DIRECTORY_SEPARATOR.'gas');
 
 				// Loop over the paths

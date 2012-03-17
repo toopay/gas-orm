@@ -84,8 +84,11 @@ class Gas {
 			$CI->config->load('gas', TRUE, TRUE);
 			$CI->config->load('migration', TRUE, TRUE);	
 
+			// Get gas configuration
+			$config =& get_config();
+
 			// Set temporary config handler
-			$config = array_merge($CI->config->item('gas'), array('migration' => $CI->config->item('migration')));
+			$config = array_merge($config['gas'], array('migration' => $CI->config->item('migration')));
 
 			// Validate DB instance
 			if ( ! class_exists('CI_DB'))
@@ -107,8 +110,13 @@ class Gas {
 				$CI->load->library('migration');
 			}
 
+			// Define the library constant
+			define('GASSPARKPATH', __DIR__.DIRECTORY_SEPARATOR);
+			
 			// Include the bootstrap
-			include_once APPPATH.'third_party'.DIRECTORY_SEPARATOR.'gas'.DIRECTORY_SEPARATOR.'bootstrap.php';
+			$dir = str_replace('libraries', '', __DIR__);
+
+			include_once $dir.'third_party'.DIRECTORY_SEPARATOR.'gas'.DIRECTORY_SEPARATOR.'bootstrap.php';
 
 			if (array_key_exists('auto', Gas\Core::$migration))
 			{

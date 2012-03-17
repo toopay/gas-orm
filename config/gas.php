@@ -16,7 +16,7 @@
 |  key for namespace, value for path
 |  eg, the default was :
 |   
-|  $config['models_path'] = array('Model' => APPPATH.'models');
+|  $config['gas']['models_path'] = array('Model' => APPPATH.'models');
 |
 |  Above mean, if within your script you requesting something like :
 |
@@ -26,7 +26,7 @@
 |
 */
 
-$config['models_path'] = array('Model' => APPPATH.'models');
+$config['gas']['models_path'] = array('Model' => APPPATH.'models');
 
 
 /*
@@ -35,11 +35,11 @@ $config['models_path'] = array('Model' => APPPATH.'models');
 | -------------------------------------------------------------------
 | Prototype:
 |
-|  $config['cache_request'] = TRUE;
+|  $config['gas']['cache_request'] = TRUE;
 |
 */
 
-$config['cache_request'] = TRUE;
+$config['gas']['cache_request'] = TRUE;
 
 /*
 | -------------------------------------------------------------------
@@ -64,11 +64,11 @@ $config['cache_request'] = TRUE;
 |
 | Prototype:
 |
-|  $config['auto_create_models'] = TRUE;
+|  $config['gas']['auto_create_models'] = TRUE;
 |
 */
 
-$config['auto_create_models'] = FALSE;
+$config['gas']['auto_create_models'] = FALSE;
 
 /*
 | -------------------------------------------------------------------
@@ -93,8 +93,8 @@ $config['auto_create_models'] = FALSE;
 |
 | Prototype:
 |
-|  config['auto_create_tables'] = TRUE;
+|  config['gas']['auto_create_tables'] = TRUE;
 |
 */
 
-$config['auto_create_tables'] = FALSE;
+$config['gas']['auto_create_tables'] = FALSE;
