@@ -2196,7 +2196,7 @@ class Core {
 		foreach ($tables as $table) 
 		{
 			//Avoid migration table
-			if($table != self::$migration['migration_table'])
+			if(empty(self::$migration['migration_table']) OR $table != self::$migration['migration_table'])
 			{
 				// Build table and field definition
 				$key = array();
