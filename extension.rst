@@ -228,8 +228,8 @@ Write your own Gas ORM extension
 
 From above extension example, if you are ready to create your own, here litlle note you should remember :
 
-- Your extension, should have namespace **Gas\Extension**.
-- Your extension, should implements **Gas\Extension** interface.
+- Your extension, should have namespace **Gas\\Extension**.
+- Your extension, should implements **Gas\\Extension** interface.
 - Your extension, should have **__init($gas)** method (notice the double underscore, distungished it from your model init method).
 - Your extension, should located under **libraries/gas/extension** folder within your application 
 
