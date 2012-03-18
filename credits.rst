@@ -26,7 +26,7 @@ At the end, i create this and sharing it to you, any Ignited developer around th
 
 
 
-.. _Stefano: http://codeigniter.com/forums/member/50286/
+.. _Stefano: http://www.stefanogiordano.it/
 .. _groenewege: https://github.com/groenewege
 .. _ardinotow: http://codeigniter.com/forums/member/62402/
 .. _blueant: http://codeigniter.com/forums/member/42027/
