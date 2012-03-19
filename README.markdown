@@ -15,5 +15,5 @@ Go to [home of Gas ORM](http://gasorm-doc.taufanaditya.com "home of Gas ORM") fo
 
 [![][FlattrButton]][FlattrLink] 
 
-[FlattrLink]: https://flattr.com/submit/auto?userid=toopay&url=https://github.com/toopay/gas-orm&title=Gas ORM&language=enGB&tags=github&category=software
+[FlattrLink]: https://flattr.com/submit/auto?userid=toopay&url=https://github.com/toopay/gas-orm&title=GasORM&language=enGB&tags=github&category=software
 [FlattrButton]: http://api.flattr.com/button/button-static-50x60.png
