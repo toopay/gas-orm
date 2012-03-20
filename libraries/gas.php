@@ -85,7 +85,7 @@ class Gas {
 			$CI->config->load('migration', TRUE, TRUE);	
 
 			// Get gas configuration
-			$config =& get_config();
+			$config = get_config();
 
 			// Set temporary config handler
 			$config = array_merge($config['gas'], array('migration' => $CI->config->item('migration')));
