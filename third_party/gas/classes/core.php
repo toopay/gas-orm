@@ -219,8 +219,8 @@ class Core {
 		'spatial'  => 'VARCHAR', 
 		'char'     => 'VARCHAR', 
 		'numeric'  => 'INTEGER', 
-		'auto'     => 'INTEGER', 
 		'int'      => 'INTEGER', 
+		'auto'     => 'INTEGER', 
 		'email'    => 'VARCHAR'
 	);
 
