@@ -205,8 +205,8 @@ class Core {
 		'spatial'  => 'GEOMETRY', 
 		'char'     => 'VARCHAR', 
 		'numeric'  => 'TINYINT', 
-		'auto'     => 'INT', 
 		'int'      => 'INT', 
+		'auto'     => 'INT', 
 		'email'    => 'VARCHAR'
 	);
 
