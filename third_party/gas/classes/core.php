@@ -214,13 +214,13 @@ class Core {
 	 * @var  array  Hold all common datatypes collections
 	 */
 	public static $common_datatypes = array(
-		'datetime' => 'VARCHAR', 
-		'string'   => 'VARCHAR', 
-		'spatial'  => 'VARCHAR', 
-		'char'     => 'VARCHAR', 
-		'numeric'  => 'INTEGER', 
-		'int'      => 'INTEGER', 
-		'auto'     => 'INTEGER', 
+		'datetime' => 'VARCHAR',
+		'string'   => 'VARCHAR',
+		'spatial'  => 'VARCHAR',
+		'char'     => 'VARCHAR',
+		'numeric'  => 'INTEGER',
+		'int'      => 'INTEGER',
+		'auto'     => 'INTEGER',
 		'email'    => 'VARCHAR'
 	);
 
