@@ -552,7 +552,7 @@ class Html implements Extension {
 		{
 			$sample   = $this->gas;
 			$gas      = array_shift($sample);
-			$collumns = $gas->meta->get('collums');
+			$collumns = $gas->meta->get('collumns');
 		}
 		else
 		{
