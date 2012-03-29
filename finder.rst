@@ -20,7 +20,7 @@ You can use **all** to fetch all record within your table. Let say we want to sc
 		echo "\n";
 	}
 
-All will return an array of object (in this case, user instance) if the record(s) more than one, an object if the total record only one, and NULL if there is no records at all.
+All **will always return an array of object** (in this case, user instance) if the record(s) exists, and NULL if there is no records at all.
 
 find()
 ++++++
@@ -66,7 +66,7 @@ You can use **find_by_collumn** to fetch a record(s) based by some collumn. For 
 		echo "\n";
 	}
 
-By default, **find_by_column** will return an array of object (in this case, user instance) if the record(s) more than one, an object if the total record only one, and NULL if there is no records at all. When you just need to match and returned one or specific number of record(s), you can do so by chaining this method with **limit** method from CI query builder, eg ::
+By default, **find_by_column** will return an array of object (in this case, user instance) if the record(s) exists, and NULL if there is no records at all. When you just need to match and returned one or specific number of record(s), you can do so by chaining this method with **limit** method from CI query builder, eg ::
 
 	$moderators = Model\User::limit(3)->find_by_role('moderator');
 

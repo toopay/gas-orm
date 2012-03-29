@@ -47,7 +47,47 @@ What if you want to create a record, but not from **$_POST** data? . Lets throw 
 		echo 'New user successfully created. And her id is '.Model\User::last_created()->id;
 	}
 
-Notice that you could immediately using the last created resource, by using **last_created** method.
+Notice that you could immediately using the last created resource, by using **last_created** method. If you want to use the last inserted id you can do so by inherit CI query builder by using **insert_id** method.
+
+Now, how about working with relationship within save operation?
+
+Let say you have a database with schema as emulated on :doc:`Relationship section <relationship>` and you have all corresponding model set up. You want to create a **job** entity record, then linking it to some user. You can do so by writing : ::
+
+	$job = Model\Job::make(array(
+		'name' => 'teacher',
+		'description' => 'We make people smarter',
+	));
+
+	$job->related->set('entities.user.pivot', array(
+		'user_id' => 1,
+	));
+
+	$job->save();
+
+You can do this **many-to-many** insertion vice versa. Since Gas ORM require PHP 5.3, which mean there are **anonymous function** available, you can also passing a closure function as the value. This usefull if you are having uncertain situation. For example, like above case, you want to create a job entity and linking it to some user. But, instead linking it to existed user, you want to also create the user entity as well. All you need to do, is write something like : ::
+
+	$job = Model\Job::make(array(
+		'name' => 'teacher',
+		'description' => 'We make people smarter',
+	));
+
+	$job->related->set('entities.user.pivot', array(
+		'user_id' => function() {
+			$new_user = \Model\User::make(array(
+				'name' => 'Bob',
+				'email' => 'bob@school.com',
+				'username' => 'fifth_grade_teacher',
+			));
+
+			$new_user->save();
+
+			return \Model\User::insert_id();
+		},
+	));
+
+	$job->save();
+
+If you want to insert some one-to-many record, you can set the **entities.relationship.child** within your Gas instance related data.
 
 Reading record(s)
 +++++++++++++++++++++

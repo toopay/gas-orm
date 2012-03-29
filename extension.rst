@@ -149,6 +149,38 @@ You can directly use it. ::
 
 This should be a simple way, to describe how **extension** works in Gas ORM.
 
+Result Extension
+++++++++++++++++
+
+This extension provide convinience way to work with Gas ORM instance and records, usage :  ::
+
+	$result = Model\User::result()->all();
+
+	// Easy way to debug over your result
+	echo $result;
+
+	// Convert the instances into an array of instance
+	$users = $result->as_array();
+
+	foreach ($users as $user)
+	{
+	  // $user will be a typical Gas Instance
+	}
+
+	// Convert all instance's record into various format
+	$records_array = $result->to_array(); // assoc array
+	$records_json = $result->to_json();   // JSON 
+	$records_xml = $result->to_xml();     // XML
+
+	// Convert all instance's record into Gas\Data object
+	$records_data = $result->to_data();
+
+	$first_user = $records_data->get('data.0'); // Return the first index
+	$first_user_name = $records_data->get('data.0.name'); // Return the first index name
+	$some_user_name = $records_data->get('data.100.name', 'Default Name');
+
+If you need more functionality, simply extend it on your **application/libraries/gas/extension/result.php**.
+
 HTML Extension
 ++++++++++++++
 

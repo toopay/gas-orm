@@ -18,6 +18,7 @@ But author want to give a credits to this following peoples, to their ability to
 - Loby
 - teiki
 - Johan
+- Khrome83
 
 Say Kudos
 +++++++++
