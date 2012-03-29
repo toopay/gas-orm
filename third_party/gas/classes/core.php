@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.0.0
+ * @version     2.1.0
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -51,7 +51,7 @@
  * Gas\Core Class.
  *
  * @package     Gas ORM
- * @version     2.0.0
+ * @since     	2.0.0
  */
 
 use Gas\Data;
@@ -62,7 +62,7 @@ class Core {
 	/**
 	 * @var  string  Global version value 
 	 */
-	const GAS_VERSION = '2.0.0';
+	const GAS_VERSION = '2.1.0';
 	
 	/**
 	 * @var  object  Hold DB Instance
@@ -460,12 +460,18 @@ class Core {
 	 * @param   object Gas Instance
 	 * @return  object Gas Instance
 	 */
-	final public static function all($gas)
+	final public static function all($gas, $multirow = TRUE)
 	{
 		// Set table and return the execution result
 		$gas->recorder->set('get', array($gas->validate_table()->table));
+		$records = self::_execute($gas);
 
-		return self::_execute($gas);
+		if ($multirow)
+		{
+			return ($records instanceof ORM) ? array($records) : $records;
+		}
+
+		return $records;
 	}
 
 	/**
@@ -531,7 +537,7 @@ class Core {
 			$gas = self::compile($gas, 'where_in', $identifier);
 		}
 
-		return self::all($gas);
+		return self::all($gas, FALSE);
 	}
 
 	/**
@@ -630,7 +636,44 @@ class Core {
 		}
 
 		// Perform requested saving method
-		$save = self::_execute($gas);
+		$save = self::_execute($gas) and $last_id = self::insert_id();
+
+		// Check for cascade insert/update
+		$entities = $gas->related->get('entities', array());
+
+		if ( ! empty($entities))
+		{
+			foreach ($entities as $related => $entity)
+			{
+				$key = key($entity);
+				$values = current($entity);
+				$model = $gas->meta->get('entities.'.$related.'.'.$key, NULL);
+
+				if (empty($model)) 
+				{
+					throw new \InvalidArgumentException('Cannot determine the entity models for '.$related.'.'.$key);
+				}
+
+				// Parsing the value and prepare the related entity
+				$params = array();
+
+				foreach ($values as $field => $value)
+				{
+					$params[$field] = ($value instanceof \Closure) ? $value() : $value;
+				}
+
+				$related = new $model($params);
+
+				// Fetch the gas instance related value and immediate save the related entries
+				if (array_key_exists('\\'.$gas->model(), $related->foreign_key))
+				{
+					$foreign_key = $related->foreign_key['\\'.$gas->model()];
+					$related->$foreign_key = ($gas->empty) ? $last_id : current($identifier);
+				}
+
+				$related->save();
+			}
+		}
 
 		// Run _after_save hook, and passed the SAVE result process
 		self::callback($gas, '_after_save', $save);
@@ -675,11 +718,11 @@ class Core {
 		// DELETE
 		$gas->recorder->set('delete', array($table));
 
-		// Perform requested delete method
-		$delete = self::_execute($gas);
-	
+		// Perform requested delete method...
 		// Contain relationship to cascade delete ?
-		if (($related = $gas->related->get('include')) && is_array($related))
+		$related = $gas->related->get('entities') ? array_keys($gas->related->get('entities')) : $gas->related->get('include');
+
+		if (is_array($related) && ! empty($related))
 		{
 			foreach ($related as $entity)
 			{
@@ -712,6 +755,10 @@ class Core {
 				// Perform cascade delete 
 				$delete = self::_execute($child);
 			}
+		}
+		else
+		{
+			$delete = self::_execute($gas);
 		}
 
 		// Run _after_delete hook, and passed the result process
@@ -1419,7 +1466,7 @@ class Core {
 						
 						// Perform checking to assign each new identifier id
 						// For further process, into each original ids
-						foreach($matched_id as $id => $matched)
+						foreach ($matched_id as $id => $matched)
 						{
 							$holder->set($token.$id, array_filter($matched));
 						}
@@ -1464,7 +1511,7 @@ class Core {
 			// Do we have ORDER BY clause ?
 			if (array_key_exists('order_by', $additional_queries))
 			{
-				$order_by = ' ORDER BY `$domain`'.$additional_queries['order_by'];
+				$order_by = " ORDER BY `$domain`.".$additional_queries['order_by'];
 			}
 
 			// Do we have LIMIT clause ?
@@ -1476,6 +1523,9 @@ class Core {
 
 		// Finalize the SQL statement
 		$sql = self::generate_clause($domain, $key, $candidate, $subquery);
+		$sql = (strpos($sql, '%s') !== FALSE) ? sprintf($sql, $ids) : $sql;
+		$sql .= ( ! empty($order_by)) ? $order_by : '';
+		$sql .= ( ! empty($limit)) ? $limit : '';
 
 		// Do we need to continue, or just return the full SQL statement ?
 		if ($raw) return $sql;
@@ -1681,7 +1731,7 @@ class Core {
 					case 'order_by':
 						if (preg_match('/^([^\n]+)\[(.*?)\]$/', $args, $m) AND count($m) == 3)
 						{
-							$queries[$method] = "`$m[1]` strtoupper($m[2])";
+							$queries[$method] = "`$m[1]` ".strtoupper($m[2]);
 						}
 
 						break;
@@ -1865,7 +1915,7 @@ class Core {
 
 											if ($tuples->get('entities.'.$include))
 											{
-												// Retrieve this user entity
+												// Retrieve this entity
 												$assoc_entities = $tuples->get('entities.'.$include);
 											}
 											else
@@ -2195,8 +2245,8 @@ class Core {
 		// Generate models
 		foreach ($tables as $table) 
 		{
-			//Avoid migration table
-			if(empty(self::$migration['migration_table']) OR $table != self::$migration['migration_table'])
+			// Avoid migration table
+			if (empty(self::$migration['migration_table']) OR $table != self::$migration['migration_table'])
 			{
 				// Build table and field definition
 				$key = array();
@@ -2410,6 +2460,10 @@ class Core {
 			return static::$$dbal_component;
 
 		}
+		elseif ($name == 'insert_id' && static::$db->pdodriver == 'pgsql')
+		{
+			return static::$db->conn_id->lastInsertId();
+		}
 		elseif ($name == 'last_created')
 		{
 			// Get last created entry
@@ -2447,7 +2501,7 @@ class Core {
 			// Build the task onto the Gas instance
 			$gas->recorder->set('select_'.$type, array($value));
 			
-			return self::all($gas);
+			return self::all($gas, FALSE);
 		}
 		elseif (preg_match('/^(first|last)$/', $name, $m) && count($m) == 2)
 		{
@@ -2461,7 +2515,7 @@ class Core {
 			$gas->recorder->set('order_by', array($collumn, $order));
 			$gas->recorder->set('limit', array('1'));
 			
-			return self::all($gas);
+			return self::all($gas, FALSE);
 		}
 		elseif (($method_type = self::diagnostic($name)) && ! empty($method_type))
 		{

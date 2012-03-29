@@ -7,7 +7,7 @@
  *
  * @package     Gas ORM
  * @category    Unit Test
- * @version     2.0.0
+ * @version     2.1.0
  * @author      Taufan Aditya
  */
 
@@ -98,11 +98,14 @@ class WhereTest extends PHPUnit_Framework_TestCase {
     public function testWhereAndSimple()
     {
         // Where username is 'johndoe' and name is 'John Doe'
-        $user = Model\User::where('username', 'johndoe')
+        $users = Model\User::where('username', 'johndoe')
                           ->or_where('name', 'John Doe')
                           ->all();
 
         // Consist
+        $this->assertEquals(count($users), 1);
+
+        $user = current($users);
         $this->assertInstanceOf('Gas\ORM', $user);
         $this->assertInstanceOf('Gas\Data', $user->record);
         

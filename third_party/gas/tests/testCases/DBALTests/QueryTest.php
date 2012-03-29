@@ -7,7 +7,7 @@
  *
  * @package     Gas ORM
  * @category    Unit Test
- * @version     2.0.0
+ * @version     2.1.0
  * @author      Taufan Aditya
  */
 
@@ -40,14 +40,14 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // Execute some simple query
         // this should return FALSE, 
         // since `foo` table was not exists
-        $sql    = $this->db->_prep_query('SELECT * FROM `foo`');
+        $sql    = $this->_prep_query('SELECT * FROM `foo`');
         $result = $this->db->simple_query($sql);
         $this->assertFalse($result);
 
         // Execute some simple query
         // this should return a PDOStatement instance, 
         // since `user` table was exists
-        $sql    = $this->db->_prep_query('SELECT * FROM `user`');
+        $sql    = $this->_prep_query('SELECT * FROM `user`');
         $result = $this->db->simple_query($sql);
         $this->assertInstanceOf('PDOStatement', $result);
 
@@ -90,5 +90,27 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // Check the meta-information about this query
         $this->assertEquals($result->num_rows(), 3);
         $this->assertEquals($result->num_fields(), 4);
+    }
+
+    /**
+     * Prep the query
+     *
+     * @param   string  an SQL query
+     * @return  string
+     */
+    protected function _prep_query($sql)
+    {
+        if ($this->db->pdodriver === 'pgsql')
+        {
+            // Change the backtick(s) for Postgre
+            $sql = str_replace('`', '"', $sql);
+        }
+        elseif ($this->db->pdodriver === 'sqlite')
+        {
+            // Change the backtick(s) for SQLite
+            $sql = str_replace('`', '', $sql);
+        }
+
+        return $sql;
     }
 }
