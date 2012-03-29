@@ -2460,6 +2460,10 @@ class Core {
 			return static::$$dbal_component;
 
 		}
+		elseif ($name == 'insert_id' && static::$db->pdodriver == 'pgsql')
+		{
+			return static::$db->conn_id->lastInsertId();
+		}
 		elseif ($name == 'last_created')
 		{
 			// Get last created entry
