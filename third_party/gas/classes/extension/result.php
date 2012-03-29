@@ -1,4 +1,4 @@
-<?php namespace Gas;
+<?php namespace Gas\Extension;
 
 /**
  * CodeIgniter Gas ORM Packages
@@ -48,17 +48,130 @@
  */
 
 /**
- * Gas\Extension Interface.
+ * Gas\Extension\Result Class.
  *
  * @package     Gas ORM
  * @since     	2.0.0
  */
 
-interface Extension {
+use \Gas\Extension;
+
+class Result implements Extension {
 
 	/**
-	 * @param  mixed Gas instance(s)
+	 * @var mixed Gas instance(s)
 	 */
-	public function __init($gas);
+	public $gas;
 
+	/**
+	 * Extension initialization method
+	 * 
+	 * @param  object
+	 * @return void
+	 */
+	function __init($gas)
+	{
+		// Here, Gas will transport your instance
+		$this->gas = $gas;
+
+		return $this;
+	}
+
+	/**
+	 * Return the Gas instance as array
+	 *
+	 * @return array
+	 */
+	public function as_array()
+	{
+		if (empty($this->gas)) return array();
+
+		return ($this->gas instanceof \Gas\ORM) ? array($this->gas) : $this->gas;
+	}
+
+	/**
+	 * Return the Gas instance record(s) to array result
+	 *
+	 * @return array
+	 */
+	public function to_array()
+	{
+		if (empty($this->gas)) return array();
+
+		$records_array = array();
+
+		if ($this->gas instanceof \Gas\ORM)
+		{
+			$records_array[] = $this->gas->record->get('data');
+		}
+		else
+		{
+			foreach ($this->gas as $gas) $records_array[] = $gas->record->get('data');
+		}
+
+		return $records_array;
+	}
+
+	/**
+	 * Convert the Gas Instance records into string
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return '<pre>'.var_export($this->to_array(), TRUE).'</pre>';
+	}
+
+	/**
+	 * Overiding method, triggered when try calling inaccesible method
+	 *
+	 * @param  string  Available method are : to_xml(), to_json(), to_data()
+	 * @return mixed
+	 */
+	public function __call($method, $params)
+	{
+		if (preg_match('/^to_(xml|json|data)$/', $method, $m) && count($m) == 2)
+		{
+			$records_array = $this->to_array();
+
+			switch ($m[1])
+			{
+				case 'data':
+					$records_data = new \Gas\Data();
+					$records_data->set('data', $records_array);
+					break;
+
+				case 'json':
+					$records_data = json_encode($records_array);
+					break;
+
+				case 'xml':
+
+					if (  ! function_exists('simplexml_load_file'))
+					{
+						throw new \RuntimeException('[to_xml]Simple XML must be installed');
+					}
+
+					$xml_template = "<?xml version='1.0' standalone='yes'?> <result> </result>";
+					$result = new \SimpleXMLElement($xml_template);
+
+					foreach ($records_array as $index => $record)
+					{
+						$$index = $result->addChild($index);
+
+						foreach ($record as $key => $value)
+						{
+							$$index->addChild($key, $value);
+						}
+					}
+
+					$records_data = $result->asXML();
+					break;
+			}
+
+			return $records_data;
+		}
+
+		throw new \BadMethodCallException('['.$method.']Unknown method.');
+	}
 }

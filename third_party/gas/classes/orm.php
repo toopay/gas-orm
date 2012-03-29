@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.0.0
+ * @version     2.1.0
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -51,7 +51,7 @@
  * Gas\ORM Class.
  *
  * @package     Gas ORM
- * @version     2.0.0
+ * @since     	2.0.0
  */
 
 use Gas\Core;
@@ -193,11 +193,14 @@ abstract class ORM {
 			if ( ! empty($this->foreign_key))
 			{
 				// Validate foreign keys for consistency naming convention recognizer
+				$foreign_key = array();
+
 				foreach($this->foreign_key as $namespace => $fk)
 				{
-					$this->foreign_key[strtolower($namespace)] = $fk;
-					unset($this->foreign_key[$namespace]);
+					$foreign_key[strtolower($namespace)] = $fk;
 				}
+
+				$this->foreign_key = $foreign_key;
 			}
 			else
 			{
@@ -714,6 +717,7 @@ abstract class ORM {
 		$path     = str_replace(' ', '', $path);
 		$entities = explode('=', str_replace(array('<', '>'), '', $path));
 		$child    = array_pop($entities);
+		$pivot    = ( ! empty($entities)) ? array_pop($entities) : NULL;
 
 		// Generate the full path
 		$root      = '\\'.get_class($gas);
@@ -749,6 +753,7 @@ abstract class ORM {
 		
 		// We're done
 		return array('path'    => $full_path,
+		             'pivot'   => $pivot,
 		             'child'   => $child,
 		             'type'    => $type,
 		             'single'  => $single,

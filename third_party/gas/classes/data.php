@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.0.0
+ * @version     2.1.0
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -51,7 +51,7 @@
  * Gas\Data Class.
  *
  * @package     Gas ORM
- * @version     2.0.0
+ * @since       2.0.0
  */
 
 class Data implements \ArrayAccess, \Iterator, \Countable {
