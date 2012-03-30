@@ -466,12 +466,18 @@ class Core {
 		$gas->recorder->set('get', array($gas->validate_table()->table));
 		$records = self::_execute($gas);
 
-		if ($multirow)
+		if ($multirow && ! empty($records))
 		{
 			return ($records instanceof ORM) ? array($records) : $records;
 		}
-
-		return (empty($records)) ? array() : $records;
+		elseif (empty($records))
+		{
+			return $multirow ? array() : $records;
+		}
+		else
+		{
+			return $records;
+		}
 	}
 
 	/**
