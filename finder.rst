@@ -20,7 +20,14 @@ You can use **all** to fetch all record within your table. Let say we want to sc
 		echo "\n";
 	}
 
-All **will always return an array of object** (in this case, user instance) if the record(s) exists, and NULL if there is no records at all.
+All **will always return an array of object** (in this case, user instance) if the record(s) exists, and empty array if there is no records at all. 
+
+However, if you passed **FALSE** as parameter, it will return an object if there is only one record, and NULL if there is no records at all. See the different here : ::
+	
+	$users = Model\user::all(); 		// Returning an array, regardless whatever record(s) found
+	$users = Model\user::all(FALSE); 	// Returning an array if contain more than one record, an object on one record, NULL if fails
+
+This behaviour will help, if you know exactly how your records condition in your database.
 
 find()
 ++++++
@@ -51,7 +58,7 @@ To find several **ids**, you can do that by : ::
 		echo "\n";
 	}
 
-Notice when you passing several ids, Gas will return an array of object instead.
+Notice when you passing several ids, Gas will return an array of object instead. If there is no records, NULL will returned.
 
 find_by_collumn()
 +++++++++++++++++
@@ -66,7 +73,7 @@ You can use **find_by_collumn** to fetch a record(s) based by some collumn. For 
 		echo "\n";
 	}
 
-By default, **find_by_column** will return an array of object (in this case, user instance) if the record(s) exists, and NULL if there is no records at all. When you just need to match and returned one or specific number of record(s), you can do so by chaining this method with **limit** method from CI query builder, eg ::
+By default, **find_by_column** will return an array of object (in this case, user instance) if the record(s) exists, and empty array if there is no records at all. When you just need to match and returned one or specific number of record(s), you can do so by chaining this method with **limit** method from CI query builder, eg ::
 
 	$moderators = Model\User::limit(3)->find_by_role('moderator');
 
@@ -76,7 +83,10 @@ By default, **find_by_column** will return an array of object (in this case, use
 		echo "\n";
 	}
 
-	$me = Model\User::limit(1)->find_by_role('administrator', 1);
+However, passing **FALSE** as second parameter will force Gas to return the records as is, as you can also found at **all** method. This useful for following situation : ::
+
+	// You want to find a record, and immediately use that
+	$me = Model\User::limit(1)->find_by_role('administrator', FALSE);
 	echo 'My name is '.$me->name;
 
 first() and last()

@@ -167,7 +167,7 @@ This extension provide convinience way to work with Gas ORM instance and records
 	  // $user will be a typical Gas Instance
 	}
 
-	// Convert all instance's record into various format
+	// Convert all instances record into various format
 	$records_array = $result->to_array(); // assoc array
 	$records_json = $result->to_json();   // JSON 
 	$records_xml = $result->to_xml();     // XML

@@ -19,7 +19,7 @@ How to create a record? In a standard way, you will wrote it as bellow ::
 	$user->save();
 
 	
-There is **create** method, for your convinient, especially when you are receive a **$_POST** data. ::
+There is **make** method, for your convinient, especially when you are receive a **$_POST** data. ::
 
 	Model\User::make($_POST)->save();
 
