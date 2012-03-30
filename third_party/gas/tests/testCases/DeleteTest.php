@@ -79,7 +79,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $user1 = Model\User::find(1);
         
         // Check result
-        $this->assertNull($user1);
+        $this->assertEmpty($user1);
     }
 
     public function testDeleteByReference()
@@ -105,7 +105,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $user3 = Model\User::find(3);
 
         // At this moment, user `2` and `3` should not exists anymore
-        $this->assertNull($user2);
-        $this->assertNull($user3);
+        $this->assertEmpty($user2);
+        $this->assertEmpty($user3);
     }
 }
