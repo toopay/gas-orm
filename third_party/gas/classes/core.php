@@ -471,7 +471,7 @@ class Core {
 			return ($records instanceof ORM) ? array($records) : $records;
 		}
 
-		return $records;
+		return (empty($records)) ? array() : $records;
 	}
 
 	/**
@@ -2169,6 +2169,12 @@ class Core {
 	 */
 	private function _autoloader($class) 
 	{
+		// Add Spark path as integral directories to check
+		if ( ! defined('GASSPARKPATH'))
+		{
+			define('GASSPARKPATH', BASEPATH.'sparks');
+		}
+
 		// Prepare autoload mechanism
 		if (($fragments = explode('\\', $class))
 		    && count($fragments) > 1
@@ -2487,8 +2493,10 @@ class Core {
 			
 			// Build the task onto the Gas instance
 			$gas->recorder->set('where', array($field, $value));
+
+			$multirow = (is_array($args) && ! empty($args)) ? current($args) : TRUE;
 			
-			return self::all($gas);
+			return self::all($gas, $multirow);
 		}
 		elseif (preg_match('/^(min|max|avg|sum)$/', $name, $m) && count($m) == 2)
 		{
