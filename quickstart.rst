@@ -3,16 +3,16 @@
 Quick Start
 ===========
 
-Gas ORM is a third-party package library, so you will need to load it first, or for for convenience you can autoload it on **autoload.php** located under **aplication/config** folder. ::
+Gas ORM is a third-party package library, so you will need to load it first. For convenience you can autoload it in the **autoload.php** file located in the **aplication/config** folder. ::
 
 	$autoload['libraries'] = array('gas');
 
-Otherwise, you would need to load Gas library manually.
+Otherwise, you would need to load Gas library manually before it can be used.
 
 Gas ORM at a Glance
 +++++++++++++++++++
 
-Before start using any of Gas available methods, you should have a gas model, which follow :doc:`Gas ORM standard model convention <convention>`. Then, you can start using it like bellow. ::
+Before starting to use any of the available Gas methods you should define a gas model.  This should follow :doc:`Gas ORM standard model convention <convention>`. Then, you can start using it like below. ::
 
 	// FINDER
 	$all_users = Model\User::all();
@@ -27,22 +27,23 @@ Before start using any of Gas available methods, you should have a gas model, wh
 	$some_user_wife = Model\User::find(1)->wife();
 	$users = Model\User::with('wife', 'kid', 'job')->all();
 
-Thats how you will use Gas ORM, in your application.
+Thats how you will use Gas ORM in your application.
 
 Gas ORM Features
 ++++++++++++++++
 
 - Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv. (including PDO, if you keep sync with CI repo)
-- Support multiple database connection.
+- Support multiple database connections.
 - Support multiple relationships.
-- Support composite keys (for key that define relationship).
-- Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.
+- Support composite keys (for key that define relationships).
+- Auto-create models from database tables and vice versa.
+- Auto-synchronize models-tables by creating migrations file.
 - Per-request caching.
 - Self-referential and adjacency column/data (hierarchical data).
-- Eager Loading, to maximize your relationship queries (for performance manner).
-- Various finder method (can chained with most of CI AR) and aggregates.
-- Validation and auto-mapping input collection, with minimal setup.
-- Hooks points, to control over your model.
-- Extensions, to share your common function/library across your model.
-- Transaction, and other CI AR goodness.
-- Included phpunit test suite, to ensure most of API consistency.
+- Eager Loading to maximize your relationship queries (for performance manner).
+- Various finder methods (can chained with most of CI AR) and aggregates.
+- Validation and auto-mapping input collection with minimal setup.
+- Hooks points to control over your model.
+- Extensions to share your common function/library across your model.
+- Transactions and other CI AR goodness.
+- Included phpunit test suite to ensure most of API consistency.

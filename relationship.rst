@@ -3,14 +3,14 @@
 Relationship
 ============
 
-Gas supported three type of table relationship, **one-to-one** relationship, **one-to-many** relationship and **many-to-many** relationship. All you have to do, is to define your table relations at **relations** properties in your model.
+Gas supports three types of table relationships - **one-to-one**, **one-to-many** and **many-to-many**. Use the **relations** properties array in your model to define relationships.
 
-Setting up your model relationship is one-time set-up, unless in the future, you need to change your table schema.
+Setting up your model relationships is a one-time set-up, unless in the future you need to change your table schema.
 
 Define Relationship
 +++++++++++++++++++
 
-To define some entity association, you need to perform one of available relationship methods : 
+To define some entity association, you need to perform one of the available relationship methods : 
 
 +---------------------+-------------------------------------------------------------------------------+
 | Relationship option | Description                                                                   |
@@ -19,17 +19,17 @@ To define some entity association, you need to perform one of available relation
 +---------------------+-------------------------------------------------------------------------------+
 | **has_many**        | for one-to-many and many-to-many relationship                                 |
 +---------------------+-------------------------------------------------------------------------------+
-| **belongs_to**      | for represent the relationships above in the target model                     |
+| **belongs_to**      | for representing the relationships above in the target model                  |
 +---------------------+-------------------------------------------------------------------------------+
 
-All relationship method could accept two parameter. The first parameter is contain the 'path' and the second parameter could contain additional query to run, eg : ::
+All relationship methods accept two parameters. The first parameter contains the 'path' and the second parameter contains optional additional queries to run, eg : ::
 
 	'wife' => ORM::has_one('\\Model\\Wife'),
 	'job'  => ORM::has_many('\\Model\\Job\\User => \\Model\\Job', array('select:id,name')),
 
-If the 'path' are more than one model, you need to add a separator which explain the ownership status of each models. In above **job** relationship for example, the separator was **=>**. That simply mean **Model\\Job\\User** (which hold the job_user table) is OWNED (or belongs to) both **Model\\User** and **Model\\Job**.
+If the 'path' contains more than one model, you need to add a separator which explain the ownership status of each models. For example in the above **job** relationship, the separator was **=>**. That simply mean **Model\\Job\\User** (which hold the job_user table) is OWNED (or belongs to) both **Model\\User** and **Model\\Job**.
 
-The second parameter, contain an array of additional queries method. Available option for second parameter are : 
+The second parameter contains an array of additional query options. Available tags for the second parameter are : 
 
 +---------------------+-------------------------------------------------------------------------------+
 | Additional option   | Syntax example                                                                |
@@ -46,9 +46,7 @@ You can have one, some, or all of those option(s) in each of your relationship d
 has_one
 +++++++
 
-First, we will talk about **has_one** relationship. For example, let say we have two table which have **one-to-one** relationship, user table and wife table, then user table should have **relations** properties as follow :
-
-Your user model would be something like : ::
+For example, let us say we have two tables with a **one-to-one** relationship - a **user** table and a **wife** table.  The user table should have the **relations** properties defined as follows in the user model : ::
 
 	class User extends ORM {
 
@@ -70,12 +68,14 @@ Your user model would be something like : ::
 		}
 	}
 
-Thats it. Now Gas will assume that each record in user table, might have one related record in wife table.
+Once you have defined the corresponding **belongs_to** relationship in the Wife model you are all set! Now Gas will assume that each record in user table, might have one related record in wife table.  The wife property is then accessed as follows: ::
+
+	$wives = Model\User::find($id)->wife();
 
 belongs_to
 ++++++++++
 
-After you declare some relationship, in some model, the corresponding model **should represent those relationship as well**. So, based by example above, your wife model should be something like : ::
+After you declare a relationship in one 'parent' model, the corresponding 'child' model **must represent those relationships as well**. Based on the example above, your wife model should be something like : ::
 
 	class Wife extends ORM {
 
@@ -103,7 +103,7 @@ Now Gas will assume that each record in wife table, might have one related recor
 has_many
 ++++++++
 
-Secondly, we will talk about **has_many** relationship. This relationship type, is similar with above, except for **one-to-many** relationship, Gas will asume that one record from parent table, is always have several records in child table. For example, lets say we have two table which have **one-to-many** relationship, user table (as parent table) and kid table (as child table), then user table now would have relations properties as follow : ::
+Secondly, we will talk about **has_many** relationships. This relationship type is similar to those above, except for **one-to-many** relationship, Gas will asume that one record from the parent table has several records in child table. For example lets say we have two tables which have a **one-to-many** relationship between them. The user table (the parent table) and the kid table (the child table), then user table should have relationship properties as follows : ::
 
 	class User extends ORM {
 
@@ -126,13 +126,13 @@ Secondly, we will talk about **has_many** relationship. This relationship type, 
 		}
 	}
 
-.. note:: Always ensure that the related model, represented the relationship as well everytime you set up some relationship. For example, in above case, make sure kid model represent this relationship as well, by setting up **belongs_to** values.
+.. note:: Don't forget that you must set up a corresponding **belongs_to** relationship in the child table - in this case, **kid** must have a ORM::belongs_to('\\Model\\Wife') set.
 
-**Has many** also could be a **many-to-many** relationship. This is the most tricky relationship in your database. This relationship type, is exist when you have a pivot table. Pivot table is an intermediate table, which links one table with another table, when each table is having many and belongs to each other : **mant-to-many** relationship.
+**Has many** also could be a **many-to-many** relationship. This is the most tricky relationship in your database. This relationship type, exists when you have a **pivot table**. A pivot table is an intermediate table that links one table with another table.  When each table has many and belongs to each other a **many-to-many** relationship exists.
 
-For example, assume a user has many jobs, but a job can also belong to many users. Three tables must be created to accomplish this relationship: a user table, a job table, and a job_user table. How to set up this type of relationship?
+For example, assume a user has many jobs, but a job can also belong to many users. Three tables must be created to accomplish this relationship: a user table, a job table, and a job_user table. How do we set up this type of relationship?
 
-First, set up both **user** and **job** model. Our user model now may looks like : ::
+First, set up both **user** and **job** model. Our user model now may look like : ::
 
 	<?php namespace Model;
 
@@ -213,9 +213,9 @@ Last, you will need to create a subfolder on your model directory, called **job*
 		}
 	}
 
-While by following Gas nature convention, define a relationship(s) is pretty simple, in real life it may not be followed smoothly (eg : by our recent schema, its imposible to match each table with Gas field-naming convention). Gas alleviate this cases with several options.
+When following Gas conventions, defining a relationship(s) is pretty simple. However in real life conventions are not always followed smoothly (eg : by our recent schema, its imposible to match each table with Gas field-naming convention). Gas alleviate this cases with several options.
 
-In previous example, when you define a relationship. Gas always assume that your **foreign key** is follow **table_pk** (pk for primary key) convention, so Gas was thingking there must be 'user_id' collumn in your intermediate table, to linked it with user table. Unfortunately, in some cases, your recent schema can't follow this convention. Then you will need to add **foreign_key** to your pivot table.  : ::
+In the previous example, when you define a relationship Gas always assume that your **foreign key** follows the **table_pk** (pk for primary key) convention, so Gas assumes there must be a 'user_id' column in your intermediate table linked with the user table. If your schema can't follow this convention you will need to add a **foreign_key** variable definition to your pivot table.  : ::
 
 	<?php namespace Model\Job;
 

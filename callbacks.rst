@@ -21,9 +21,9 @@ You can define hooks/callbacks for some of the model's explicit lifecycle events
 | **_after_delete**   | hook point before after deletion process     |
 +---------------------+----------------------------------------------+
 
-This is a convinient way to hook into the life cycle of a Gas object. You can control the state of your object by declaring certain methods to be called before or after methods are invoked on your object within Gas mechanism.
+This is a convenient way to hook into the life cycle of a Gas object. You can control the state of your object by declaring certain methods to be called before or after methods are invoked on your object within Gas mechanism.
 
-Lets throw another scenario. You are just submit a form, which contain some data. And in your validation rules, you only want to check several input. So, the flow will be...
+Lets throw another scenario. You have just submit a form, which contains some data. In your validation rules, you only want to check several inputs. So, the flow will be...
 
 _before_check()
 +++++++++++++++
@@ -57,11 +57,11 @@ Notice that to get all input which have set, we could use ::
 
 	$this->record->get('data');
 
-And to re-set the input, we didnt modify any **$_POST** data, instead we use ::
+And to re-set the input, we didnt modify any **$_POST** data, so instead we should use ::
 
 	$this->record->set('data', $post_data);
 
-So in this example, we are preserve (and remove for temporary) some fields for being validated.
+So in this example, we preserve some fields for being validated and remove some temporary information.
 
 _after_check()
 +++++++++++++++
@@ -79,12 +79,12 @@ You can place this method within your Gas model. ::
 		return $this;
 	}
 
-So in this example, we are rebuild our data, for next process.
+So in this example, we rebuild our data for the next process.
 
 _before_save()
 +++++++++++++++
 
-You can place this method within your Gas model. Let say, we want adding some **active** value. ::
+You can place this method within your Gas model. Let say, we want to add a value nanmed **active**. ::
 
 	function _before_save()
 	{
@@ -93,7 +93,7 @@ You can place this method within your Gas model. Let say, we want adding some **
 		return $this;
 	}
 
-So in this example, we are adding some fields into our data, for next process. In Gas ORM, saving process can be an INSERT event, or UPDATE event. How to know which event at a time? ::
+So in this example, we are adding some fields into our data for the next process to use. In Gas ORM, saving process can be an INSERT event or an UPDATE event. How can you find out which event has occurred? ::
 
 	function _before_save()
 	{
@@ -109,7 +109,7 @@ So in this example, we are adding some fields into our data, for next process. I
 		}
 	}
 
-By checking **empty** property, we actually checked is there a record being hold by some Gas instance. If yes, then above **is_new** variable will set to FALSE, mean UPDATE process is the next event. Otherwise, it will be an INSERT event.
+By checking the **empty** property, we actually checked if there is a record being held by some Gas instance. If yes, then the **is_new** variable will set to FALSE, meaning an UPDATE process is the next event. Otherwise, it will be an INSERT event.
 
 _after_save()
 +++++++++++++
@@ -121,7 +121,7 @@ You can place this method within your Gas model. ::
 		
 	}
 
-This is a convinient way, to do something after INSERT or UPDATE operation.
+This is a convinient way to do something after INSERT or UPDATE operation.
 
 _before_delete()
 ++++++++++++++++
@@ -136,7 +136,7 @@ You can place this method within your Gas model. ::
 		return $this;
 	}
 
-Here you can sort some stuff, before delete a record(s).
+Here you can sort some stuff before deleting a record(s).
 
 _after_delete()
 +++++++++++++++
@@ -148,4 +148,4 @@ You can place this method within your Gas model. ::
 		
 	}
 
-This is a convinient way, to do something after DELETE operation.
+This is a convinient way to do something after a DELETE operation.

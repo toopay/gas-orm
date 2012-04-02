@@ -3,12 +3,12 @@
 Credits
 =======
 
-Gas ORM mostly developed by Taufan Aditya a.k.a toopay. If Gas ORM should have a **relationships** property, then it must be **belongs_to** CodeIgniter community :)
+Gas ORM was mostly developed by Taufan Aditya a.k.a toopay. If Gas ORM should have a **relationships** property, then it must be **belongs_to** CodeIgniter community :)
 
 Gas ORM friends
 +++++++++++++++
 
-But author want to give a credits to this following peoples, to their ability to provide their times/efforts either submitting and fixing an issues, report and squash bug(s) or other contribution which improve Gas ORM. Therefore, they are part of Gas ORM contributor too :
+But the author wants to give credit to the following people, for their ability to provide their time/effort either submitting and fixing issues, reporting and squash bug(s) or other contribution which improve Gas ORM. Therefore, they are Gas ORM contributors too :
 
 - Stefano_
 - groenewege_
@@ -23,7 +23,7 @@ But author want to give a credits to this following peoples, to their ability to
 Say Kudos
 +++++++++
 
-At the end, i create this and sharing it to you, any Ignited developer around the globe, to help you works faster, better and easier while you develop your next CodeIgniter application. If you are using it, say kudos is a nice way to thanks :
+At the end, i create this and sharing it to you, any Ignited developer around the globe, to help you work faster, better and easier while you develop your next CodeIgniter application. If you are using it, say kudos is a nice way to thanks :
 
 
 

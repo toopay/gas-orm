@@ -3,20 +3,20 @@
 Extension
 =========
 
-The purpose of an **extension** is to become a standard interface which you can use, to share common function that utilize either CI Library or your own library, across your Gas models/instances.
+The purpose of an **extension** is to become a standard interface which you can use to share common function that utilize either a CI Library or your own library across your Gas models/instances.
 
-We use Interface instead Class, in extension implementation, because :
+We use an Interface instead of a Class in the extension implementation because :
 
 - Interfaces allow us to define/create a common structure for our classes – to set a standard for objects.
 - Interfaces solves the problem of single inheritance – they allow us to inject 'qualities' from multiple sources.
 - Interfaces provide a flexible base/root structure that we don't get with classes.
 
-Here you can found some default extension which bundled within Gas ORM.
+Here you can found some default extension which are bundled with Gas ORM.
 
 Dummy Extension
 +++++++++++++++
 
-I include this **dummy** extension within the repo as well. Lets look how it works : ::
+I included this **dummy** extension within the repo as well. Lets look how it works : ::
 
 	
 	use \Gas\Extension;
@@ -147,12 +147,12 @@ You can directly use it. ::
 
 	echo Model\User::dummy()->all()->explain();
 
-This should be a simple way, to describe how **extension** works in Gas ORM.
+This should be a simple way to describe how an **extension** works in Gas ORM.
 
 Result Extension
 ++++++++++++++++
 
-This extension provide convinience way to work with Gas ORM instance and records, usage :  ::
+This extension provides a convinient way to work with Gas ORM instances and records :  ::
 
 	$result = Model\User::result()->all();
 
@@ -233,16 +233,16 @@ Generate HTML form from Gas model records ::
 
 	echo $user->definition($entities)->form('controller/function');
 
-There are option for setting **submit**, **separator**, **entity** and **hide** as well. You can see the demo on my sandbox [#html2_sandbox]_
+There are options for setting **submit**, **separator**, **entity** and **hide** as well. You can see the demo on my sandbox [#html2_sandbox]_
 
 jQuery Extension
 ++++++++++++++++
 
-This extension will be a good place to sharing common handler for any similar jQuery data processor plugin (eg : flot [#flot]_ for outputing graph or chart).
+This extension will be a good place for sharing common handlers for any similar jQuery data processor plugins (eg : flot [#flot]_ for outputing graph or chart).
 
-For now, it provide a method to handle and generate response for datatable. [#datatable]_ 
+For now, it provides a method to handle and generate responses for datatables. [#datatable]_ 
 
-Assume you have download and put it into your application directory, and set it properly, point it to some controller as ajax source, then within your controller (which receive the ajax request), you only need to put ::
+Assume you have downloaded the file, put it into your application directory and configured it properly, point it to some controller as ajax source, then within your controller (which receives the ajax request), you only need to put ::
 
 	if ($_POST)
 	{
@@ -253,17 +253,17 @@ Assume you have download and put it into your application directory, and set it 
 		echo Model\User::jquery()->datatable($_GET);
 	}
 
-That will serve datatable for browsing **user** table. You can see the demo on my sandbox [#jquery1_sandbox]_ .
+That will serve a datatable for browsing the **user** table. You can see the demo on my sandbox [#jquery1_sandbox]_ .
 
 Write your own Gas ORM extension
 ++++++++++++++++++++++++++++++++
 
-From above extension example, if you are ready to create your own, here litlle note you should remember :
+From the above extension examples, if you are ready to create your own you should remember :
 
 - Your extension, should have namespace **Gas\\Extension**.
 - Your extension, should implements **Gas\\Extension** interface.
-- Your extension, should have **__init($gas)** method (notice the double underscore, distungished it from your model init method).
-- Your extension, should located under **libraries/gas/extension** folder within your application 
+- Your extension, should have **__init($gas)** method (notice the double underscore to distinguish it from your model's init method).
+- Your extension, should be located under the **libraries/gas/extension** folder within your application 
 
 Thats all about extension.
 

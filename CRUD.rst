@@ -3,14 +3,14 @@
 CRUD 
 ====
 
-The hard part (was it?) is over. Setting up your model, field validation rules and relationship properties, once and for all (unless somehow, in the future, our recent schema not fit anymore). 
+The hard part (was it?) is over! Setting up your model, field validation rules and relationship properties once and for all (unless somehow, in the future our schema doesn't fit anymore). 
 
 Now its time to use it in action. 
 
 Creating record(s)
 ++++++++++++++++++++++
 
-How to create a record? In a standard way, you will wrote it as bellow ::
+How do you create a record? The standard method for creating a record is : ::
 
 	$user = new Model\User();
 	$user->name = 'Mr Foo';
@@ -19,11 +19,11 @@ How to create a record? In a standard way, you will wrote it as bellow ::
 	$user->save();
 
 	
-There is **make** method, for your convinient, especially when you are receive a **$_POST** data. ::
+There is also a **make** method for your convenience, especially when you are receiving **$_POST** data. ::
 
 	Model\User::make($_POST)->save();
 
-As default, Gas not enforce you to run validation process, before create a record. But if you already set up your field validation rules, passing **TRUE** within **save** method will do the job. ::
+By default, Gas does not enforce you to run validation process before creating a record. But if you have already set up your field validation rules in the model, passing **TRUE** within the **save** method will do the job. ::
 
 	Model\User::make($_POST)->save(TRUE);
 
@@ -47,11 +47,11 @@ What if you want to create a record, but not from **$_POST** data? . Lets throw 
 		echo 'New user successfully created. And her id is '.Model\User::last_created()->id;
 	}
 
-Notice that you could immediately using the last created resource, by using **last_created** method. If you want to use the last inserted id you can do so by inherit CI query builder by using **insert_id** method.
+Notice that you could immediately using the last created resource, by using **last_created** method. If you want to use the last inserted id you can do so by inheriting the CI query builder and using the **insert_id** method.
 
-Now, how about working with relationship within save operation?
+Now, how about working with relationships within a save operation?
 
-Let say you have a database with schema as emulated on :doc:`Relationship section <relationship>` and you have all corresponding model set up. You want to create a **job** entity record, then linking it to some user. You can do so by writing : ::
+Let say you have a database with schema as shown in the :doc:`Relationship section <relationship>` and you have all the corresponding models set up. You want to create a **job** entity record and link it to some user. You can do so by writing : ::
 
 	$job = Model\Job::make(array(
 		'name' => 'teacher',
@@ -64,7 +64,7 @@ Let say you have a database with schema as emulated on :doc:`Relationship sectio
 
 	$job->save();
 
-You can do this **many-to-many** insertion vice versa. Since Gas ORM require PHP 5.3, which mean there are **anonymous function** available, you can also passing a closure function as the value. This usefull if you are having uncertain situation. For example, like above case, you want to create a job entity and linking it to some user. But, instead linking it to existed user, you want to also create the user entity as well. All you need to do, is write something like : ::
+You can do this **many-to-many** insertion as well. Gas ORM requires PHP 5.3, which means there are **anonymous functions** available.  This means you can pass a closure function as the value, which can be useful in some situations. For example in the above case, you want to create a job entity and link it to some user. Instead of linking it to an existing user, you want to also create the user entity as well. All you need to do is write something like : ::
 
 	$job = Model\Job::make(array(
 		'name' => 'teacher',
@@ -87,19 +87,19 @@ You can do this **many-to-many** insertion vice versa. Since Gas ORM require PHP
 
 	$job->save();
 
-If you want to insert some one-to-many record, you can set the **entities.relationship.child** within your Gas instance related data.
+If you want to insert a one-to-many record, you can set the **entities.relationship.child** within your Gas instance related data.
 
 Reading record(s)
 +++++++++++++++++++++
 
-You already meet the :doc:`Finder method <finder>`, also you already specify each of your models relationship. In :doc:`Finder section <finder>` you already know, how to fetch either one record or a set of records. Now, how to access its relationship? As easy as : ::
+You have already meet the :doc:`Finder method <finder>` and have already specified each of your model relationships. In :doc:`Finder section <finder>` you already know how to fetch either one record or a set of records. Now, how to access its relationships? As easy as : ::
 	
 	$someuser = Model\User::find(1);
 	echo 'User 1 name is '.$someuser->name.' and his wife name is '.$someuser->wife()->name;
 
-As you can see, you can directly get the user's wife, by accessing **wife** method from user instance. This method is refer to **relationship name** , not a table name. So even the real table was **wifes** or **wf** or whateer it is, only **related relationship to model's class name** that you specicy in user's relations properties which really matter.
+As you can see you can directly get the user's wife by accessing the **wife** method from the user instance. This method refers to the **relationship name** , not the table name. So even if the real table was **wifes** or **wf** or whatever it is, only the **related relationship to model's class name** that you specify in the user model's relations properties really matters.
 
-For **one-to-many** relationship, you can iterate the child nodes, something like : ::
+For **one-to-many** relationships, you can iterate the child nodes as follows : ::
 
 	$someuser = Model\User::find(1);
 
@@ -114,11 +114,11 @@ For **one-to-many** relationship, you can iterate the child nodes, something lik
 		}
 	}
 	
-This applied to **many-to-many** relationship as well.
+This applies to **many-to-many** relationships as well.
 
-Gas support eager loading, so you can improve your relationship queries, especially when you retrieve a child node from a set of parent instance. Eager loading works for all **relations** properties that you defined. You can eager loading any types of relationship tables, using **with()** method.
+Gas supports eager loading so you can improve your relationship queries especially when you retrieve a child node from a set of parent instances. Eager loading works for all **relations** properties that you define. You can eager load any types of relationship tables, using the **with** method.
 
-In short, instead doing this : ::
+The code below is one way of finding all of the children for a set of users.  It performs a **SELECT** statement for each user, which can be bad for either you or your mother's health, especially for your grandfather : ::
 
 	$all_users = Model\user::all(); 
 
@@ -136,7 +136,7 @@ In short, instead doing this : ::
 
 	}
 
-Above, you actually will doing **SELECT** as many as your user counts, and this bad for either you or your mother health, especially for your grandfather. Eager loading alleviate this N+1 problem, and if you used it wisely, will tremendously increase your application performance (both for execution time and memory usage). How to do eager load my related model? ::
+Eager loading alleviates this N+1 problem and if you used it wisely will tremendously increase your application performance (both for execution time and memory usage). How do you eager load a related model? ::
 
 
 	$all_users = Model\User::with('kid')->all(); 
@@ -158,7 +158,7 @@ Now you just only doing two queries, one to **SELECT** all users and one to **SE
 Updating record(s)
 ++++++++++++++++++++++
 
-This section is actually much same, with **create record** section, unless instead doing INSERT, we are about UPDATE a record(s) : ::
+This section is actually much the same as the **create record** section, however instead of performing an INSERT we are about to UPDATE a record(s) : ::
 	
 	$recent_user = Model\User::find(1);
 	$recent_user->name = 'New name';
@@ -172,7 +172,7 @@ This section is actually much same, with **create record** section, unless inste
 		echo 'User 1 successfully updated.';
 	}
 
-The beautiful part of using Gas ORM, is you can also update your model relation as well, look at this example : ::
+The beautiful part of using Gas ORM is you can also update your model relationships as well, look at this example : ::
 
 	$someuser = Model\User::find(1);
 
@@ -198,7 +198,7 @@ Passing **ids** is accepted as well : ::
 
 	Model\User::delete(1, 2, 3, 4, 5, 1000);
 
-When you working with relational entity, cascading delete are supported, this mean you could **unlink** (for example) user entity from role entity, without deleting both user record and role record. Instead, you could only delete some record on the pivot table, which linking the record, eg : ::
+When you working with relational entity, cascading delete are supported, this mean you could **unlink** (for example) user entity from role entity, without deleting both user record and role record. Instead you could only delete some record on the pivot table, which linking the record, eg : ::
 
 	$someuser = Model\User::with('role')->find(1);
 	$someuser->delete();
