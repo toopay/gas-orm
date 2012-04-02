@@ -3,22 +3,22 @@
 What is Gas ORM ?
 =================
 
-A **lighweight** and **easy-to-use** [#easy]_ ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
+A **lighweight** and **easy-to-use** [#easy]_ ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages and benefits from the CI form_validation class. Gas ORM provide a set of methods that will map your database tables and its relationships into accesible objects.
 
 Gas ORM is Object Relational Mapping...
 +++++++++++++++++++++++++++++++++++++++
 
-Object-relational mapping (ORM, O/RM, and O/R mapping) in computer software is a programming technique for converting data between incompatible type systems in object-oriented programming languages. This creates, in effect, a **"virtual object database"** that can be used from within the programming language. [#orm_wikipedia]_ 
+Object-relational mapping (ORM, O/RM, and O/R mapping) in computer software is a programming technique for converting data between incompatible type systems in object-oriented programming languages. This creates a **"virtual object database"** that can be used from within the programming language. [#orm_wikipedia]_ 
 
 
-Gas ORM is follow Active Record pattern...
+Gas ORM follows the Active Record pattern...
 ++++++++++++++++++++++++++++++++++++++++++
 
-Active record is an approach to accessing data in a database. A database table or view is wrapped into a class. Thus, **an object instance is tied to a single row in the table**. After creation of an object, a new row is added to the table upon save. Any object loaded gets its information from the database. When an object is updated the corresponding row in the table is also updated. The wrapper class implements accessor methods or properties for each column in the table or view. [#ar_wikipedia]_ 
+Active record is an approach to accessing data in a database. A database table or view is wrapped into a class. Thus, **an object instance is tied to a single row in the table**. After creation of an object, a new row is added to the table upon saving. Any object loaded gets its information from the database. When an object is updated the corresponding row in the table is also updated. The wrapper class implements accessor methods or properties for each column in the table or view. [#ar_wikipedia]_ 
 
 Gas ORM is highly-optimized...
 ++++++++++++++++++++++++++++++
-Scaling database is the most hard and the most expensive process. If you already doing indexing, normalization and other schema optimization, then Gas ORM will respect and put it on a good use. Because, when reading/scanning your table and its relationships records, Gas ORM uses neither repetitive queries nor joins, because they can be slow. Instead, **Gas ORM  sends a constant number of simple queries (one query for each table type). This imply that volume of transferred data is minimized and the number of queries stays low no matter how many rows are processed**. This approach will increase your application performance. And if you still want to make it more better and efficient, there are per-request caching option, which make sure no same queries executed twice.
+Scaling a database is an expensive and difficult process. If you already doing indexing, normalization and other schema optimization, then Gas ORM will respect these and put them to a good use. When reading/scanning your table and its relationships records, Gas ORM uses neither repetitive queries nor joins, because they can be slow. Instead, **Gas ORM  sends a constant number of simple queries (one query for each table type). This implies that volume of transferred data is minimized and the number of queries stays low no matter how many rows are processed**. This approach will increase your application performance. And if you still want to make it more better and efficient, there are per-request caching options, which make sure no same query executes twice.
 
 Gas ORM is for CodeIgniter...
 +++++++++++++++++++++++++++++
