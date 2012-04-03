@@ -2472,7 +2472,7 @@ class Core {
 			return static::$$dbal_component;
 
 		}
-		elseif ($name == 'insert_id' && static::$db->pdodriver == 'pgsql')
+		elseif ($name == 'insert_id' && isset(static::$db->pdodriver) && static::$db->pdodriver == 'pgsql')
 		{
 			return static::$db->conn_id->lastInsertId();
 		}
