@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.1.0
+ * @version     2.1.1
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -62,7 +62,7 @@ class Core {
 	/**
 	 * @var  string  Global version value 
 	 */
-	const GAS_VERSION = '2.1.0';
+	const GAS_VERSION = '2.1.1';
 	
 	/**
 	 * @var  object  Hold DB Instance
@@ -651,14 +651,15 @@ class Core {
 		{
 			foreach ($entities as $related => $entity)
 			{
+				// Prevent related entity which load by `with` method
+				if ($entity instanceof ORM) continue;
+
 				$key = key($entity);
 				$values = current($entity);
 				$model = $gas->meta->get('entities.'.$related.'.'.$key, NULL);
 
-				if (empty($model)) 
-				{
-					throw new \InvalidArgumentException('Cannot determine the entity models for '.$related.'.'.$key);
-				}
+				// Prevent related entities which load by `with` method
+				if (empty($model)) continue;
 
 				// Parsing the value and prepare the related entity
 				$params = array();
@@ -1331,8 +1332,16 @@ class Core {
 			{
 				if (isset($holder))
 				{
-					// This mean we really have a business
-					$ids = $original_ids;
+					if ( count($tuples) == 1)
+					{
+						// Easy one, this is one level path
+						$ids = $original_ids = array($resource[$identifier]);
+					}
+					else
+					{
+						// This mean we really have a business
+						$ids = $original_ids;
+					}
 				}
 				else
 				{
@@ -1557,13 +1566,20 @@ class Core {
 					// Get the identifier to check
 					$matcher_id = $row[$holder->get('identifier')];
 
-					// We have assoc ids to check against it
-					if (in_array($matcher_id, $holder->get($token.$original_id)))
+					if (count($holder->get($token)) == 1)
 					{
+						// One level path...
+						$matched_id[$resource[$original_pk]][] = $child_instance;
+						
+					}
+					elseif (in_array($matcher_id, $holder->get($token.$original_id)))
+					{
+						// We have assoc ids to check against it
 						$matched_id[$original_id][] = $child_instance;
 					}
 					else
 					{
+						// Not found
 						$matched_id[$original_id][] = NULL;
 					}
 				}
@@ -1918,6 +1934,7 @@ class Core {
 											$identifier = $instance->record->get('data.'.$pk);
 											$concenate  = $table.':'.$pk.':'.$identifier;
 											$tuple      = $relation[$include];
+											$type       = $tuple['type'];
 
 											if ($tuples->get('entities.'.$include))
 											{
@@ -1932,7 +1949,8 @@ class Core {
 
 											// Assign the included entity, respectively
 											$entity = array_values(array_filter($assoc_entities->get('data.'.$identifier, array())));
-											$instance->related->set('entities.'.$include, $entity);
+											$related_entity = $type == 'has_many' ? $entity : current($entity);
+											$instance->related->set('entities.'.$include, $related_entity);
 										}
 									}
 								
