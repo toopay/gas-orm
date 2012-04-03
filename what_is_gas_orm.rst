@@ -12,7 +12,7 @@ Object-relational mapping (ORM, O/RM, and O/R mapping) in computer software is a
 
 
 Gas ORM follows the Active Record pattern...
-++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++
 
 Active record is an approach to accessing data in a database. A database table or view is wrapped into a class. Thus, **an object instance is tied to a single row in the table**. After creation of an object, a new row is added to the table upon saving. Any object loaded gets its information from the database. When an object is updated the corresponding row in the table is also updated. The wrapper class implements accessor methods or properties for each column in the table or view. [#ar_wikipedia]_ 
 

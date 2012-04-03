@@ -11,6 +11,7 @@ Gas ORM friends
 But the author wants to give credit to the following people, for their ability to provide their time/effort either submitting and fixing issues, reporting and squash bug(s) or other contribution which improve Gas ORM. Therefore, they are Gas ORM contributors too :
 
 - Stefano_
+- mecharius_
 - groenewege_
 - ardinotow_
 - blueant_
@@ -28,6 +29,7 @@ At the end, i create this and sharing it to you, any Ignited developer around th
 
 
 .. _Stefano: http://www.stefanogiordano.it/
+.. _mecharius: https://github.com/mecharius
 .. _groenewege: https://github.com/groenewege
 .. _ardinotow: http://codeigniter.com/forums/member/62402/
 .. _blueant: http://codeigniter.com/forums/member/42027/
