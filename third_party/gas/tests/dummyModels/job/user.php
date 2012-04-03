@@ -12,7 +12,7 @@
  * @package     Gas ORM
  * @subpackage  Gas ORM Model
  * @category    ORM
- * @version     2.1.0
+ * @version     2.1.1
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD

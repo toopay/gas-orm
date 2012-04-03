@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.0.0
+ * @version     2.1.1
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -52,7 +52,7 @@
  *
  * @package     Gas ORM
  * @category    Libraries
- * @version     2.0.0
+ * @since       2.0.0
  */
 
 class Gas {

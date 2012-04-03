@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<phpunit bootstrap="../bootstrap.php">
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         bootstrap="../bootstrap.php">
 	<php>
         <const name="DB_GROUP" value="testing_mysql"/>
         <const name="ROOTPATH" value="TRUE"/>
