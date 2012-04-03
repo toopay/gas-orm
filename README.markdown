@@ -9,7 +9,7 @@ A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for
 
 ## Install
 
-    php tools/spark install -v2.1.0 gas
+    php tools/spark install -v2.1.1 gas
 
 ## Documentation and Examples
 
