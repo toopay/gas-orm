@@ -157,7 +157,7 @@ tells Gas that the modified_at should be used for saving our edit datetime, whil
 
 Note that we've also placed a second argument inside the title ORM::field section : ::
 
-array('required','max_length[255]')
+	array('required','max_length[255]')
 
 If you have used CodeIgniter's *form_validation* class then this should be familiar to you - they are basic validation rules for CodeIgniter! We'll come back to this later but basically these allow you to do form_validation with just a simple Gas call to *save()*. 
 
@@ -247,7 +247,8 @@ Our main template could be something like ::
 Creating And Editing A Post
 +++++++++++++++++++++++++++
 
-I generally put these in the same basket, as I think it makes for a cleaner and more uniform interface and a minimum of code. Lets add a couple of functions to our controller.  Assume as well that we have a login/auth system that has saved our current user's id at **$this->session->userdata('user_id');** ::
+I generally put these in the same basket, as I think it makes for a cleaner and more uniform interface and a minimum of code. Lets add a couple of functions to our controller.  Assume as well that we have a login/auth system that has saved our current user's id at 
+**$this->session->userdata('user_id');** ::
 
 	public function create()
 	{
