@@ -103,9 +103,7 @@ This a fairly basic model which describes the user table and doesn't do much els
 
 	public $primary_key = 'id';
 
-Just tells Gas what the name of the primary key is. 
-
-Further down, the relationships that this model has with other models (or just our blog one in this case) are defined using the line that starts with ::
+Just tells Gas what the name of the primary key is.  Further down, the relationships that this model has with other models (or just our blog one in this case) are defined using the line that starts with ::
 
 	self::$relationships = array()
 	
