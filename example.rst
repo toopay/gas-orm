@@ -241,8 +241,15 @@ Our main template could be something like ::
 	<!-- End main_template.php -->
 
 
-Creating A Post
-+++++++++++++++
+Creating And Editing A Post
++++++++++++++++++++++++++++
+
+I generally put these in the same basket, as I think it makes for a cleaner and more uniform interface and a minimum of code. Lets add a couple of functions to our controller.  Assume as well that we have a login/auth system that has saved our current user's id at **$this->session->userdata('user_id');** ::
+
+	public function create()
+	{
+		
+	}
 
 
 
