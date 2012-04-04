@@ -372,7 +372,7 @@ And thats it! Our basic blog is completed using Gas ORM.
 Some More Advanced Options
 ++++++++++++++++++++++++++
 
-What we have done so far only shows a little bit of the power of Gas, but in reality there is a lot more that can be done with this template.  If for instance we wanted to display posts by a given author, we could create a function in our blog controller similar to the *view($id)* function but with our line: 
+What we have done so far only shows a little bit of the power of Gas, but in reality there is a lot more that can be done with this template.  If for instance we wanted to display posts by a given author, we could create a function in our blog controller similar to the *view($id)* function but with our line: ::
 
 	$data['posts'] = Model\Blog::find($id);
 
@@ -388,4 +388,4 @@ This *eager loads* a user model joined with the relevant blog records.  We could
 
 	$data['posts'] = $data['user']->blog();
 
-Gas also comes bundled with a number of extensions which make building views even easier.  Much of what we did in our *view_many_posts.php* view file can be done with a single line of code from the html extension.  Have a look at the documentation for more information.
+Gas also comes with a number of extensions which make building views even easier.  Much of what we did in our *view_many_posts.php* view file can be done with a single line of code from the html extension.  Have a look at the documentation for more information.
