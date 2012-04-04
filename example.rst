@@ -13,6 +13,7 @@ Installing Gas
 
 This example isn't going to describe how to install Gas as this is already described in detail in the :doc:`Configuration <configuration>` and :doc:`Quick Start <quickstart>` sections.  If you are having issues getting Gas installed then hop on over to the CodeIgniter forum and ask a few questions.
 
+
 The Blog Structure
 ++++++++++++++++++
 
@@ -160,6 +161,7 @@ Note that we've also placed a second argument inside the title ORM::field sectio
 If you have used CodeIgniter's *form_validation* class then this should be familiar to you - they are basic validation rules for CodeIgniter! We'll come back to this later but basically these allow you to do form_validation with just a simple Gas call to *save()*. 
 
 With just this simple bit of setup, Gas now has basically everything it needs to start working with our database, but to do this we are going to have to build some controllers and views!
+
 
 Viewing Our Posts
 +++++++++++++++++
@@ -328,6 +330,7 @@ We can then build a basic view to display our form ::
 
 As we have asked Gas to perform CI validation on our model, we perform a test at the top of the view for **validation_errors()**.  
 
+
 Viewing A Single Post
 +++++++++++++++++++++
 
@@ -366,6 +369,7 @@ And of course we need to write the associated view ::
 	<!-- END view_one_post.php -->
 
 And thats it! Our basic blog is completed using Gas ORM.
+
 
 Some More Advanced Options
 ++++++++++++++++++++++++++
