@@ -25,6 +25,7 @@ Every Gas model could have an **_init()** function. It primarily used for set up
 
 .. note:: Dont use or put any constructor on your Gas model, use **_init()** method instead.
 
+
 Field Properties
 ++++++++++++++++
 
@@ -53,6 +54,7 @@ Lets throw an example scenario. Suppose we want to insert a new record into our 
 This is one-time set-up, unless in the future we need to change our table schema. So basicly, we have set several fields rules, which are : **auto** , **char** , **email** , **int** .
 
 These provide a generic rule for commonly used datatypes. Also as you may have already noticed, we can add a "max length" rule directly using **[n]** or specify both min length and max length using **[n,n]**. This can be useful to define your field length since this will represent your field constraint (auto-create tables mechanism will use this value as your field constraint). More explanation about field definitions is described below.
+
 
 Data Type
 ++++++++++
@@ -99,6 +101,7 @@ Notice that because **TINYBLOB** is within **string** datatype category you defi
 
 This annotation will also included and used as a pointer in your auto-created migration files, so if needed you can also add **auto_increment** or/and **unsigned** as the third parameter separated by commas. 
 
+
 Additional Rules
 ++++++++++++++++
 
@@ -133,6 +136,7 @@ Then you would need to set up your callback function as below  : ::
 If you want to set a custom error on the above method, you just need to add a line (with 'username_check' as the key) to your gas language file: ::
 
 	$lang['username_check']                = 'The username supplied was invalid!';
+
 
 Timestamp Fields
 ++++++++++++++++
