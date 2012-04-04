@@ -72,6 +72,7 @@ Once you have defined the corresponding **belongs_to** relationship in the Wife 
 
 	$wives = Model\User::find($id)->wife();
 
+
 belongs_to
 ++++++++++
 
@@ -241,6 +242,3 @@ In the previous example, when you define a relationship Gas always assume that y
 			);
 		}
 	}
-
-
-
