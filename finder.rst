@@ -87,23 +87,29 @@ Passing **FALSE** as a second parameter matches the behaviour found with the **a
 	$me = Model\User::limit(1)->find_by_role('administrator', FALSE);
 	echo 'My name is '.$me->name;
 
+
 first() and last()
 ++++++++++++++++++
 
 Will return an instance with the **first** or **last** record of your primary key (default to **id**). You can pass a column name as well. ::
+
 	$res = Model\User::first();
 	echo 'The first user id is ' . $res->id;
 	
 Where your primary key is **id**, this is the same as: ::
+
 	$res = Model\User::first('id');
 	echo 'The first user id is ' . $res->id;
+
 
 max(), min(), sum() and avg()
 +++++++++++++++++++++++++++++
 
 Will return an instance with **max**, **min**, **sum** or **avg** of your primary key (default to **id**). You can passing a column name as well. If you need to aliasing column, pass it as second argument : ::
+
 	$res = Model\User::max('id','top_user');
 	echo 'The highest user id is ' . $res->top_user;
+
 
 Chaining Finder with CI AR
 ++++++++++++++++++++++++++
