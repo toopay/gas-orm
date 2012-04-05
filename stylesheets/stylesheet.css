@@ -57,14 +57,14 @@ body {
 }
 
 a {
-  color: #63a52a;
+  color: #222;
   text-decoration: none;
   -webkit-transition: color ease-in-out 0.3s;
 }
 
 a:hover {
   text-decoration: underline;
-  color: #90D355;
+  color: #E0941B;
 }
 
 h1.title {
@@ -100,7 +100,7 @@ p.tagline {
 }
 
 .download-bar {
-  background: #222;
+  background: #E0941B;
   border: 5px solid #444;
   padding: 10px;
   margin: 0 -35px 20px;
