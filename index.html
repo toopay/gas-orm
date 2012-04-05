@@ -1,0 +1,126 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>Gas ORM</title>
+  <meta name="description" content="A lighweight and easy-to-use ORM for CodeIgniter">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Gas ORM</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">A lighweight and easy-to-use ORM for CodeIgniter</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/toopay/gas-orm/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/toopay/gas-orm/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/toopay/gas-orm" class="code">fork Gas ORM on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <h3>Overview</h3>
+
+<p>A lighweight and easy-to-use Active Record ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.</p>
+
+<h3>Features</h3>
+
+<ul>
+<li>Auto-create models from database tables and vice versa.</li>
+<li>Cascading insert, update, delete across entities (composite key supported).</li>
+<li>Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite3, sqlsrv, PDO.</li>
+<li>Support multiple database connection.</li>
+<li>Support modular models directories.</li>
+<li>Multiple relationship with custom relationship setting.</li>
+<li>Per-request caching.</li>
+<li>Eager Loading, to maximize your relationship queries.</li>
+<li>Various finder method (can chained with most of CI AR) and aggregates.</li>
+<li>Built-in validation and auto-mapping input collection, with minimal setup.</li>
+<li>Hooks points, to control over your model.</li>
+<li>Extensions, to share your common function/library across your model</li>
+<li>Transaction and other CI AR goodness.</li>
+</ul><h3>Overview</h3>
+
+<pre><code>// FINDER
+$all = Model\User::all();
+$some_user = Model\User::find_by_username('foo', FALSE);
+$first_user = Model\User::first();
+
+// WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
+$new_user = Model\User::make($_POST)-&gt;save(TRUE);
+$new_user-&gt;name = "New Name";
+$new_user-&gt;save();
+$new_user-&gt;delete();
+
+// RELATIONSHIP &amp; EAGER LOADING
+$some_user = Model\User::with('wife', 'kid', 'job')-&gt;all();
+$some_user_wife = $some_user-&gt;wife;
+</code></pre>
+
+<h3>Authors and Contributors</h3>
+
+<p>The original authors is Taufan Aditya (toopay@taufanaditya.com), with this contributor list :</p>
+
+<ul>
+<li>Stefano</li>
+<li>mecharius</li>
+<li>larste</li>
+<li>groenewege</li>
+<li>ardinotow</li>
+<li>blueant</li>
+<li>pieter</li>
+<li>Loby</li>
+<li>teiki</li>
+<li>Johan</li>
+<li>Khrome83</li>
+</ul><h3>Support or Contact</h3>
+
+<p>Join the discussion on <a href="http://codeigniter.com/forums/viewthread/202669/">CI Forum</a>, submit issue(s) on  <a href="https://github.com/toopay/gas-orm/issues">issues section</a> and if you need convention, API documentation and more examples go to <a href="http://gasorm-doc.taufanaditya.com/">Home of Gas ORM</a></p>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/toopay" class="avatar"><img src="https://secure.gravatar.com/avatar/a1f48a50d32521c580da6d69fb950d14?s=30&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png" width="48" height="48"/></a> <a href="https://github.com/toopay">toopay</a> maintains <a href="https://github.com/toopay/gas-orm">Gas ORM</a></p>
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/toopay/gas-orm/tarball/master" class="tar">tar</a><a href="https://github.com/toopay/gas-orm/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-26860735-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+</body>
+</html>
