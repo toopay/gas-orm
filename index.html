@@ -1,119 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
 <html>
 <head>
-  <meta charset='utf-8'>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  <title>Gas ORM @ GitHub</title>
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #000;
-      font-family: Tahoma, Arial, FreeSans, san-serif;
-      color: #787878;
-      text-shadow: -0.1px -0.1px 1px #EAEAEA;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-      padding:30px;
-      background-color: #fff;
-      moz-border-radius: 25px;
-      border-radius: 25px;
-    }
-    h1 { font-size: 3.8em; color: #d00; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; color: #787878;}
-    h1 .small a { text-decoration: none; color: #787878;}
-    h1 .small a:hover { text-decoration: none; color: #d00;}
-    h1 a { text-decoration: none; color: #d00; }
-    h2 { font-size: 1.5em; color: #787878; }
-    h3 { text-align: center; color: #787878; }
-    a { text-decoration: none; color: #787878; }
-    a:hover { text-decoration: none; color: #d00; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; }
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; }
-  </style>
-  <script type="text/javascript">
+  <title>Gas ORM</title>
+  <meta name="description" content="A lighweight and easy-to-use ORM for CodeIgniter">
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-26860735-1']);
-  _gaq.push(['_trackPageview']);
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
 </head>
 
 <body>
-  <a href="https://github.com/toopay/gas-orm"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
-  <div id="container">
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Gas ORM</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">A lighweight and easy-to-use ORM for CodeIgniter</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/toopay/gas-orm/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/toopay/gas-orm/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/toopay/gas-orm" class="code">fork Gas ORM on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <h3>Status</h3>
+          Current build : <a href="http://travis-ci.org/toopay/gas-orm"><img src="https://secure.travis-ci.org/toopay/gas-orm.png?branch=master"></a>
+          
+          <h3>Overview</h3>
 
-    <div class="download">
-      <a href="https://github.com/toopay/gas-orm/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/toopay/gas-orm/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-    </div>
+<p>A lighweight and easy-to-use Active Record ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.</p>
 
-    <h1><a href="https://github.com/toopay/gas-orm">Gas ORM</a>
-      <span class="small">by <a href="https://github.com/toopay">toopay</a></span></h1>
+<h3>Features</h3>
 
-    <div class="description">
-      A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses standard CI DB packages, also take anvantages from CI validator class. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
-    </div>
-    
-    <h2>Features</h2>
-    <ul>
-    <li>Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite, sqlsrv.</li>
-    <li>Support multiple database connection.</li>
-    <li>Support modular models directories.</li>
-    <li>Multiple relationship (has_one, has_many, belongs_to, has_and_belongs_to) with custom relationship setting (through, foreign_key, foreign_table).</li>
-    <li>Auto-create models from database tables and vice versa, and auto-synchronize models-tables by creating migrations file.</li>
-    <li>Per-request caching.</li>
-    <li>Self-referential and adjacency column/data (hierarchical data).</li>
-    <li>Eager Loading, to maximize your relationship queries (for performance manner).</li>
-    <li>Various finder method (can chained with most of CI AR) and aggregates.</li>
-    <li>Validation and auto-mapping input collection, with minimal setup.</li>
-    <li>Hooks points, to control over your model.</li>
-    <li>CLI Packages</li>
-    <li>Extensions, to share your common function/library across your model</li>
-    <li>Transaction and other CI AR goodness.</li>
-    </ul>
+<ul>
+<li>Auto-create models from database tables and vice versa.</li>
+<li>Cascading insert, update, delete across entities (composite key supported).</li>
+<li>Supported databases : cubrid, mssql, mysql, oci8, odbc, postgre, sqlite3, sqlsrv, PDO.</li>
+<li>Support multiple database connection.</li>
+<li>Support modular models directories.</li>
+<li>Multiple relationship with custom relationship setting.</li>
+<li>Per-request caching.</li>
+<li>Eager Loading, to maximize your relationship queries.</li>
+<li>Various finder method (can chained with most of CI AR) and aggregates.</li>
+<li>Built-in validation and auto-mapping input collection, with minimal setup.</li>
+<li>Hooks points, to control over your model.</li>
+<li>Extensions, to share your common function/library across your model</li>
+<li>Transaction and other CI AR goodness.</li>
+</ul><h3>Overview</h3>
 
-    <h2>Overview</h2>
-    <pre>
-// FINDER
-$all = Gas::factory('user')->all();
-$some_user = Gas::factory('user')->find_by_username('foo');
+<pre><code>// FINDER
+$all = Model\User::all();
+$some_user = Model\User::find_by_username('foo', FALSE);
+$first_user = Model\User::first();
 
 // WRITE (INSERT, UPDATE, DELETE) AND VALIDATION
-$new_user = new User;
-$new_user->fill($_POST)->save(TRUE);
+$new_user = Model\User::make($_POST)-&gt;save(TRUE);
+$new_user-&gt;name = "New Name";
+$new_user-&gt;save();
+$new_user-&gt;delete();
 
-// RELATIONSHIP & EAGER LOADING
-$some_users = Gas::factory('user')->with('wife', 'kid', 'job')->all();
-$some_user_wife = $some_user->wife;
-    </pre>
-    
-      <h2>Authors</h2>
-      <p>toopay (toopay@taufanaditya.com)<br/></p>
+// RELATIONSHIP &amp; EAGER LOADING
+$some_user = Model\User::with('wife', 'kid', 'job')-&gt;all();
+$some_user_wife = $some_user-&gt;wife;
+</code></pre>
 
-      <h2>Clone :</h2>
-      <pre>$ git clone git://github.com/toopay/gas-orm</pre>
+<h3>Authors and Contributors</h3>
 
-    <div class="footer">
-      Join the discussion on : <a href="http://codeigniter.com/forums/viewthread/202669/">CI Forum</a>.<br />
-      Submit issue(s) on  : <a href="https://github.com/toopay/gas-orm/issues">Issues section</a>. <br />Convention and more examples on : <a href="http://gasorm-doc.taufanaditya.com/">Home of Gas ORM</a>
+<p>The original authors is Taufan Aditya (toopay@taufanaditya.com), with this contributor list :</p>
+
+<ul>
+<li>Stefano</li>
+<li>mecharius</li>
+<li>larste</li>
+<li>groenewege</li>
+<li>ardinotow</li>
+<li>blueant</li>
+<li>pieter</li>
+<li>Loby</li>
+<li>teiki</li>
+<li>Johan</li>
+<li>Khrome83</li>
+</ul><h3>Support or Contact</h3>
+
+<p>Join the discussion on <a href="http://codeigniter.com/forums/viewthread/202669/">CI Forum</a>, submit issue(s) on  <a href="https://github.com/toopay/gas-orm/issues">issues section</a> and if you need convention, API documentation and more examples go to <a href="http://gasorm-doc.taufanaditya.com/">Home of Gas ORM</a></p>
+        </article>
+      </div>
     </div>
-
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/toopay">toopay</a> maintains <a href="https://github.com/toopay/gas-orm">Gas ORM</a></p>
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/toopay/gas-orm/tarball/master" class="tar">tar</a><a href="https://github.com/toopay/gas-orm/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
   </div>
 
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-26860735-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
 </body>
+</html>
