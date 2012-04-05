@@ -182,6 +182,10 @@ p.tagline {
   filter:alpha(opacity=1);
 }
 
+.download-bar a.code:hover {
+  color:#fff;
+}
+
 .current-section {
   position: fixed;
   top: 0;
