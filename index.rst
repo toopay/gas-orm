@@ -12,6 +12,7 @@ Gas ORM version 2.1 Documentation
 	requirement
 	configuration
 	quickstart
+	example
 	convention
 	validation
 	relationship
