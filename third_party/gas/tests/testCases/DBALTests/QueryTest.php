@@ -70,14 +70,14 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // since `foo` table was not exists
         // Note that unlike with simple query, 
         // we do not need to escape it will automatically prepared and escaped
-        $sql    = 'SELECT * FROM `foo`';
+        $sql    = 'SELECT * FROM foo';
         $result = $this->db->query($sql);
         $this->assertFalse($result);
 
         // this should return a CI_DB_Result instance, 
         // and in this particular test it would be a CI_DB_pdo_Result instance, 
         // since `wife` table was exists
-        $sql    = 'SELECT * FROM `wife`';
+        $sql    = 'SELECT * FROM wife';
         $result = $this->db->query($sql);
         $this->assertInstanceOf('CI_DB_result', $result);
         $this->assertInstanceOf('CI_DB_pdo_result', $result);

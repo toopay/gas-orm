@@ -51,7 +51,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
     public function testDeleteCompositeViaParent()
     {
         // At this moment, this should result 2 records
-        $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_array();
+        $exists = Gas\Core::query("SELECT * FROM r_u WHERE r_u.u_id = 1")->result_array();
         $this->assertCount(2, $exists);
 
         // In this case, it should not delete any of the role entry
@@ -59,7 +59,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue( Model\User::with('role')->delete(1));
 
         // Now, this should contain empty array
-        $exists = Gas\Core::query("SELECT * FROM `r_u` WHERE `r_u`.`u_id` = 1")->result_array();
+        $exists = Gas\Core::query("SELECT * FROM r_u WHERE r_u.u_id = 1")->result_array();
         $this->assertEmpty($exists);
     }
 

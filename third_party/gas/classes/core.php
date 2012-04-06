@@ -1788,7 +1788,7 @@ class Core {
 		}
 		else
 		{
-			$bt = '`';
+			$bt = '"';
 		}
 
 		// Generate subquery
