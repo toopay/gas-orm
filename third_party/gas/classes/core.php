@@ -1788,7 +1788,7 @@ class Core {
 		}
 		else
 		{
-			$bt = '"';
+			$bt = (isset(self::$db->pdodriver) && self::$db->pdodriver == 'mysql') ? '`' : '"';
 		}
 
 		// Generate subquery
