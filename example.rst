@@ -15,6 +15,8 @@ This example isn't going to describe how to install Gas as this is already descr
 The Blog Structure
 ++++++++++++++++++
 
+The first thing is to make sure you have **gas** and **session** libraries autoloaded, and autoload the **url** and **form** helpers as well.
+
 To start with we are just going to create a simple blog.  There will be blog and user tables (and models), a blog controller with some actions:
 
 +------------------+-------------------------------------------+
@@ -132,7 +134,7 @@ Next we can follow the same process to define our blog model.  Create a new file
 		{
 			
 			self::$relationships = array (
-				'user'          	=>     ORM::belongs_to('\\Model\\User');
+				'user'          	=>     ORM::belongs_to('\\Model\\User')
 			);
 			
 			self::$fields = array(
@@ -143,7 +145,7 @@ Next we can follow the same process to define our blog model.  Create a new file
 				'created_at'		=>		ORM::field('datetime'),
 			);
 			
-			$this->ts_fields('modified_at','[created_at]');
+			$this->ts_fields = array('modified_at','[created_at]');
 		}
 	}
 
@@ -167,7 +169,7 @@ With just this simple bit of setup, Gas now has basically everything it needs to
 Viewing All Our Posts
 +++++++++++++++++++++
 
-So we've got our models and our database set up ready to go.  The first thing we want to do is view all our blog posts in the database.  Start by building a controller to handle the requests ::
+So we've got our models and our database set up ready to go.  The first thing we want to do is view all our blog posts in the database.  Start by building a controller to handle the requests.  Create a new file in application/models called **blog.php** ::
 
 	<?php if (!defined('BASEPATH')) die ('No direct script access allowed!'); 
 	
@@ -190,7 +192,7 @@ So we've got our models and our database set up ready to go.  The first thing we
 			$data['content'] = $this->load->view('view_many_posts', $data, TRUE);
 
 			// show the main template
-			$this->load->view('main_template', $data, TRUE);
+			$this->load->view('main_template', $data);
 		}
 	}
 
@@ -255,8 +257,15 @@ I generally put creating and editing in the same basket, as I think it makes for
 		// create a new blog object
 		$post = new Model\Blog();
 		
-		// set the default information
-		$post->user_id = $this->session->userdata('user_id');
+		/* 
+		 * Set default blog information.  Note we set the value to 1
+		 * here which is a bit of a hack.  In a real application you would
+		 * get this value from the session or from a form using something
+		 * like: 
+		 *
+		 * $post->title = $this->session->userdata('user_id');
+		 */
+		$post->user_id = 1; // This is just to get the application working
 		$post->title = 'New Post';
 		
 		// save the blog post to the database
@@ -272,6 +281,7 @@ I generally put creating and editing in the same basket, as I think it makes for
 This is our post creation function.  It creates a new record, sets some default data and saves it to the database. It then redirects to the edit page where more detailed information can be added.  The only really new thing here is the call to the **save()** function.  Until we call this function our changes are just held in memory in the Model object.  Once we call **save()** our changes are saved into the database.
 
 The edit function in our blog controller file looks like this: ::
+
 
 	public function edit($id = 0)
 	{
