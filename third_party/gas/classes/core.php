@@ -440,12 +440,12 @@ class Core {
 						if ($gas->empty)
 						{
 							$ts_field = str_replace(array('[',']'), array('',''), $ts_field);
-							$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d h:i:s') : time();
+							$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d H:i:s') : time();
 						}
 					}
 					else
 					{
-						$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d h:i:s') : time();
+						$gas->$ts_field = ($field == 'ts_fields') ? date('Y-m-d H:i:s') : time();
 					}
 				}
 			}
