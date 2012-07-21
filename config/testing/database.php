@@ -14,7 +14,8 @@ $active_record = TRUE;
  * MySQL configuration for PDO
  */
 
-$db['testing_mysql']['hostname'] = 'mysql:host=localhost;port=3306;';
+$db['testing_mysql']['dsn']      = 'mysql:host=localhost;port=3306;dbname=gas_test';
+$db['testing_mysql']['hostname'] = '';
 $db['testing_mysql']['username'] = 'travis';
 $db['testing_mysql']['password'] = '';
 $db['testing_mysql']['database'] = 'gas_test';

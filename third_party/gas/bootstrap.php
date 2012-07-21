@@ -95,6 +95,17 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 		}
 
 		/**
+		 * Serve undefined Core CI properties
+		 */
+		public function __get($name)
+		{
+			if ($name == 'load')
+			{
+				return static::$instance;
+			}
+		}
+
+		/**
 		 * Serve other methods, to capture the error for the very least
 		 *
 		 * @param   string
@@ -112,6 +123,11 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 
 				// Good bye
 				throw new LogicException('CI Internal Error with message : '.$internal_error);
+			}
+			// For package path
+			elseif ($name == 'get_package_paths')
+			{
+				return array();
 			}
 		}
 	}
@@ -138,6 +154,13 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 	function &get_instance() {
 
 		$instance =& Tron::get_instance();
+
+		// If Tron not initialized yet, build a mock
+		if (is_null($instance))
+		{
+			$instance = new stdClass();
+			$instance->load = new Tron('undefined');
+		}
 
 		return $instance;
 	}

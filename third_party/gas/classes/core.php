@@ -965,9 +965,9 @@ class Core {
 		elseif ($type == 'forge_field')
 		{
 			// Set Forge type and constraint spec
-			if (self::$default_datatypes[$field_gas_type] != $field_raw_type or ! isset(self::$db->pdodriver))
+			if (self::$default_datatypes[$field_gas_type] != $field_raw_type or ! isset(self::$db->subdriver))
 			{
-				if (in_array($field_raw_type, array('LONG', 'BLOB', 'VAR_STRING')) && isset(self::$db->pdodriver))
+				if (in_array($field_raw_type, array('LONG', 'BLOB', 'VAR_STRING')) && isset(self::$db->subdriver))
 				{
 					$field_type = self::$common_datatypes[$field_gas_type];
 				} 
@@ -1788,7 +1788,7 @@ class Core {
 		}
 		else
 		{
-			$bt = (isset(self::$db->pdodriver) && self::$db->pdodriver == 'mysql') ? '`' : '"';
+			$bt = (isset(self::$db->subdriver) && self::$db->subdriver == 'mysql') ? '`' : '"';
 		}
 
 		// Generate subquery
@@ -2490,7 +2490,7 @@ class Core {
 			return static::$$dbal_component;
 
 		}
-		elseif ($name == 'insert_id' && isset(static::$db->pdodriver) && static::$db->pdodriver == 'pgsql')
+		elseif ($name == 'insert_id' && isset(static::$db->subdriver) && static::$db->subdriver == 'pgsql')
 		{
 			return static::$db->conn_id->lastInsertId();
 		}
