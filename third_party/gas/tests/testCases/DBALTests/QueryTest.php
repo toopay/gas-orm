@@ -100,12 +100,12 @@ class QueryTest extends PHPUnit_Framework_TestCase {
      */
     protected function _prep_query($sql)
     {
-        if ($this->db->pdodriver === 'pgsql')
+        if ($this->db->subdriver === 'pgsql')
         {
             // Change the backtick(s) for Postgre
             $sql = str_replace('`', '"', $sql);
         }
-        elseif ($this->db->pdodriver === 'sqlite')
+        elseif ($this->db->subdriver === 'sqlite')
         {
             // Change the backtick(s) for SQLite
             $sql = str_replace('`', '', $sql);
