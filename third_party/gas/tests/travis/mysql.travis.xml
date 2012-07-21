@@ -14,4 +14,9 @@
             <directory suffix="Test.php" phpVersion="5.3.0" phpVersionOperator=">=">./../testCases</directory>
         </testsuite>
     </testsuites>
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../../classes</directory>
+        </whitelist>
+    </filter>
 </phpunit>

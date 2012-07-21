@@ -19,7 +19,7 @@ before_script:
   - git pull origin develop
   - cd ../../
 
-script: phpunit --configuration third_party/gas/tests/travis/$DB.travis.xml
+script: phpunit --configuration third_party/gas/tests/travis/$DB.travis.xml --coverage-text
 
 branches:
   except:
