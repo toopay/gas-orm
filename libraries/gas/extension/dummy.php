@@ -104,7 +104,7 @@ class Dummy implements Extension {
 		{
 			// This for single Gas instance
 			$model         = ucfirst($this->gas->model());
-			$structure     = $this->gas->meta->get('collumns');
+			$structure     = $this->gas->meta->get('columns');
 			$relationships = array_keys($this->gas->meta->get('entities'));
 
 			// Get all the records and start build the record table
@@ -125,7 +125,7 @@ class Dummy implements Extension {
 			$sample        = $this->gas;
 			$gas           = array_shift($sample);
 			$model         = ucfirst($gas->model());
-			$structure     = $gas->meta->get('collumns');
+			$structure     = $gas->meta->get('columns');
 			$relationships = array_keys($gas->meta->get('entities'));
 
 			// Get all the records and start build the record table
