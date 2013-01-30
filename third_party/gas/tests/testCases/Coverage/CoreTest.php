@@ -38,15 +38,6 @@ class CoreTest extends PHPUnit_Framework_TestCase {
 		$this->assertInstanceOf('CI_DB_pdo_forge', $gas_core::forge());
 	}
 
-	public function testStaticMethodToCallLastCreated()
-	{
-		$gas_core = new Gas\Core($this->db);
-
-		$this->setExpectedException('InvalidArgumentException', '[find]Could not find entity identifier');
-
-		$gas_core::last_created();
-	}
-
 	public function testStaticMethodToCallRegexPattern()
 	{
 		$gas_core = new Gas\Core($this->db);
