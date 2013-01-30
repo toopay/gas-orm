@@ -12,5 +12,12 @@
  */
 
 class JanitorTest extends PHPUnit_Framework_TestCase {
+
+	public function testGetInputThrowExceptionIfEmptyInput()
+	{
+		$this->setExpectedException('InvalidArgumentException', 'empty_arguments:some_method');
+		
+		Gas\Janitor::get_input('some_method', NULL, TRUE);
+	}
 	
 }

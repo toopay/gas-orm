@@ -279,6 +279,7 @@ class Core {
 	 */
 	private static $init = FALSE;
 
+// @codeCoverageIgnoreStart
 	/**
 	 * Constructor
 	 * 
@@ -1332,10 +1333,24 @@ class Core {
 			{
 				if (isset($holder))
 				{
-					if ( count($tuples) == 1)
+					if (strpos($tuple, '<') === FALSE)
 					{
-						// Easy one, this is one level path
-						$ids = $original_ids = array($resource[$identifier]);
+						// Reset the ids matchers
+						$fk_original_ids = array();
+
+						// Revert for belongs to relationship
+						foreach ($resources as $orig_index => $resource)
+						{
+							// Populate the ids
+							$fk_original_ids[$original_ids[$orig_index]] = $resource[$identifier];
+
+							// Generate new token and empty holder for each original identifier
+							$token = $original_table.':'.$identifier.'.';
+							$index = $resource[$identifier];
+							$holder->set("$token$index", array($index));
+						}
+
+						$ids = $fk_original_ids;
 					}
 					else
 					{
@@ -1566,16 +1581,14 @@ class Core {
 					// Get the identifier to check
 					$matcher_id = $row[$holder->get('identifier')];
 
-					if (count($holder->get($token)) == 1)
-					{
-						// One level path...
-						$matched_id[$resource[$original_pk]][] = $child_instance;
-						
-					}
-					elseif (in_array($matcher_id, $holder->get($token.$original_id)))
+					if (in_array($matcher_id, $holder->get($token.$original_id, array())))
 					{
 						// We have assoc ids to check against it
 						$matched_id[$original_id][] = $child_instance;
+					}
+					elseif (isset($fk_original_ids) && in_array($matcher_id, $fk_original_ids))
+					{
+						$matched_id[$matcher_id][] = $child_instance;
 					}
 					else
 					{
@@ -1786,6 +1799,11 @@ class Core {
 		{
 			$bt = '';
 		}
+		elseif (strpos(static::$db->dbdriver, 'mysql') !== FALSE)
+		{
+			// Backward-compability for bot mysql or mysqli database
+			$bt = '`';
+		}
 		else
 		{
 			$bt = (isset(self::$db->subdriver) && self::$db->subdriver == 'mysql') ? '`' : '"';
@@ -1945,6 +1963,12 @@ class Core {
 											{
 												$assoc_entities = \Gas\Core::generate_entity($gas, $tuple, $results);
 												$tuples->set('entities.'.$include, $assoc_entities);
+											}
+
+											if ($assoc_entities->get('identifier') != $pk)
+											{
+												$fk = $assoc_entities->get('identifier');
+												$identifier = $instance->record->get('data.'.$fk);
 											}
 
 											// Assign the included entity, respectively
@@ -2469,6 +2493,7 @@ class Core {
 		// Late binding to flagged auto-migration process
 		static::$migration['auto'] = TRUE;
 	}
+// @codeCoverageIgnoreEnd
 
 	/**
 	 * Overloading static method triggered when invoking special method.

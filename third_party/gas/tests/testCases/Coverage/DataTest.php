@@ -12,5 +12,15 @@
  */
 
 class DataTest extends PHPUnit_Framework_TestCase {
+
+	public function testOffsetExists()
+	{
+		$gas_data = new Gas\Data(array('foo' => 'bar'));
+
+		$this->assertTrue($gas_data->offsetExists('foo'));
+
+		$this->assertFalse($gas_data->offsetExists('undefined'));
+		$this->assertFalse($gas_data->offsetExists('somethingelse'));
+	}
 	
 }
