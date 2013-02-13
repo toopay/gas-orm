@@ -13,6 +13,14 @@ A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for
 
 Go to [home of Gas ORM](http://gasorm-doc.taufanaditya.com "home of Gas ORM") for full guide about convention and in-depth usage.
 
+## Running the Test Suite
+
+Set appropriate values on both **config/testing/database.php** and phpunit configuration you used (check **CI_VERSION**, **APPPATH** and **BASEPATH**) based by your own machine configuration. Then you could run the test, for example you use MySQL database :
+
+	phpunit --configuration /path/to/third_party/gas/tests/travis/mysql.travis.xml --coverage-text
+
+Gas ORM is well-covered and the latest build status could be found on the top of this document.
+
 [![][FlattrButton]][FlattrLink] 
 
 [FlattrLink]: https://flattr.com/submit/auto?user_id=toopay&url=https://github.com/toopay/gas-orm&title=Gas%20ORM&language=en_GB&tags=codeigniter%20orm&category=software
