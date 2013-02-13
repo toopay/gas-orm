@@ -19,6 +19,9 @@
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">../../classes</directory>
+            <exclude>
+              <directory suffix=".php">../../classes/extension</directory>
+            </exclude>
         </whitelist>
     </filter>
 </phpunit>
