@@ -194,7 +194,11 @@ if ( ! function_exists('get_instance'))
 // Validate DB instance
 if ( ! class_exists('CI_DB'))
 {
-	$DB = &DB(DB_GROUP);
+	try{
+		$DB = &DB(DB_GROUP);
+	} catch (Exception $e) {
+		die('Cant connect to database : '.$e->getMessage().', please check config/testing/database.php.'."\n");
+	}
 }
 
 if ( ! $DB instanceof CI_DB_Driver)

@@ -6,6 +6,12 @@
  *---------------------------------------------------------------
  */
  
+// First of all validate the global constants
+if ( ! defined('BASEPATH') || ! is_dir(BASEPATH) || ! defined('APPPATH') || ! is_dir(APPPATH))
+{
+	die('Ensure you set up BASEPATH and APPPATH correctly on your PHPUnit configuration'."\n");
+}
+
 // Get the front directory
 $dir     = __DIR__;
 $fragdir = explode(DIRECTORY_SEPARATOR, $dir);

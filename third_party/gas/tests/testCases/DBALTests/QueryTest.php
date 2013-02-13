@@ -40,9 +40,13 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // Execute some simple query
         // this should return FALSE, 
         // since `foo` table was not exists
-        $sql    = $this->_prep_query('SELECT * FROM `foo`');
-        $result = $this->db->simple_query($sql);
-        $this->assertFalse($result);
+        // Note that this only works on CI v.3.0
+        if (CI_VERSION == '3.0.0')
+        {
+            $sql    = $this->_prep_query('SELECT * FROM `foo`');
+            $result = $this->db->simple_query($sql);
+            $this->assertFalse($result);
+        }
 
         // Execute some simple query
         // this should return a PDOStatement instance, 
@@ -70,9 +74,13 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // since `foo` table was not exists
         // Note that unlike with simple query, 
         // we do not need to escape it will automatically prepared and escaped
-        $sql    = 'SELECT * FROM foo';
-        $result = $this->db->query($sql);
-        $this->assertFalse($result);
+        // Also note that this only works on CI v.3.0
+        if (CI_VERSION == '3.0.0')
+        {
+            $sql    = 'SELECT * FROM foo';
+            $result = $this->db->query($sql);
+            $this->assertFalse($result);
+        }
 
         // this should return a CI_DB_Result instance, 
         // and in this particular test it would be a CI_DB_pdo_Result instance, 
