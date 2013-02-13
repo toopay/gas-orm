@@ -279,13 +279,13 @@ class Core {
 	 */
 	private static $init = FALSE;
 
-// @codeCoverageIgnoreStart
 	/**
 	 * Constructor
 	 * 
 	 * @param  object Database instance
 	 * @param  array  Configuration
 	 * @return void
+	 * @codeCoverageIgnore
 	 */
 	public function __construct(\CI_DB $DB, $config = array())
 	{
@@ -329,8 +329,9 @@ class Core {
 	 * Set core initialization status
 	 * 
 	 * @return void
+	 * @codeCoverageIgnore
 	 */
-	public function init()
+	public static function init()
 	{
 		static::$init = TRUE;
 	}
@@ -339,8 +340,9 @@ class Core {
 	 * Retrieve core initialization status
 	 * 
 	 * @return void
+	 * @codeCoverageIgnore
 	 */
-	public function init_status()
+	public static function init_status()
 	{
 		return static::$init;
 	}
@@ -351,6 +353,7 @@ class Core {
 	 * @param  object Database instance
 	 * @param  array  Configuration
 	 * @return object
+	 * @codeCoverageIgnore
 	 */
 	public static function make(\CI_DB $DB, $config = array())
 	{
@@ -362,6 +365,7 @@ class Core {
 	 * 
 	 * @param  string DSN
 	 * @return void
+	 * @codeCoverageIgnore
 	 */
 	public static function connect($dsn)
 	{
@@ -399,6 +403,7 @@ class Core {
 	 * @param   mixed     Argument
 	 * @throws  Exception If the callback returned non-ORM instance
 	 * @return  object    Gas Instance
+	 * @codeCoverageIgnore
 	 */
 	final public static function callback($gas, $point, $arg = NULL)
 	{
@@ -423,6 +428,7 @@ class Core {
 	 *
 	 * @param   object    Gas Instance
 	 * @return  object    Gas Instance
+	 * @codeCoverageIgnore
 	 */
 	final public static function timestamp($gas)
 	{
@@ -460,6 +466,7 @@ class Core {
 	 *
 	 * @param   object Gas Instance
 	 * @return  object Gas Instance
+	 * @codeCoverageIgnore
 	 */
 	final public static function all($gas, $multirow = TRUE)
 	{
@@ -487,6 +494,7 @@ class Core {
 	 * @param   object Gas Instance
 	 * @param   mixed
 	 * @return  object Gas Instance
+	 * @codeCoverageIgnore
 	 */
 	final public static function find($gas, $args)
 	{
@@ -553,6 +561,7 @@ class Core {
 	 * @param   object Gas Instance
 	 * @param   bool   Whether to perform validation or not
 	 * @return  bool
+	 * @codeCoverageIgnore
 	 */
 	final public static function save($gas, $check = FALSE)
 	{
@@ -695,6 +704,7 @@ class Core {
 	 * @param   object Gas Instance
 	 * @param   array  Identifier ids
 	 * @return  bool
+	 * @codeCoverageIgnore
 	 */
 	final public static function delete($gas, $ids = array())
 	{
@@ -781,6 +791,7 @@ class Core {
 	 * @param  string SQL statement
 	 * @param  bool   Whether to do `query` or `simple_query` 
 	 * @return mixed
+	 * @codeCoverageIgnore
 	 */
 	public static function query($sql, $simple = FALSE)
 	{
@@ -855,6 +866,7 @@ class Core {
 	 * @param  string 
 	 * @param  mixed 
 	 * @return mixed
+	 * @codeCoverageIgnore
 	 */
 	public static function compile($gas, $method, $args)
 	{
@@ -920,6 +932,7 @@ class Core {
 	 * @param   string
 	 * @param   string
 	 * @return  array
+	 * @codeCoverageIgnore
 	 */
 	public static function identify_field($meta_data, $type = 'gas_field', $driver = '')
 	{
@@ -999,6 +1012,7 @@ class Core {
 	 *
 	 * @param   array
 	 * @return  array
+	 * @codeCoverageIgnore
 	 */
 	public static function identify_annotation($annotation)
 	{
@@ -1031,6 +1045,7 @@ class Core {
 	 * @param   string
 	 * @param   string
 	 * @return  string
+	 * @codeCoverageIgnore
 	 */
 	public static function diagnostic($name, $source = 'dictionary')
 	{
@@ -1047,6 +1062,7 @@ class Core {
 	 * Stop caching
 	 *
 	 * @return	void
+	 * @codeCoverageIgnore
 	 */
 	public static function cache_flush()
 	{
@@ -1062,6 +1078,7 @@ class Core {
 	 * @param   array
 	 * @param   bool   Whether to save into global cache key or not
 	 * @return  void
+	 * @codeCoverageIgnore
 	 */
 	public static function cache_start($task, $global = TRUE)
 	{
@@ -1090,6 +1107,7 @@ class Core {
 	 * @param   mixed    DB resource or any data
 	 * @param   string   Cache key
 	 * @return  void
+	 * @codeCoverageIgnore
 	 */
 	public static function cache_end($resource, $key = NULL)
 	{
@@ -1111,6 +1129,7 @@ class Core {
 	 * 
 	 * @param   string  Cache key
 	 * @return  bool
+	 * @codeCoverageIgnore
 	 */
 	public static function validate_cache($key = NULL)
 	{
@@ -1137,6 +1156,7 @@ class Core {
 	 * 
 	 * @param   string  Cache key
 	 * @return  mixed
+	 * @codeCoverageIgnore
 	 */
 	public static function fetch_cache($key = NULL)
 	{
@@ -1156,6 +1176,7 @@ class Core {
 	 *
 	 * @access  public
 	 * @return  bool
+	 * @codeCoverageIgnore
 	 */
 	public static function cache_status()
 	{
@@ -1169,6 +1190,7 @@ class Core {
 	 * @param   string
 	 * @param   string
 	 * @return  void
+	 * @codeCoverageIgnore
 	 */
 	public static function track_resource($resource, $action)
 	{
@@ -1202,6 +1224,7 @@ class Core {
 	 *
 	 * @param   string
 	 * @return  bool
+	 * @codeCoverageIgnore
 	 */
 	public static function changed_resource($resource)
 	{
@@ -1214,6 +1237,7 @@ class Core {
 	 *
 	 * @param   object Gas instance
 	 * @return  mixed  All resource state
+	 * @codeCoverageIgnore
 	 */
 	public static function reports($gas)
 	{
@@ -1227,6 +1251,7 @@ class Core {
 	 * @param   mixed
 	 * @param   string
 	 * @return  void
+	 * @codeCoverageIgnore
 	 */
 	public static function reset_query()
 	{
@@ -1258,6 +1283,7 @@ class Core {
 	 * @param  array  Resource collection
 	 * @param  bool   Whether to return the SQL statement or execute then send its result
 	 * @return object Child Gas 
+	 * @codeCoverageIgnore
 	 */
 	public static function generate_entity($gas, $relationship, $resources = array(), $raw = FALSE)
 	{
@@ -1632,6 +1658,7 @@ class Core {
 	 *
 	 * @param  string  Tuple
 	 * @return array   Domain, key and identifier
+	 * @codeCoverageIgnore
 	 */
 	public static function generate_identifier($tuple)
 	{
@@ -1728,6 +1755,7 @@ class Core {
 	 *
 	 * @param  array  Gas relationship option spec
 	 * @return array  Formatted option
+	 * @codeCoverageIgnore
 	 */
 	public static function generate_options($options)
 	{
@@ -1787,6 +1815,7 @@ class Core {
 	 * @param  string  Identifier collumn name
 	 * @param  string  Either ids or subquery
 	 * @return array   Formatted SQL clause
+	 * @codeCoverageIgnore
 	 */
 	public static function generate_clause($domain, $key, $identifier, $ids = '')
 	{
@@ -1852,6 +1881,7 @@ class Core {
 	 *
 	 * @param  object Gas instance
 	 * @return object Finished Gas 
+	 * @codeCoverageIgnore
 	 */
 	protected static function _execute($gas)
 	{
@@ -2019,6 +2049,7 @@ class Core {
 	 *
 	 * @param  Data  the recorder
 	 * @return array task spec
+	 * @codeCoverageIgnore
 	 */
 	protected static function _play_record(Data $recorder)
 	{
@@ -2051,6 +2082,7 @@ class Core {
 	 *
 	 * @param  object  Gas Instance
 	 * @return bool 
+	 * @codeCoverageIgnore
 	 */
 	private static function _check($gas)
 	{
@@ -2169,6 +2201,7 @@ class Core {
 	 *
 	 * @param	array
 	 * @return	void
+	 * @codeCoverageIgnore
 	 */
 	private function _configure($config = array())
 	{
@@ -2214,6 +2247,7 @@ class Core {
 	 *
 	 * @param	string
 	 * @return	void
+	 * @codeCoverageIgnore
 	 */
 	private function _autoloader($class) 
 	{
@@ -2289,6 +2323,7 @@ class Core {
 	 * This is used by config only (internal usage).
 	 *
 	 * @return void   
+	 * @codeCoverageIgnore
 	 */
 	private function _generate_models()
 	{
@@ -2402,6 +2437,7 @@ class Core {
 	 * This is used by config only (internal usage).
 	 *
 	 * @return void   
+	 * @codeCoverageIgnore
 	 */
 	private function _generate_tables()
 	{
@@ -2493,7 +2529,6 @@ class Core {
 		// Late binding to flagged auto-migration process
 		static::$migration['auto'] = TRUE;
 	}
-// @codeCoverageIgnoreEnd
 
 	/**
 	 * Overloading static method triggered when invoking special method.
@@ -2501,6 +2536,7 @@ class Core {
 	 * @param	string
 	 * @param	array
 	 * @return	mixed
+	 * @codeCoverageIgnore
 	 */
 	public static function __callStatic($name, $args)
 	{
