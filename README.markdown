@@ -1,6 +1,5 @@
 # Gas ORM 
-Master : [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png?branch=master)](http://travis-ci.org/toopay/gas-orm) 
-Develop : [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png?branch=develop)](http://travis-ci.org/toopay/gas-orm)
+Status : [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png](http://travis-ci.org/toopay/gas-orm) 
 
 A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses CodeIgniter Database packages, a powerful DBAL which support numerous DB drivers. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
 
@@ -19,7 +18,7 @@ Set appropriate values on both **config/testing/database.php** and phpunit confi
 
 	phpunit --configuration /path/to/third_party/gas/tests/travis/mysql.travis.xml --coverage-text
 
-Gas ORM is well-covered and the latest build status could be found on the top of this document.
+Gas ORM is well-tested and the latest build status could be found on the top of this document.
 
 [![][FlattrButton]][FlattrLink] 
 
