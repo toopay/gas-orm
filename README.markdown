@@ -1,5 +1,5 @@
 # Gas ORM 
-Status : [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png)](http://travis-ci.org/toopay/gas-orm)]
+Status : [![Build Status](https://secure.travis-ci.org/toopay/gas-orm.png)](http://travis-ci.org/toopay/gas-orm)
 
 A lighweight and easy-to-use ORM for CodeIgniter. Gas was built specifically for CodeIgniter app. It uses CodeIgniter Database packages, a powerful DBAL which support numerous DB drivers. Gas ORM provide a set of methods that will map your database tables and its relationship, into accesible object.
 
