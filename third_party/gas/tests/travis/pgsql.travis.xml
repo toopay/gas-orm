@@ -5,8 +5,10 @@
          colors="true"
          bootstrap="../bootstrap.php">
 	<php>
+        <const name="CI_VERSION" value="3.0.0"/>
         <const name="DB_GROUP" value="testing_postgre"/>
-        <const name="ROOTPATH" value="TRUE"/>
+        <const name="APPPATH" value="./"/>
+        <const name="BASEPATH" value="./vendor/CodeIgniter/system/"/>
     </php>
     <testsuites>
         <testsuite name="Gas ORM Test Suite">

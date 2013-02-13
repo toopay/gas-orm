@@ -57,6 +57,37 @@
 class Janitor {
 
 	/**
+	 * Returning a real path of any environment paths
+	 *
+	 * @param string 'app' will resulted APPPATH adn 'base' will resulted in BASEPATH
+	 * @return string Real path
+	 */
+	public static function path($type = '')
+	{
+		$type = strtolower($type);
+
+		// Validate
+		if ( ! in_array($type, array('app','base')))
+		{
+			throw new \InvalidArgumentException('empty_arguments:path');
+		}
+
+		// Get original constants
+		switch ($type) 
+		{
+			case 'app':
+				$path = realpath(APPPATH);
+				break;
+			
+			case 'base':
+				$path = realpath(BASEPATH);
+				break;
+		}
+
+		return (substr($path, -1) !== DIRECTORY_SEPARATOR) ? $path . DIRECTORY_SEPARATOR : $path;
+	}
+
+	/**
 	 * Validate passed input
 	 *
 	 * @param   mixed

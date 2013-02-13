@@ -300,8 +300,8 @@ class Core {
 
 			// Load the DB, DB Util and DB Forge instances
 			static::$db      = $DB;
-			static::$dbutil  = new $util();
-			static::$dbforge = new $forge();
+			static::$dbutil  = new $util($DB);
+			static::$dbforge = new $forge($DB);
 
 			// Generate new collection of needed properties
 			static::$entity_repository = new Data();
@@ -1806,7 +1806,7 @@ class Core {
 		}
 		else
 		{
-			$bt = (isset(self::$db->subdriver) && self::$db->subdriver == 'mysql') ? '`' : '"';
+			$bt = (isset(self::$db->subdriver) && self::$db->subdriver == 'mysql') ? '`' : '';
 		}
 
 		// Generate subquery
@@ -2220,7 +2220,7 @@ class Core {
 		// Add Spark path as integral directories to check
 		if ( ! defined('GASSPARKPATH'))
 		{
-			define('GASSPARKPATH', BASEPATH.'sparks');
+			define('GASSPARKPATH', Janitor::path('base').'sparks');
 		}
 
 		// Prepare autoload mechanism
@@ -2249,7 +2249,7 @@ class Core {
 				// 2. APPPATH.'libraries/gas/extension'
 				$extension_paths = array(GASPATH.'classes',
 				                         GASSPARKPATH.DIRECTORY_SEPARATOR.'gas',
-				                         APPPATH.'libraries'.DIRECTORY_SEPARATOR.'gas');
+				                         Janitor::path('app').'libraries'.DIRECTORY_SEPARATOR.'gas');
 
 				// Loop over the paths
 				foreach ($extension_paths as $extension_path)

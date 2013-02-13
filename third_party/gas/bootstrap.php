@@ -30,17 +30,17 @@ require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'orm.php';
 require_once GASPATH.'interfaces'.DIRECTORY_SEPARATOR.'extension.php';
 
 // Load needed DB files
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_forge.php';
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_utility.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB_forge.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB_utility.php';
 
 // Define DB path
-define('DBPATH', BASEPATH.'database'.DIRECTORY_SEPARATOR);
+define('DBPATH', Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR);
 define('DBDRIVERSPATH', DBPATH.'drivers'.DIRECTORY_SEPARATOR);
 
 // Mock internal CI instance and low-level functions,
 // in case we run Gas ORM outside CI scope
-if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
+if ( ! function_exists('get_instance'))
 {
 	// Build our own TRON!
 	class Tron {
