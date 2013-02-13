@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.1.1
+ * @version     2.1.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -55,6 +55,37 @@
  */
 
 class Janitor {
+
+	/**
+	 * Returning a real path of any environment paths
+	 *
+	 * @param string 'app' will resulted APPPATH adn 'base' will resulted in BASEPATH
+	 * @return string Real path
+	 */
+	public static function path($type = '')
+	{
+		$type = strtolower($type);
+
+		// Validate
+		if ( ! in_array($type, array('app','base')))
+		{
+			throw new \InvalidArgumentException('empty_arguments:path');
+		}
+
+		// Get original constants
+		switch ($type) 
+		{
+			case 'app':
+				$path = realpath(APPPATH);
+				break;
+			
+			case 'base':
+				$path = realpath(BASEPATH);
+				break;
+		}
+
+		return (substr($path, -1) !== DIRECTORY_SEPARATOR) ? $path . DIRECTORY_SEPARATOR : $path;
+	}
 
 	/**
 	 * Validate passed input

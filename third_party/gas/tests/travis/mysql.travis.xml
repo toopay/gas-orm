@@ -5,8 +5,10 @@
          colors="true"
          bootstrap="../bootstrap.php">
 	<php>
+        <const name="CI_VERSION" value="3.0.0"/>
         <const name="DB_GROUP" value="testing_mysql"/>
-        <const name="ROOTPATH" value="TRUE"/>
+        <const name="APPPATH" value="./"/>
+        <const name="BASEPATH" value="./vendor/CodeIgniter/system/"/>
     </php>
     <testsuites>
         <testsuite name="Gas ORM Test Suite">
@@ -14,4 +16,12 @@
             <directory suffix="Test.php" phpVersion="5.3.0" phpVersionOperator=">=">./../testCases</directory>
         </testsuite>
     </testsuites>
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../../classes</directory>
+            <exclude>
+              <directory suffix=".php">../../classes/extension</directory>
+            </exclude>
+        </whitelist>
+    </filter>
 </phpunit>

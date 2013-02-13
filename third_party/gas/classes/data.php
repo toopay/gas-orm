@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.1.1
+ * @version     2.1.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -231,6 +231,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
         $path = trim($path, '.* ');
         $keys = explode('.', $path);
 
+        // @codeCoverageIgnoreStart
         do 
         {
             $key = array_shift($keys);
@@ -297,6 +298,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
                 break;
             }
         } while ($keys);
+        // @codeCoverageIgnoreEnd
 
         // Unable to find the value requested
         return $default;
@@ -314,6 +316,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
         // If the key are arrays build associative array, otherwise build one level array
         if ($key = explode('.', $key)) 
         {
+            // @codeCoverageIgnoreStart
             switch(count($key)) 
             {
                 case 1:
@@ -336,10 +339,7 @@ class Data implements \ArrayAccess, \Iterator, \Countable {
 
                     break;
             }
-        } 
-        else 
-        {
-            $this->collections[$key] = $value;
+            // @codeCoverageIgnoreEnd
         }
     }
 }

@@ -30,17 +30,17 @@ require_once GASPATH.'classes'.DIRECTORY_SEPARATOR.'orm.php';
 require_once GASPATH.'interfaces'.DIRECTORY_SEPARATOR.'extension.php';
 
 // Load needed DB files
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB.php';
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_forge.php';
-require_once BASEPATH.'database'.DIRECTORY_SEPARATOR.'DB_utility.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB_forge.php';
+require_once Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR.'DB_utility.php';
 
 // Define DB path
-define('DBPATH', BASEPATH.'database'.DIRECTORY_SEPARATOR);
+define('DBPATH', Gas\Janitor::path('base').'database'.DIRECTORY_SEPARATOR);
 define('DBDRIVERSPATH', DBPATH.'drivers'.DIRECTORY_SEPARATOR);
 
 // Mock internal CI instance and low-level functions,
 // in case we run Gas ORM outside CI scope
-if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
+if ( ! function_exists('get_instance'))
 {
 	// Build our own TRON!
 	class Tron {
@@ -95,6 +95,17 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 		}
 
 		/**
+		 * Serve undefined Core CI properties
+		 */
+		public function __get($name)
+		{
+			if ($name == 'load')
+			{
+				return static::$instance;
+			}
+		}
+
+		/**
 		 * Serve other methods, to capture the error for the very least
 		 *
 		 * @param   string
@@ -112,6 +123,11 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 
 				// Good bye
 				throw new LogicException('CI Internal Error with message : '.$internal_error);
+			}
+			// For package path
+			elseif ($name == 'get_package_paths')
+			{
+				return array();
 			}
 		}
 	}
@@ -138,6 +154,13 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 	function &get_instance() {
 
 		$instance =& Tron::get_instance();
+
+		// If Tron not initialized yet, build a mock
+		if (is_null($instance))
+		{
+			$instance = new stdClass();
+			$instance->load = new Tron('undefined');
+		}
 
 		return $instance;
 	}
@@ -171,7 +194,11 @@ if ( ! function_exists('get_instance') && ! defined('CI_VERSION'))
 // Validate DB instance
 if ( ! class_exists('CI_DB'))
 {
-	$DB = &DB(DB_GROUP);
+	try{
+		$DB = &DB(DB_GROUP);
+	} catch (Exception $e) {
+		die('Cant connect to database : '.$e->getMessage().', please check config/testing/database.php.'."\n");
+	}
 }
 
 if ( ! $DB instanceof CI_DB_Driver)

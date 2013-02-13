@@ -7,7 +7,7 @@
  *
  * @package     Gas ORM
  * @category    Unit Test
- * @version     2.1.1
+ * @version     2.1.2
  * @author      Taufan Aditya
  */
 
@@ -42,13 +42,17 @@ class ConnectionTest extends PHPUnit_Framework_TestCase {
     public function testConnectionViaDsnPDODriver()
     {
         // Connect using a valid dsn string
-        Gas\Core::connect('pdo://travis:@localhost:3306/gas_test?pdodriver=mysql');
+        // Note that this only works on CI v.3.0
+        if (CI_VERSION == '3.0.0')
+        {
+             Gas\Core::connect('pdo://travis:@localhost:3306/gas_test?pdodriver=mysql');
 
-        $db = Gas\Core::$db;
+            $db = Gas\Core::$db;
 
-        $this->assertInstanceOf('CI_DB', $db);
-        $this->assertInstanceOf('CI_DB_Driver', $db);
-        $this->assertInstanceOf('CI_DB_PDO_Driver', $db);
+            $this->assertInstanceOf('CI_DB', $db);
+            $this->assertInstanceOf('CI_DB_Driver', $db);
+            $this->assertInstanceOf('CI_DB_PDO_Driver', $db);
+        }
     }
 
     /**

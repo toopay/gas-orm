@@ -11,7 +11,7 @@
  *
  * @package     Gas ORM
  * @category    ORM
- * @version     2.1.1
+ * @version     2.1.2
  * @author      Taufan Aditya A.K.A Toopay
  * @link        http://gasorm-doc.taufanaditya.com/
  * @license     BSD
@@ -333,13 +333,13 @@ abstract class ORM {
 		if ($name == 'postgre')
 		{
 			$is_driver = (bool) (Core::$db->dbdriver == $name 
-				                or (isset(Core::$db->pdodriver) && Core::$db->pdodriver == 'pgsql')
+				                or (isset(Core::$db->subdriver) && Core::$db->subdriver == 'pgsql')
 				                or strpos(Core::$db->hostname, 'pgsql') !== FALSE);
 		}
 		else
 		{
 			$is_driver = (bool) (Core::$db->dbdriver == $name 
-				                or (isset(Core::$db->pdodriver) && Core::$db->pdodriver == $name)
+				                or (isset(Core::$db->subdriver) && Core::$db->subdriver == $name)
 				                or strpos(Core::$db->hostname, $name) !== FALSE);
 		}
 

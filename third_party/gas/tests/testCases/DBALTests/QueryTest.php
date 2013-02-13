@@ -7,7 +7,7 @@
  *
  * @package     Gas ORM
  * @category    Unit Test
- * @version     2.1.1
+ * @version     2.1.2
  * @author      Taufan Aditya
  */
 
@@ -40,9 +40,13 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // Execute some simple query
         // this should return FALSE, 
         // since `foo` table was not exists
-        $sql    = $this->_prep_query('SELECT * FROM `foo`');
-        $result = $this->db->simple_query($sql);
-        $this->assertFalse($result);
+        // Note that this only works on CI v.3.0
+        if (CI_VERSION == '3.0.0')
+        {
+            $sql    = $this->_prep_query('SELECT * FROM `foo`');
+            $result = $this->db->simple_query($sql);
+            $this->assertFalse($result);
+        }
 
         // Execute some simple query
         // this should return a PDOStatement instance, 
@@ -70,14 +74,18 @@ class QueryTest extends PHPUnit_Framework_TestCase {
         // since `foo` table was not exists
         // Note that unlike with simple query, 
         // we do not need to escape it will automatically prepared and escaped
-        $sql    = 'SELECT * FROM `foo`';
-        $result = $this->db->query($sql);
-        $this->assertFalse($result);
+        // Also note that this only works on CI v.3.0
+        if (CI_VERSION == '3.0.0')
+        {
+            $sql    = 'SELECT * FROM foo';
+            $result = $this->db->query($sql);
+            $this->assertFalse($result);
+        }
 
         // this should return a CI_DB_Result instance, 
         // and in this particular test it would be a CI_DB_pdo_Result instance, 
         // since `wife` table was exists
-        $sql    = 'SELECT * FROM `wife`';
+        $sql    = 'SELECT * FROM wife';
         $result = $this->db->query($sql);
         $this->assertInstanceOf('CI_DB_result', $result);
         $this->assertInstanceOf('CI_DB_pdo_result', $result);
@@ -100,12 +108,12 @@ class QueryTest extends PHPUnit_Framework_TestCase {
      */
     protected function _prep_query($sql)
     {
-        if ($this->db->pdodriver === 'pgsql')
+        if ($this->db->subdriver === 'pgsql')
         {
             // Change the backtick(s) for Postgre
             $sql = str_replace('`', '"', $sql);
         }
-        elseif ($this->db->pdodriver === 'sqlite')
+        elseif ($this->db->subdriver === 'sqlite')
         {
             // Change the backtick(s) for SQLite
             $sql = str_replace('`', '', $sql);
