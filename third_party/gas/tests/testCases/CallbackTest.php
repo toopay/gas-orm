@@ -18,9 +18,11 @@ class CallbackTest extends PHPUnit_Framework_TestCase {
      */
     public function setUp()
     {
-        // Set Up then truncate the user table
+        // Set Up then truncate the user and job table
         Model\User::setUp();
         Model\User::truncate();
+        Model\Job::setUp();
+        Model\Job::truncate();
     }
 
     public function testCallbackSave()
@@ -44,5 +46,33 @@ class CallbackTest extends PHPUnit_Framework_TestCase {
         // Since the before_save already make sure that username can not contain
         // `administrator`, it turn into `member`
         $this->assertEquals($foo->username, 'member');
+
+        // 'hourly' is not a valid field
+        $data = array('id' => 9, 'name' => 'Developer', 'description' => 'Code!', 'hourly' => 50);
+        $developer = Model\Job::make($data);
+
+        // In corresponding model, there is `_before_save` callback
+        // to filtered the data, so only matching fields will be used
+        // @see : third_party/gas/tests/dummyModels/job.php
+        $developer->save();
+        unset($developer);
+
+        // Get the last created entry
+        $developer = Model\Job::find(9);
+        
+        // Consist
+        $this->assertInstanceOf('Gas\ORM', $developer);
+        $this->assertInstanceOf('Gas\Data', $developer->record);
+        $this->assertEquals('Developer', $developer->name);
+        $this->assertEquals('Code!', $developer->description);
+
+        // 'nickname' is not a valid field
+        $data = array('description' => 'Code and Heinekken!', 'nickname' => 'Developah...');
+        $developer->record->set('data', $data);
+
+        // Update
+        $developer->save();
+
+        $this->assertEquals('Code and Heinekken!', $developer->description);
     }
 }

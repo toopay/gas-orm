@@ -109,4 +109,15 @@ class Job extends ORM {
 			'description' => ORM::field('string[100]'),
 		);
 	}
+
+	function _before_save()
+	{
+		$allowed_fields = array_keys($this->meta->get('fields'));
+		$allowed_entries = array_intersect_key($this->record->get('data'), array_flip($allowed_fields));
+
+		// Update data with filtered entries
+		$this->record->set('data', $allowed_entries);
+
+		return $this;
+	}
 }
